@@ -1339,6 +1339,47 @@ public:
         }
     }
 
+    void reweightCurrentPaths(ref<Sampler> sampler){
+        for(std::uint32_t i = 0; i < m_samplePaths.size(); ++i){
+            Spectrum throughput(1.0f);
+            std::vector<Float> oldWoPdf(m_samplePaths[i].path.size());
+
+            m_samplePaths[i].Li = Spectrum(0.f);
+
+            for(std::uint32_t j = 0; j < m_samplePaths[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper(m_samplePaths[i].path[j].p, dTreeVoxelSize);
+
+                m_samplePaths[i].path[j].dTree = dTree;
+                m_samplePaths[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
+                m_samplePaths[i].path[j].dTreePdf = dTree->pdf(m_samplePaths[i].path[j].wo);
+                oldWoPdf[j] = m_samplePaths[i].path[j].woPdf;
+                m_samplePaths[i].path[j].woPdf = m_samplePaths[i].path[j].bsdfSamplingFraction * m_samplePaths[i].path[j].bsdfPdf +
+                    (1 - m_samplePaths[i].path[j].bsdfSamplingFraction) * m_samplePaths[i].path[j].dTreePdf;
+
+                Spectrum bsdfWeight = m_samplePaths[i].path[j].bsdfVal / m_samplePaths[i].path[j].woPdf;
+                throughput *= bsdfWeight;
+                m_samplePaths[i].path[j].throughput = throughput;
+                m_samplePaths[i].path[j].radiance = Spectrum(0.f);
+            }
+
+            //this assumes no NEE, will need to change to account for NEE later
+            for(std::uint32_t j = 0; j < m_samplePaths[i].radiance_record.size(); ++j){
+                std::uint32_t pos = m_samplePaths[i].radiance_record[j].pos;
+                m_samplePaths[i].radiance_record[j].L = m_samplePaths[i].radiance_record[j].L * oldWoPdf[pos] / m_samplePaths[i].path[j].woPdf;
+                for(std::uint32_t k = 0; k <= pos; ++k){
+                    m_samplePaths[i].path[j].radiance += m_samplePaths[i].radiance_record[j].L;
+                }
+                m_samplePaths[i].Li += m_samplePaths[i].radiance_record[j].L;
+            }
+        }
+
+        for (int j = 0; j < m_samplePaths[i].path.size(); ++j) {
+            m_samplePaths[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+        }
+    }
+
     bool renderSPP(Scene *scene, RenderQueue *queue, const RenderJob *job,
         int sceneResID, int sensorResID, int samplerResID, int integratorResID) {
 
@@ -1356,6 +1397,11 @@ public:
         Float currentVarAtEnd = std::numeric_limits<Float>::infinity();
 
         m_progress = std::unique_ptr<ProgressReporter>(new ProgressReporter("Rendering", nPasses, job));
+
+        Properties props("independent");
+        ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
+        sampler->configure();
+        sampler->generate(Point2i(0));
 
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
@@ -1379,6 +1425,8 @@ public:
 
             film->clear();
             resetSDTree();
+
+            reweightCurrentPaths(sampler);
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -1447,6 +1495,11 @@ public:
 
         Float elapsedSeconds = 0;
 
+        Properties props("independent");
+        ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
+        sampler->configure();
+        sampler->generate(Point2i(0));
+
         while (result && elapsedSeconds < nSeconds) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
@@ -1460,6 +1513,8 @@ public:
 
             film->clear();
             resetSDTree();
+
+            reweightCurrentPaths(sampler);
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -1605,6 +1660,15 @@ public:
         squaredBlock->setOffset(block->getOffset());
         squaredBlock->clear();
 
+        for(std::uint32_t i = 0; i < m_samplePaths.size(); ++i){
+            if(m_samplePaths.sample_pos.x >= block->getOffset().x && m_samplePaths.sample_pos.x < block->getOffset().x + block->getSize().x &&
+                m_samplePaths.sample_pos.y >= block->getOffset().y && m_samplePaths.sample_pos.y < block->getOffset().y + block->getSize().y){
+                Spectrum s = m_samplePaths[i].spec * m_samplePaths[i].Li;
+                block->put(m_samplePaths.sample_pos, s, m_samplePaths.alpha);
+                squaredBlock->put(m_samplePaths.sample_pos, s * s, m_samplePaths.alpha);
+            }
+        }
+
         uint32_t queryType = RadianceQueryRecord::ESensorRay;
 
         if (!sensor->getFilm()->hasAlpha()) // Don't compute an alpha channel if we don't have to
@@ -1629,10 +1693,15 @@ public:
 
                 sensorRay.scaleDifferential(diffScaleFactor);
 
-                spec *= Li(sensorRay, rRec);
+                PGPath pathRecord;
+                pathRecord.sample_pos = samplePos;
+                pathRecord.spec = spec;
+                spec *= Li(sensorRay, rRec, pathRecord);
                 block->put(samplePos, spec, rRec.alpha);
                 squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
+
+                m_samplePaths.push_back(pathRecord);
             }
         }
 
@@ -1709,65 +1778,81 @@ public:
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
-    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
-        struct Vertex {
-            DTreeWrapper* dTree;
-            Vector dTreeVoxelSize;
-            Ray ray;
+    struct Vertex {
+        DTreeWrapper* dTree;
+        Vector dTreeVoxelSize;
+        Ray ray;
 
-            Spectrum throughput;
-            Spectrum bsdfVal;
+        Spectrum throughput;
+        Spectrum bsdfVal;
 
-            Spectrum radiance;
+        Spectrum radiance;
 
-            Float woPdf, bsdfPdf, dTreePdf;
-            bool isDelta;
+        Float woPdf, bsdfPdf, dTreePdf, samplingFraction;
+        bool isDelta;
 
-            void record(const Spectrum& r) {
-                radiance += r;
+        Point p;
+        Vector wo;
+        Float alpha;
+
+        void record(const Spectrum& r) {
+            radiance += r;
+        }
+
+        void commit(STree& sdTree, Float statisticalWeight, ESpatialFilter spatialFilter, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
+            if (!(woPdf > 0) || !radiance.isValid() || !bsdfVal.isValid()) {
+                return;
             }
 
-            void commit(STree& sdTree, Float statisticalWeight, ESpatialFilter spatialFilter, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
-                if (!(woPdf > 0) || !radiance.isValid() || !bsdfVal.isValid()) {
-                    return;
-                }
+            Spectrum localRadiance = Spectrum{0.0f};
+            if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
+            if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
+            if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
+            Spectrum product = localRadiance * bsdfVal;
 
-                Spectrum localRadiance = Spectrum{0.0f};
-                if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
-                if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
-                if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
-                Spectrum product = localRadiance * bsdfVal;
+            DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
+            switch (spatialFilter) {
+                case ESpatialFilter::ENearest:
+                    dTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
+                    break;
+                case ESpatialFilter::EStochasticBox:
+                    {
+                        DTreeWrapper* splatDTree = dTree;
 
-                DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
-                switch (spatialFilter) {
-                    case ESpatialFilter::ENearest:
-                        dTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
-                        break;
-                    case ESpatialFilter::EStochasticBox:
-                        {
-                            DTreeWrapper* splatDTree = dTree;
+                        // Jitter the actual position within the
+                        // filter box to perform stochastic filtering.
+                        Vector offset = dTreeVoxelSize;
+                        offset.x *= sampler->next1D() - 0.5f;
+                        offset.y *= sampler->next1D() - 0.5f;
+                        offset.z *= sampler->next1D() - 0.5f;
 
-                            // Jitter the actual position within the
-                            // filter box to perform stochastic filtering.
-                            Vector offset = dTreeVoxelSize;
-                            offset.x *= sampler->next1D() - 0.5f;
-                            offset.y *= sampler->next1D() - 0.5f;
-                            offset.z *= sampler->next1D() - 0.5f;
-
-                            Point origin = sdTree.aabb().clip(ray.o + offset);
-                            splatDTree = sdTree.dTreeWrapper(origin);
-                            if (splatDTree) {
-                                splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
-                            }
-                            break;
+                        Point origin = sdTree.aabb().clip(ray.o + offset);
+                        splatDTree = sdTree.dTreeWrapper(origin);
+                        if (splatDTree) {
+                            splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
                         }
-                    case ESpatialFilter::EBox:
-                        sdTree.record(ray.o, dTreeVoxelSize, rec, directionalFilter, bsdfSamplingFractionLoss);
                         break;
-                }
+                    }
+                case ESpatialFilter::EBox:
+                    sdTree.record(ray.o, dTreeVoxelSize, rec, directionalFilter, bsdfSamplingFractionLoss);
+                    break;
             }
-        };
+        }
+    };
 
+    struct RadianceRecord{
+        std::uint32_t pos;
+        Spectrum L;
+    };
+
+    struct PGPath{
+        std::vector<Vertex> path;
+        std::vector<RadianceRecord> radiance_record;
+        Point2 sample_pos;
+        Spectrum spec, Li;
+    }
+
+    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec, PathRecord& pathRecord) const {
         static const int MAX_NUM_VERTICES = 32;
         std::array<Vertex, MAX_NUM_VERTICES> vertices;
 
@@ -2008,8 +2093,14 @@ public:
                                         dRec.pdf,
                                         bsdfPdf,
                                         dTreePdf,
+                                        bsdfSamplingFraction,
                                         false,
+                                        its.p,
+                                        bRec.its.toWorld(bRec.wo),
+                                        rRec.alpha
                                     };
+
+                                    pathRecord.path.push_back(v);
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                 }
@@ -2060,8 +2151,14 @@ public:
                                 woPdf,
                                 bsdfPdf,
                                 dTreePdf,
+                                bsdfSamplingFraction,
                                 true,
+                                its.p,
+                                bRec.its.toWorld(bRec.wo),
+                                rRec.alpha
                             };
+
+                            pathRecord.path.push_back(vertices[nVertices]);
 
                             ++nVertices;
                         }
@@ -2088,6 +2185,7 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
+                        pathRecord.radiance_record.push_back({pathRecord.path.size(), L});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && !m_isFinalIter) {
@@ -2102,8 +2200,14 @@ public:
                                 woPdf,
                                 bsdfPdf,
                                 dTreePdf,
+                                bsdfSamplingFraction,
                                 isDelta,
+                                its.p,
+                                bRec.its.toWorld(bRec.wo),
+                                rRec.alpha
                             };
+
+                            pathRecord.path.push_back(vertices[nVertices]);
 
                             ++nVertices;
                         }
@@ -2150,8 +2254,11 @@ public:
         if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
+                m_samples.push_back(vertices[i]);
             }
         }
+
+        pathRecord.Li = Li;
 
         return Li;
     }
@@ -2413,6 +2520,8 @@ private:
 
     /// The time at which rendering started.
     std::chrono::steady_clock::time_point m_startTime;
+
+    std::vector<PGPath> m_samplePaths;
 
 public:
     MTS_DECLARE_CLASS()
