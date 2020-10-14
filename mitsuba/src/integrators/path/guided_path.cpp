@@ -1852,7 +1852,13 @@ public:
         Spectrum spec, Li;
     }
 
-    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec, PathRecord& pathRecord) const {
+    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec){
+        PGPath pathRecord;
+        
+        return Li(r, rRec, pathRecord);
+    }
+
+    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec, PGPath& pathRecord) const {
         static const int MAX_NUM_VERTICES = 32;
         std::array<Vertex, MAX_NUM_VERTICES> vertices;
 
