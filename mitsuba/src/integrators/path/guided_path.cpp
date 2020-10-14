@@ -1849,12 +1849,13 @@ public:
         std::vector<Vertex> path;
         std::vector<RadianceRecord> radiance_record;
         Point2 sample_pos;
-        Spectrum spec, Li;
-    }
+        Spectrum spec;
+        Spectrum Li;
+    };
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec){
         PGPath pathRecord;
-        
+
         return Li(r, rRec, pathRecord);
     }
 
