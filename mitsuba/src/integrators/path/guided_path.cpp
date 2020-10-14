@@ -1341,41 +1341,41 @@ public:
     }
 
     void reweightCurrentPaths(ref<Sampler> sampler){
-        for(std::uint32_t i = 0; i < m_samplePaths.size(); ++i){
+        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             Spectrum throughput(1.0f);
-            std::vector<Float> oldWoPdf(m_samplePaths[i].path.size());
+            std::vector<Float> oldWoPdf((*m_samplePaths)[i].path.size());
 
-            m_samplePaths[i].Li = Spectrum(0.f);
+            (*m_samplePaths)[i].Li = Spectrum(0.f);
 
-            for(std::uint32_t j = 0; j < m_samplePaths[i].path.size(); ++j){
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper(m_samplePaths[i].path[j].p, dTreeVoxelSize);
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize);
 
-                m_samplePaths[i].path[j].dTree = dTree;
-                m_samplePaths[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
-                m_samplePaths[i].path[j].dTreePdf = dTree->pdf(m_samplePaths[i].path[j].wo);
-                oldWoPdf[j] = m_samplePaths[i].path[j].woPdf;
-                m_samplePaths[i].path[j].woPdf = m_samplePaths[i].path[j].bsdfSamplingFraction * m_samplePaths[i].path[j].bsdfPdf +
-                    (1 - m_samplePaths[i].path[j].bsdfSamplingFraction) * m_samplePaths[i].path[j].dTreePdf;
+                (*m_samplePaths)[i].path[j].dTree = dTree;
+                (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
+                (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
+                oldWoPdf[j] = (*m_samplePaths)[i].path[j].woPdf;
+                (*m_samplePaths)[i].path[j].woPdf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction * (*m_samplePaths)[i].path[j].bsdfPdf +
+                    (1 - (*m_samplePaths)[i].path[j].bsdfSamplingFraction) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-                Spectrum bsdfWeight = m_samplePaths[i].path[j].bsdfVal / m_samplePaths[i].path[j].woPdf;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-                m_samplePaths[i].path[j].throughput = throughput;
-                m_samplePaths[i].path[j].radiance = Spectrum(0.f);
+                (*m_samplePaths)[i].path[j].throughput = throughput;
+                (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
             }
 
             //this assumes no NEE, will need to change to account for NEE later
-            for(std::uint32_t j = 0; j < m_samplePaths[i].radiance_record.size(); ++j){
-                std::uint32_t pos = m_samplePaths[i].radiance_record[j].pos;
-                m_samplePaths[i].radiance_record[j].L = m_samplePaths[i].radiance_record[j].L * oldWoPdf[pos] / m_samplePaths[i].path[j].woPdf;
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
+                std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
+                (*m_samplePaths)[i].radiance_record[j].L = (*m_samplePaths)[i].radiance_record[j].L * oldWoPdf[pos] / (*m_samplePaths)[i].path[j].woPdf;
                 for(std::uint32_t k = 0; k <= pos; ++k){
-                    m_samplePaths[i].path[j].radiance += m_samplePaths[i].radiance_record[j].L;
+                    (*m_samplePaths)[i].path[j].radiance += (*m_samplePaths)[i].radiance_record[j].L;
                 }
-                m_samplePaths[i].Li += m_samplePaths[i].radiance_record[j].L;
+                (*m_samplePaths)[i].Li += (*m_samplePaths)[i].radiance_record[j].L;
             }
 
-            for (int j = 0; j < m_samplePaths[i].path.size(); ++j) {
-                m_samplePaths[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+            for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
+                (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
         }
@@ -1573,6 +1573,8 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
+        m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
+        m_samplePaths = std::unique_ptr<std::vector<PGPath>(new std::vector<PGPath>());
         m_iter = 0;
         m_isFinalIter = false;
 
@@ -1661,12 +1663,12 @@ public:
         squaredBlock->setOffset(block->getOffset());
         squaredBlock->clear();
 
-        for(std::uint32_t i = 0; i < m_samplePaths.size(); ++i){
-            if(m_samplePaths[i].sample_pos.x >= block->getOffset().x && m_samplePaths[i].sample_pos.x < block->getOffset().x + block->getSize().x &&
-                m_samplePaths[i].sample_pos.y >= block->getOffset().y && m_samplePaths[i].sample_pos.y < block->getOffset().y + block->getSize().y){
-                Spectrum s = m_samplePaths[i].spec * m_samplePaths[i].Li;
-                block->put(m_samplePaths[i].sample_pos, s, m_samplePaths[i].alpha);
-                squaredBlock->put(m_samplePaths[i].sample_pos, s * s, m_samplePaths[i].alpha);
+        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if((*m_samplePaths)[i].sample_pos.x >= block->getOffset().x && (*m_samplePaths)[i].sample_pos.x < block->getOffset().x + block->getSize().x &&
+                (*m_samplePaths)[i].sample_pos.y >= block->getOffset().y && (*m_samplePaths)[i].sample_pos.y < block->getOffset().y + block->getSize().y){
+                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                block->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                squaredBlock->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
             }
         }
 
@@ -1703,8 +1705,8 @@ public:
                 sampler->advance();
 
                 {
-                    std::lock_guard<std::mutex> lg(m_samplePathMutex);
-                    m_samplePaths.push_back(std::move(pathRecord));
+                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                    m_samplePaths->push_back(std::move(pathRecord));
                 }
             }
         }
@@ -1857,7 +1859,7 @@ public:
         Float alpha;
     };
 
-    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec){
+    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
         PGPath pathRecord;
 
         return Li(r, rRec, pathRecord);
@@ -2529,9 +2531,8 @@ private:
     /// The time at which rendering started.
     std::chrono::steady_clock::time_point m_startTime;
 
-    std::vector<PGPath> m_samplePaths;
-
-    std::mutex m_samplePathMutex;
+    std::unique_ptr<std::vector<PGPath>> m_samplePaths;
+    std::unique_ptr<std::mutex> m_samplePathMutex;
 
 public:
     MTS_DECLARE_CLASS()
