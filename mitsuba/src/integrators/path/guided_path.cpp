@@ -1372,11 +1372,11 @@ public:
                 }
                 m_samplePaths[i].Li += m_samplePaths[i].radiance_record[j].L;
             }
-        }
 
-        for (int j = 0; j < m_samplePaths[i].path.size(); ++j) {
-            m_samplePaths[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            for (int j = 0; j < m_samplePaths[i].path.size(); ++j) {
+                m_samplePaths[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
         }
     }
 
@@ -1793,7 +1793,6 @@ public:
 
         Point p;
         Vector wo;
-        Float alpha;
 
         void record(const Spectrum& r) {
             radiance += r;
@@ -1851,6 +1850,7 @@ public:
         Point2 sample_pos;
         Spectrum spec;
         Spectrum Li;
+        Float alpha;
     };
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec){
@@ -2103,8 +2103,7 @@ public:
                                         bsdfSamplingFraction,
                                         false,
                                         its.p,
-                                        bRec.its.toWorld(bRec.wo),
-                                        rRec.alpha
+                                        bRec.its.toWorld(bRec.wo)
                                     };
 
                                     pathRecord.path.push_back(v);
@@ -2161,8 +2160,7 @@ public:
                                 bsdfSamplingFraction,
                                 true,
                                 its.p,
-                                bRec.its.toWorld(bRec.wo),
-                                rRec.alpha
+                                bRec.its.toWorld(bRec.wo)
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2210,8 +2208,7 @@ public:
                                 bsdfSamplingFraction,
                                 isDelta,
                                 its.p,
-                                bRec.its.toWorld(bRec.wo),
-                                rRec.alpha
+                                bRec.its.toWorld(bRec.wo)
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2261,11 +2258,13 @@ public:
         if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
-                m_samples.push_back(vertices[i]);
             }
-        }
 
-        pathRecord.Li = Li;
+            pathRecord.Li = Li;
+            pathRecord.alpha = rRec.alpha;
+
+            m_samplePaths.push_back(pathRecord);
+        }
 
         return Li;
     }
