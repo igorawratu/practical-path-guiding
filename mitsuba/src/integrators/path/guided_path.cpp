@@ -29,6 +29,7 @@
 #include <functional>
 #include <iomanip>
 #include <sstream>
+#include <mutex>
 
 MTS_NAMESPACE_BEGIN
 
@@ -1701,7 +1702,10 @@ public:
                 squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
-                m_samplePaths.push_back(pathRecord);
+                {
+                    std::lock_guard<std::mutex> lg(m_samplePathMutex);
+                    m_samplePaths.push_back(std::move(pathRecord));
+                }
             }
         }
 
@@ -2259,12 +2263,10 @@ public:
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
-
-            pathRecord.Li = Li;
-            pathRecord.alpha = rRec.alpha;
-
-            m_samplePaths.push_back(pathRecord);
         }
+
+        pathRecord.Li = Li;
+        pathRecord.alpha = rRec.alpha;
 
         return Li;
     }
@@ -2528,6 +2530,8 @@ private:
     std::chrono::steady_clock::time_point m_startTime;
 
     std::vector<PGPath> m_samplePaths;
+
+    std::mutex m_samplePathMutex;
 
 public:
     MTS_DECLARE_CLASS()
