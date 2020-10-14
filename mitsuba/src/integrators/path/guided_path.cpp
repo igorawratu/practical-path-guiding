@@ -1661,11 +1661,11 @@ public:
         squaredBlock->clear();
 
         for(std::uint32_t i = 0; i < m_samplePaths.size(); ++i){
-            if(m_samplePaths.sample_pos.x >= block->getOffset().x && m_samplePaths.sample_pos.x < block->getOffset().x + block->getSize().x &&
-                m_samplePaths.sample_pos.y >= block->getOffset().y && m_samplePaths.sample_pos.y < block->getOffset().y + block->getSize().y){
+            if(m_samplePaths[i].sample_pos.x >= block->getOffset().x && m_samplePaths[i].sample_pos.x < block->getOffset().x + block->getSize().x &&
+                m_samplePaths[i].sample_pos.y >= block->getOffset().y && m_samplePaths[i].sample_pos.y < block->getOffset().y + block->getSize().y){
                 Spectrum s = m_samplePaths[i].spec * m_samplePaths[i].Li;
-                block->put(m_samplePaths.sample_pos, s, m_samplePaths.alpha);
-                squaredBlock->put(m_samplePaths.sample_pos, s * s, m_samplePaths.alpha);
+                block->put(m_samplePaths[i].sample_pos, s, m_samplePaths[i].alpha);
+                squaredBlock->put(m_samplePaths[i].sample_pos, s * s, m_samplePaths[i].alpha);
             }
         }
 
@@ -1788,7 +1788,7 @@ public:
 
         Spectrum radiance;
 
-        Float woPdf, bsdfPdf, dTreePdf, samplingFraction;
+        Float woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction;
         bool isDelta;
 
         Point p;
