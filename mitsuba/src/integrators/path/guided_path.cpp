@@ -1365,7 +1365,9 @@ public:
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
-                throughput /= (*m_samplePaths)[i].path[j].successProb;
+                Float successProb = throughput.max * eta * eta;
+                successProb = std::max(0.1f, std::min(successProb, 0.99f));
+                throughput /= successProb;
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
             }
 
@@ -1817,7 +1819,7 @@ public:
 
         Point p;
         Vector wo;
-        Float successProb;
+        Float eta;
 
         void record(const Spectrum& r) {
             radiance += r;
@@ -2139,7 +2141,7 @@ public:
                                         false,
                                         its.p,
                                         bRec.its.toWorld(bRec.wo),
-                                        1.f
+                                        bRec.eta
                                     };
 
                                     pathRecord.path.push_back(v);
@@ -2197,7 +2199,7 @@ public:
                                 true,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                1.f
+                                bRec.eta
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2246,7 +2248,7 @@ public:
                                 isDelta,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                1.f
+                                bRec.eta
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
