@@ -1346,6 +1346,7 @@ public:
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             Spectrum throughput(1.0f);
             std::vector<Float> oldWoPdf((*m_samplePaths)[i].path.size());
+            std::vector<Float> oldThroughputs((*m_samplePaths)[i].path.size());
 
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
@@ -1359,20 +1360,27 @@ public:
                 oldWoPdf[j] = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - (*m_samplePaths)[i].path[j].bsdfSamplingFraction) * (*m_samplePaths)[i].path[j].dTreePdf;
+
+                oldThroughputs[j] = (*m_samplePaths)[i].path[j].throughput;
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
+                throughput /= (*m_samplePaths)[i].path[j].successProb;
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
             }
 
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
-                Float owop = oldWoPdf[pos] / (oldWoPdf[pos] * oldWoPdf[pos]);
-                Float nwop = (*m_samplePaths)[i].path[j].woPdf / ((*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].woPdf);
-                (*m_samplePaths)[i].radiance_record[j].L = (*m_samplePaths)[i].radiance_record[j].L / owop * nwop;
-                for(std::uint32_t k = 0; k <= pos; ++k){
-                    (*m_samplePaths)[i].path[j].radiance += (*m_samplePaths)[i].radiance_record[j].L;
+
+                if(pos >= 0){
+                    Float oldFactor = oldWoPdf[pos] / (oldWoPdf[pos] * oldWoPdf[pos]) * oldThroughputs[pos];
+                    Float newFactor = (*m_samplePaths)[i].path[j].woPdf / ((*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].woPdf)
+                        * (*m_samplePaths)[i].path[j].throughput;
+                    (*m_samplePaths)[i].radiance_record[j].L = (*m_samplePaths)[i].radiance_record[j].L / oldFactor * newFactor;
+                    for(std::uint32_t k = 0; k <= pos; ++k){
+                        (*m_samplePaths)[i].path[j].radiance += (*m_samplePaths)[i].radiance_record[j].L;
+                    }
                 }
                 (*m_samplePaths)[i].Li += (*m_samplePaths)[i].radiance_record[j].L;
             }
@@ -1809,6 +1817,7 @@ public:
 
         Point p;
         Vector wo;
+        Float successProb;
 
         void record(const Spectrum& r) {
             radiance += r;
@@ -2015,7 +2024,12 @@ public:
                         Spectrum value = throughput * scene->evalEnvironment(ray);
                         if (rRec.medium)
                             value *= rRec.medium->evalTransmittance(ray, rRec.sampler);
+
                         recordRadiance(value);
+
+                        if(!value.isZero()){
+                            pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
+                        }
                     }
 
                     break;
@@ -2023,8 +2037,13 @@ public:
 
                 /* Possibly include emitted radiance if requested */
                 if (its.isEmitter() && (rRec.type & RadianceQueryRecord::EEmittedRadiance)
-                    && (!m_hideEmitters || scattered))
-                    recordRadiance(throughput * its.Le(-ray.d));
+                    && (!m_hideEmitters || scattered)){
+                    Spectrum eL = throughput * its.Le(-ray.d);
+                    recordRadiance(eL);
+                    if(!eL.isZero()){
+                        pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, eL});
+                    }
+                }
 
                 /* Include radiance from a subsurface integrator if requested */
                 if (its.hasSubsurface() && (rRec.type & RadianceQueryRecord::ESubsurfaceRadiance))
@@ -2119,7 +2138,8 @@ public:
                                         bsdfSamplingFraction,
                                         false,
                                         its.p,
-                                        bRec.its.toWorld(bRec.wo)
+                                        bRec.its.toWorld(bRec.wo),
+                                        1.f
                                     };
 
                                     pathRecord.path.push_back(v);
@@ -2176,7 +2196,8 @@ public:
                                 bsdfSamplingFraction,
                                 true,
                                 its.p,
-                                bRec.its.toWorld(bRec.wo)
+                                bRec.its.toWorld(bRec.wo),
+                                1.f
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2224,7 +2245,8 @@ public:
                                 bsdfSamplingFraction,
                                 isDelta,
                                 its.p,
-                                bRec.its.toWorld(bRec.wo)
+                                bRec.its.toWorld(bRec.wo),
+                                1.f
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2263,6 +2285,7 @@ public:
                     if (rRec.nextSample1D() >= successProb)
                         break;
                     throughput /= successProb;
+                    pathRecord.path.back().successProb = successProb;
                 }
             }
 
