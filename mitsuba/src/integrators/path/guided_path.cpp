@@ -1345,8 +1345,6 @@ public:
     void reweightCurrentPaths(ref<Sampler> sampler){
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             Spectrum throughput(1.0f);
-            std::vector<Float> oldWoPdf((*m_samplePaths)[i].path.size());
-            std::vector<Spectrum> oldThroughputs((*m_samplePaths)[i].path.size());
 
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
@@ -1357,11 +1355,14 @@ public:
                 (*m_samplePaths)[i].path[j].dTree = dTree;
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
-                oldWoPdf[j] = (*m_samplePaths)[i].path[j].woPdf;
-                (*m_samplePaths)[i].path[j].woPdf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction * (*m_samplePaths)[i].path[j].bsdfPdf +
-                    (1 - (*m_samplePaths)[i].path[j].bsdfSamplingFraction) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-                oldThroughputs[j] = (*m_samplePaths)[i].path[j].throughput;
+                Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
+                float oldpdf = (*m_samplePaths)[i].path[j].woPdf;
+                (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
+                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
+
+                std::cout << oldpdf << " : " << (*m_samplePaths)[i].path[j].woPdf << std::endl;
+
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
