@@ -1375,16 +1375,15 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
 
+                Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
                 if(pos >= 0){
-                    Spectrum oldFactor = oldWoPdf[pos] / (oldWoPdf[pos] * oldWoPdf[pos]) * oldThroughputs[pos];
-                    Spectrum newFactor = (*m_samplePaths)[i].path[j].woPdf / ((*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].woPdf)
+                    L *= (*m_samplePaths)[i].path[j].woPdf / ((*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].woPdf)
                         * (*m_samplePaths)[i].path[j].throughput;
-                    (*m_samplePaths)[i].radiance_record[j].L = (*m_samplePaths)[i].radiance_record[j].L / oldFactor * newFactor;
                     for(std::uint32_t k = 0; k <= pos; ++k){
-                        (*m_samplePaths)[i].path[j].radiance += (*m_samplePaths)[i].radiance_record[j].L;
+                        (*m_samplePaths)[i].path[j].radiance += L;
                     }
                 }
-                (*m_samplePaths)[i].Li += (*m_samplePaths)[i].radiance_record[j].L;
+                (*m_samplePaths)[i].Li += L;
             }
 
             for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
@@ -2229,7 +2228,7 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
-                        pathRecord.radiance_record.push_back({pathRecord.path.size(), L});
+                        pathRecord.radiance_record.push_back({pathRecord.path.size(), value});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && !m_isFinalIter) {
