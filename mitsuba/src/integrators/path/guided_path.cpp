@@ -1680,7 +1680,7 @@ public:
         squaredBlock->setOffset(block->getOffset());
         squaredBlock->clear();
 
-        /*if(m_reweight){
+        if(m_reweight){
             for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
                 if((*m_samplePaths)[i].sample_pos.x >= block->getOffset().x && (*m_samplePaths)[i].sample_pos.x < block->getOffset().x + block->getSize().x &&
                     (*m_samplePaths)[i].sample_pos.y >= block->getOffset().y && (*m_samplePaths)[i].sample_pos.y < block->getOffset().y + block->getSize().y){
@@ -1689,7 +1689,7 @@ public:
                     squaredBlock->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
                 }
             }
-        }*/
+        }
 
         uint32_t queryType = RadianceQueryRecord::ESensorRay;
 
@@ -2295,11 +2295,11 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter) {
+        /*if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
-        }
+        }*/
 
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
