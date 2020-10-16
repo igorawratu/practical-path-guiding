@@ -1346,7 +1346,7 @@ public:
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             Spectrum throughput(1.0f);
             std::vector<Float> oldWoPdf((*m_samplePaths)[i].path.size());
-            std::vector<Float> oldThroughputs((*m_samplePaths)[i].path.size());
+            std::vector<Spectrum> oldThroughputs((*m_samplePaths)[i].path.size());
 
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
