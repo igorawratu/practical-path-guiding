@@ -1865,7 +1865,7 @@ public:
     };
 
     struct RadianceRecord{
-        std::uint32_t pos;
+        int pos;
         Spectrum L;
     };
 
