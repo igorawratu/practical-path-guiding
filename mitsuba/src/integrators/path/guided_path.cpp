@@ -1374,8 +1374,8 @@ public:
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
 
                 if(pos >= 0){
-                    Float oldFactor = oldWoPdf[pos] / (oldWoPdf[pos] * oldWoPdf[pos]) * oldThroughputs[pos];
-                    Float newFactor = (*m_samplePaths)[i].path[j].woPdf / ((*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].woPdf)
+                    Spectrum oldFactor = oldWoPdf[pos] / (oldWoPdf[pos] * oldWoPdf[pos]) * oldThroughputs[pos];
+                    Spectrum newFactor = (*m_samplePaths)[i].path[j].woPdf / ((*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].woPdf)
                         * (*m_samplePaths)[i].path[j].throughput;
                     (*m_samplePaths)[i].radiance_record[j].L = (*m_samplePaths)[i].radiance_record[j].L / oldFactor * newFactor;
                     for(std::uint32_t k = 0; k <= pos; ++k){
