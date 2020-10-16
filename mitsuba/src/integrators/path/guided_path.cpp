@@ -1359,7 +1359,6 @@ public:
                 oldWoPdf[j] = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - (*m_samplePaths)[i].path[j].bsdfSamplingFraction) * (*m_samplePaths)[i].path[j].dTreePdf;
-
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
@@ -1369,7 +1368,9 @@ public:
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
-                (*m_samplePaths)[i].radiance_record[j].L = (*m_samplePaths)[i].radiance_record[j].L * oldWoPdf[pos] / (*m_samplePaths)[i].path[j].woPdf;
+                Float owop = oldWoPdf[pos] / (oldWoPdf[pos] * oldWoPdf[pos]);
+                Float nwop = (*m_samplePaths)[i].path[j].woPdf / ((*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].woPdf);
+                (*m_samplePaths)[i].radiance_record[j].L = (*m_samplePaths)[i].radiance_record[j].L / owop * nwop;
                 for(std::uint32_t k = 0; k <= pos; ++k){
                     (*m_samplePaths)[i].path[j].radiance += (*m_samplePaths)[i].radiance_record[j].L;
                 }
@@ -1669,7 +1670,7 @@ public:
         squaredBlock->setOffset(block->getOffset());
         squaredBlock->clear();
 
-        if(m_reweight){
+        /*if(m_reweight){
             for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
                 if((*m_samplePaths)[i].sample_pos.x >= block->getOffset().x && (*m_samplePaths)[i].sample_pos.x < block->getOffset().x + block->getSize().x &&
                     (*m_samplePaths)[i].sample_pos.y >= block->getOffset().y && (*m_samplePaths)[i].sample_pos.y < block->getOffset().y + block->getSize().y){
@@ -1678,7 +1679,7 @@ public:
                     squaredBlock->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
                 }
             }
-        }
+        }*/
 
         uint32_t queryType = RadianceQueryRecord::ESensorRay;
 
