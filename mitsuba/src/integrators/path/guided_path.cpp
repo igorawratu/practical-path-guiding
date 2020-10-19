@@ -1316,7 +1316,7 @@ public:
                 Point2i pos = Point2i(x, y);
                 Spectrum pixel = image->getPixel(pos);
                 Spectrum localVar = squaredImage->getPixel(pos) - pixel * pixel / (Float)N;
-                std::cout << pixel << " " << localVar << std::endl;
+                std::cout << pixel.getLuminance() << " " << localVar.getLuminance() << std::endl;
                 image->setPixel(pos, localVar);
                 // The local variance is clamped such that fireflies don't cause crazily unstable estimates.
                 variance += std::min(localVar.getLuminance(), 10000.0f);
