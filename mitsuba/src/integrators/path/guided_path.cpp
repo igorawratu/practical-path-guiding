@@ -1441,7 +1441,7 @@ public:
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
 
                 for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li / sppRendered;
+                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
                     previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
                 }
 
@@ -1718,8 +1718,8 @@ public:
                 pathRecord.sample_pos = samplePos;
                 pathRecord.spec = spec;
                 spec *= Li(sensorRay, rRec, pathRecord);
-                block->put(samplePos, spec, rRec.alpha);
-                squaredBlock->put(samplePos, spec * spec, rRec.alpha);
+                //block->put(samplePos, spec, rRec.alpha);
+                //squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
                 if(m_reweight)
@@ -2228,7 +2228,6 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
-                        pathRecord.radiance_record.push_back({pathRecord.path.size(), value});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && !m_isFinalIter) {
@@ -2251,6 +2250,10 @@ public:
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
+
+                            if(!L.isZero()){
+                                pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
+                            }
 
                             ++nVertices;
                         }
