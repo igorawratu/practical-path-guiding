@@ -1384,11 +1384,11 @@ public:
                 (*m_samplePaths)[i].Li += L;
             }
 
-        //     for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
-        //         (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-        //             m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-        //     }
-        // }
+            // for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
+            //     (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+            //         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            // }
+        }
     }
 
     bool renderSPP(Scene *scene, RenderQueue *queue, const RenderJob *job,
