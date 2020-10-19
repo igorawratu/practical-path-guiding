@@ -1288,6 +1288,13 @@ public:
 
         m_renderProcesses.clear();
 
+        if(m_reweight){
+            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+            }
+        }
+
         variance = 0;
         Bitmap* squaredImage = m_squaredImage->getBitmap();
         Bitmap* image = m_image->getBitmap();
@@ -1416,7 +1423,6 @@ public:
 
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
-            std::cout << sppRendered << " " << m_passesRendered << " " << m_sppPerPass << " " << sampleCount << std::endl;
             m_doNee = doNeeWithSpp(sppRendered);
 
             int remainingPasses = nPasses - m_passesRendered;
@@ -1677,17 +1683,6 @@ public:
         ref<ImageBlock> squaredBlock = new ImageBlock(block->getPixelFormat(), block->getSize(), block->getReconstructionFilter());
         squaredBlock->setOffset(block->getOffset());
         squaredBlock->clear();
-
-        if(m_reweight){
-            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                if((*m_samplePaths)[i].sample_pos.x >= block->getOffset().x && (*m_samplePaths)[i].sample_pos.x < block->getOffset().x + block->getSize().x &&
-                    (*m_samplePaths)[i].sample_pos.y >= block->getOffset().y && (*m_samplePaths)[i].sample_pos.y < block->getOffset().y + block->getSize().y){
-                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                    block->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                    squaredBlock->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
-                }
-            }
-        }
 
         uint32_t queryType = RadianceQueryRecord::ESensorRay;
 
