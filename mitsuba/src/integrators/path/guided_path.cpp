@@ -1355,8 +1355,9 @@ public:
 
                 (*m_samplePaths)[i].path[j].dTree = dTree;
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
+                float oldDtreeP = (*m_samplePaths)[i].path[j].dTreePdf;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
-                std::cout << (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << std::endl;
+                std::cout << oldDtreeP << " " << (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << std::endl;
 
                 Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
