@@ -1360,7 +1360,7 @@ public:
 
                 Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
-                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
+                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;*/
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -1368,7 +1368,7 @@ public:
                 Float successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
                 successProb = std::max(0.1f, std::min(successProb, 0.99f));
                 throughput /= successProb;
-                (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);*/
+                (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
             }
 
             //this assumes no NEE, will need to change to account for NEE later
