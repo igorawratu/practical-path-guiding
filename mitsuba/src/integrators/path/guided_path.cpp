@@ -1350,7 +1350,7 @@ public:
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                /*Vector dTreeVoxelSize;
+                Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize);
 
                 (*m_samplePaths)[i].path[j].dTree = dTree;
@@ -1360,14 +1360,18 @@ public:
 
                 Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
-                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;*/
+                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
-                Float successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
+                
+                Float successProb = 1.f;
+                if(!m_isBuilt){
+                    successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
+                }
                 successProb = std::max(0.1f, std::min(successProb, 0.99f));
-                //throughput /= successProb;
+                throughput /= successProb;
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
             }
 
@@ -2199,7 +2203,7 @@ public:
                                 true,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                bRec.eta
+                                eta
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2247,7 +2251,7 @@ public:
                                 isDelta,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                bRec.eta
+                                eta
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
