@@ -1355,7 +1355,6 @@ public:
 
                 (*m_samplePaths)[i].path[j].dTree = dTree;
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
-                float oldDtreeP = (*m_samplePaths)[i].path[j].dTreePdf;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
                 Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
@@ -1366,12 +1365,12 @@ public:
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
                 
-                Float successProb = 1.f;
+                /*Float successProb = 1.f;
                 if(!m_isBuilt){
                     successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
                 }
                 successProb = std::max(0.1f, std::min(successProb, 0.99f));
-                throughput /= successProb;
+                throughput /= successProb;*/
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
             }
 
@@ -1723,8 +1722,8 @@ public:
                 pathRecord.sample_pos = samplePos;
                 pathRecord.spec = spec;
                 spec *= Li(sensorRay, rRec, pathRecord);
-                //block->put(samplePos, spec, rRec.alpha);
-                //squaredBlock->put(samplePos, spec * spec, rRec.alpha);
+                block->put(samplePos, spec, rRec.alpha);
+                squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
                 if(m_reweight)
