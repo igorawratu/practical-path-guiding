@@ -1674,7 +1674,7 @@ public:
         const std::vector< TPoint2<uint8_t> > &points) const {
 
         Float diffScaleFactor = 1.0f /
-            std::sqrt((Float)m_sppPerPass);
+            std::sqrt((Float)sampleCount);
 
         bool needsApertureSample = sensor->needsApertureSample();
         bool needsTimeSample = sensor->needsTimeSample();
@@ -2294,11 +2294,11 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter) {
+        /*if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
-        }
+        }*/
 
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
