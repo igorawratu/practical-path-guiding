@@ -1224,9 +1224,6 @@ public:
             for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
                 if((*m_samplePaths)[i].sample_pos.x >= m_image->getOffset().x && (*m_samplePaths)[i].sample_pos.x < m_image->getOffset().x + m_image->getSize().x &&
                     (*m_samplePaths)[i].sample_pos.y >= m_image->getOffset().y && (*m_samplePaths)[i].sample_pos.y < m_image->getOffset().y + m_image->getSize().y){
-                    std::cout << (*m_samplePaths)[i].sample_pos.x << " " << (*m_samplePaths)[i].sample_pos.y << " " << 
-                        m_image->getOffset().x << " " << m_image->getOffset().y << " " << 
-                        m_image->getOffset().x + m_image->getSize().x << " " << m_image->getOffset().x + m_image->getSize().y << std::endl;
                     Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
                     m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
                 }
@@ -1618,7 +1615,7 @@ public:
         m_varianceBuffer->setDestinationFile(scene->getDestinationFile(), 0);
 
         m_squaredImage = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize());
-        m_image = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize());
+        m_image = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
 
         m_images.clear();
         m_variances.clear();
@@ -1674,7 +1671,7 @@ public:
         const std::vector< TPoint2<uint8_t> > &points) const {
 
         Float diffScaleFactor = 1.0f /
-            std::sqrt((Float)sampleCount);
+            std::sqrt((Float)m_sppPerPass);
 
         bool needsApertureSample = sensor->needsApertureSample();
         bool needsTimeSample = sensor->needsTimeSample();
