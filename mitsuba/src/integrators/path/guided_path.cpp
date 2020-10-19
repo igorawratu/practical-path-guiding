@@ -1357,11 +1357,8 @@ public:
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
                 Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
-                float oldpdf = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
-
-                std::cout << oldpdf << " : " << (*m_samplePaths)[i].path[j].woPdf << std::endl;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -1419,6 +1416,7 @@ public:
 
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
+            std::cout << sppRendered << " " << m_passesRendered << " " << m_sppPerPass << " " << sampleCount << std::endl;
             m_doNee = doNeeWithSpp(sppRendered);
 
             int remainingPasses = nPasses - m_passesRendered;
