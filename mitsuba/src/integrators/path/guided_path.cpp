@@ -1226,6 +1226,7 @@ public:
                     (*m_samplePaths)[i].sample_pos.y >= m_image->getOffset().y && (*m_samplePaths)[i].sample_pos.y < m_image->getOffset().y + m_image->getSize().y){
                     Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
                     m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                    m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
                 }
             }
         }
@@ -1614,7 +1615,7 @@ public:
         m_varianceBuffer = static_cast<Film*>(PluginManager::getInstance()->createObject(MTS_CLASS(Film), properties));
         m_varianceBuffer->setDestinationFile(scene->getDestinationFile(), 0);
 
-        m_squaredImage = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize());
+        m_squaredImage = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
         m_image = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
 
         m_images.clear();
