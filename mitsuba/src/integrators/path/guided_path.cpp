@@ -1290,12 +1290,9 @@ public:
 
         if(m_reweight){
             for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                if((*m_samplePaths)[i].sample_pos.x >= m_image->getOffset().x && (*m_samplePaths)[i].sample_pos.x < m_image->getOffset().x + m_image->getSize().x &&
-                    (*m_samplePaths)[i].sample_pos.y >= m_image->getOffset().y && (*m_samplePaths)[i].sample_pos.y < m_image->getOffset().y + m_image->getSize().y){
-                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                    m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                    m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
-                }
+                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
             }
         }
 
@@ -1319,6 +1316,7 @@ public:
                 Point2i pos = Point2i(x, y);
                 Spectrum pixel = image->getPixel(pos);
                 Spectrum localVar = squaredImage->getPixel(pos) - pixel * pixel / (Float)N;
+                std::cout << pixel << " " << localVar << std::endl;
                 image->setPixel(pos, localVar);
                 // The local variance is clamped such that fireflies don't cause crazily unstable estimates.
                 variance += std::min(localVar.getLuminance(), 10000.0f);
