@@ -1350,7 +1350,7 @@ public:
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                /*Vector dTreeVoxelSize;
+                Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize);
 
                 (*m_samplePaths)[i].path[j].dTree = dTree;
@@ -1365,7 +1365,7 @@ public:
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
                 
-                Float successProb = 1.f;
+                /*Float successProb = 1.f;
                 if(!m_isBuilt){
                     successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
                 }
