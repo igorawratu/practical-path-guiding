@@ -1376,8 +1376,8 @@ public:
 
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
                 if(pos >= 0){
-                    L *= /*(*m_samplePaths)[i].path[pos].woPdf / ((*m_samplePaths)[i].path[pos].woPdf * (*m_samplePaths)[i].path[pos].woPdf)
-                        * */(*m_samplePaths)[i].path[pos].throughput;
+                    L *= (*m_samplePaths)[i].path[pos].woPdf / ((*m_samplePaths)[i].path[pos].woPdf * (*m_samplePaths)[i].path[pos].woPdf)
+                        * (*m_samplePaths)[i].path[pos].throughput;
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         (*m_samplePaths)[i].path[j].radiance += L;
                     }
