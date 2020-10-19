@@ -1357,7 +1357,6 @@ public:
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
                 float oldDtreeP = (*m_samplePaths)[i].path[j].dTreePdf;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
-                std::cout << oldDtreeP << " " << (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << std::endl;
 
                 Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
@@ -2298,11 +2297,11 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        /*if (nVertices > 0 && !m_isFinalIter) {
+        if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
-        }*/
+        }
 
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
