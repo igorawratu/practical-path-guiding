@@ -1356,6 +1356,7 @@ public:
                 (*m_samplePaths)[i].path[j].dTree = dTree;
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
+                std::cout << (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << std::endl;
 
                 Float& bsf = (*m_samplePaths)[i].path[j].bsdfSamplingFraction;
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
@@ -1376,8 +1377,7 @@ public:
 
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
                 if(pos >= 0){
-                    L *= (*m_samplePaths)[i].path[pos].woPdf / ((*m_samplePaths)[i].path[pos].woPdf * (*m_samplePaths)[i].path[pos].woPdf)
-                        * (*m_samplePaths)[i].path[pos].throughput;
+                    L *= (*m_samplePaths)[i].path[pos].throughput;
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         (*m_samplePaths)[i].path[j].radiance += L;
                     }
