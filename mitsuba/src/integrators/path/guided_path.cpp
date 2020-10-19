@@ -1367,7 +1367,7 @@ public:
                 (*m_samplePaths)[i].path[j].throughput = throughput;
                 Float successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
                 successProb = std::max(0.1f, std::min(successProb, 0.99f));
-                throughput /= successProb;
+                //throughput /= successProb;
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
             }
 
