@@ -1436,7 +1436,7 @@ public:
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
             film->clear();
-            
+
             if(m_reweight){
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
 
@@ -1718,8 +1718,8 @@ public:
                 pathRecord.sample_pos = samplePos;
                 pathRecord.spec = spec;
                 spec *= Li(sensorRay, rRec, pathRecord);
-                block->put(samplePos, spec, rRec.alpha);
-                squaredBlock->put(samplePos, spec * spec, rRec.alpha);
+                //block->put(samplePos, spec, rRec.alpha);
+                //squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
                 if(m_reweight)
@@ -2294,11 +2294,11 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        /*if (nVertices > 0 && !m_isFinalIter) {
+        if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
-        }*/
+        }
 
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
