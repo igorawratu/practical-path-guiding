@@ -1288,14 +1288,6 @@ public:
 
         m_renderProcesses.clear();
 
-        if(m_reweight){
-            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
-            }
-        }
-
         variance = 0;
         Bitmap* squaredImage = m_squaredImage->getBitmap();
         Bitmap* image = m_image->getBitmap();
@@ -1316,13 +1308,21 @@ public:
                 Point2i pos = Point2i(x, y);
                 Spectrum pixel = image->getPixel(pos);
                 Spectrum localVar = squaredImage->getPixel(pos) - pixel * pixel / (Float)N;
-                std::cout << pixel.getLuminance() << " " << localVar.getLuminance() << std::endl;
                 image->setPixel(pos, localVar);
                 // The local variance is clamped such that fireflies don't cause crazily unstable estimates.
                 variance += std::min(localVar.getLuminance(), 10000.0f);
             }
 
         variance /= (Float)size.x * size.y * (N - 1);
+
+        if(m_reweight){
+            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
+            }
+        }
+        
         m_varianceBuffer->put(m_image);
 
         if (m_sampleCombination == ESampleCombination::EInverseVariance) {
