@@ -1220,17 +1220,6 @@ public:
         m_image->clear();
         m_squaredImage->clear();
 
-        if(m_reweight){
-            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                if((*m_samplePaths)[i].sample_pos.x >= m_image->getOffset().x && (*m_samplePaths)[i].sample_pos.x < m_image->getOffset().x + m_image->getSize().x &&
-                    (*m_samplePaths)[i].sample_pos.y >= m_image->getOffset().y && (*m_samplePaths)[i].sample_pos.y < m_image->getOffset().y + m_image->getSize().y){
-                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                    m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                    m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
-                }
-            }
-        }
-
         size_t totalBlocks = 0;
 
         Log(EInfo, "Rendering %d render passes.", numPasses);
@@ -1298,6 +1287,17 @@ public:
         }
 
         m_renderProcesses.clear();
+
+        if(m_reweight){
+            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                if((*m_samplePaths)[i].sample_pos.x >= m_image->getOffset().x && (*m_samplePaths)[i].sample_pos.x < m_image->getOffset().x + m_image->getSize().x &&
+                    (*m_samplePaths)[i].sample_pos.y >= m_image->getOffset().y && (*m_samplePaths)[i].sample_pos.y < m_image->getOffset().y + m_image->getSize().y){
+                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                    m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                    m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
+                }
+            }
+        }
 
         variance = 0;
         Bitmap* squaredImage = m_squaredImage->getBitmap();
