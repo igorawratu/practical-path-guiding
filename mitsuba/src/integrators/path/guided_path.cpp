@@ -2224,6 +2224,7 @@ public:
                     bool isDelta = bRec.sampledType & BSDF::EDelta;
                     const Float emitterPdf = (m_doNee && !isDelta && !value.isZero()) ? scene->pdfEmitterDirect(dRec) : 0;
 
+                    std::cout << emitterPdf << std::endl;
                     const Float weight = miWeight(woPdf, emitterPdf);
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
