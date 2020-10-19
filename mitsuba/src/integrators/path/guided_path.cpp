@@ -1719,8 +1719,8 @@ public:
                 pathRecord.sample_pos = samplePos;
                 pathRecord.spec = spec;
                 spec *= Li(sensorRay, rRec, pathRecord);
-                //block->put(samplePos, spec, rRec.alpha);
-                //squaredBlock->put(samplePos, spec * spec, rRec.alpha);
+                block->put(samplePos, spec, rRec.alpha);
+                squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
                 if(m_reweight)
