@@ -1222,11 +1222,14 @@ public:
 
         if(m_reweight){
             for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                std::cout << (*m_samplePaths)[i].sample_pos.x << " " << (*m_samplePaths)[i].sample_pos.y << " " 
-                    << m_image->getBitmap()->getSize().x << " " << m_image->getBitmap()->getSize().y << std::endl;
-                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                m_squaredImage->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
+                if((*m_samplePaths)[i].sample_pos.x >= m_image->getOffset().x && (*m_samplePaths)[i].sample_pos.x < m_image->getOffset().x + m_image->getSize().x &&
+                    (*m_samplePaths)[i].sample_pos.y >= m_image->getOffset().y && (*m_samplePaths)[i].sample_pos.y < m_image->getOffset().y + m_image->getSize().y){
+                    std::cout << (*m_samplePaths)[i].sample_pos.x << " " << (*m_samplePaths)[i].sample_pos.y << " " << 
+                        m_image->getOffset().x << " " << m_image->getOffset().y << " " << 
+                        m_image->getOffset().x + m_image->getSize().x << " " << m_image->getOffset().x + m_image->getSize().y << std::endl;
+                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                    m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                }
             }
         }
 
