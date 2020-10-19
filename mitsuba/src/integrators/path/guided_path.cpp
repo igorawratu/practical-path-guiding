@@ -1288,17 +1288,6 @@ public:
 
         m_renderProcesses.clear();
 
-        if(m_reweight){
-            ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
-
-            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-            }
-
-            film->put(previousSamples);
-        }
-
         variance = 0;
         Bitmap* squaredImage = m_squaredImage->getBitmap();
         Bitmap* image = m_image->getBitmap();
@@ -1447,6 +1436,18 @@ public:
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
             film->clear();
+            
+            if(m_reweight){
+                ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
+
+                for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                    previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                }
+
+                film->put(previousSamples);
+            }
+
             resetSDTree();
 
             if(m_reweight){
