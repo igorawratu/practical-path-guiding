@@ -1288,16 +1288,6 @@ public:
 
         m_renderProcesses.clear();
 
-        if(m_reweight){
-            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                if((*m_samplePaths)[i].sample_pos.x >= m_image->getOffset().x && (*m_samplePaths)[i].sample_pos.x < m_image->getOffset().x + m_image->getSize().x &&
-                    (*m_samplePaths)[i].sample_pos.y >= m_image->getOffset().y && (*m_samplePaths)[i].sample_pos.y < m_image->getOffset().y + m_image->getSize().y){
-                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                    m_image->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                }
-            }
-        }
-
         variance = 0;
         Bitmap* squaredImage = m_squaredImage->getBitmap();
         Bitmap* image = m_image->getBitmap();
@@ -1406,7 +1396,7 @@ public:
 
         ref<Scheduler> sched = Scheduler::getInstance();
 
-        size_t sampleCount = (size_t)m_budget;
+        sampleCount = (size_t)m_budget;
 
         ref<Sensor> sensor = static_cast<Sensor *>(sched->getResource(sensorResID));
         ref<Film> film = sensor->getFilm();
@@ -1671,7 +1661,7 @@ public:
         const std::vector< TPoint2<uint8_t> > &points) const {
 
         Float diffScaleFactor = 1.0f /
-            std::sqrt((Float)m_sppPerPass);
+            std::sqrt((Float)sampleCount);
 
         bool needsApertureSample = sensor->needsApertureSample();
         bool needsTimeSample = sensor->needsTimeSample();
@@ -1686,6 +1676,17 @@ public:
         ref<ImageBlock> squaredBlock = new ImageBlock(block->getPixelFormat(), block->getSize(), block->getReconstructionFilter());
         squaredBlock->setOffset(block->getOffset());
         squaredBlock->clear();
+
+        if(m_reweight){
+            for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                if((*m_samplePaths)[i].sample_pos.x >= block->getOffset().x && (*m_samplePaths)[i].sample_pos.x < block->getOffset().x + block->getSize().x &&
+                    (*m_samplePaths)[i].sample_pos.y >= block->getOffset().y && (*m_samplePaths)[i].sample_pos.y < block->getOffset().y + block->getSize().y){
+                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                    block->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                    squaredBlock->put((*m_samplePaths)[i].sample_pos, s * s, (*m_samplePaths)[i].alpha);
+                }
+            }
+        }
 
         uint32_t queryType = RadianceQueryRecord::ESensorRay;
 
@@ -2565,6 +2566,7 @@ private:
     std::unique_ptr<std::mutex> m_samplePathMutex;
 
     bool m_reweight;
+    size_t sampleCount;
 
 public:
     MTS_DECLARE_CLASS()
