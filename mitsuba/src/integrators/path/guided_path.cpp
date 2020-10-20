@@ -1364,12 +1364,6 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-                if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
-                    std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
-                        (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << " " << bsf << " " <<
-                        (*m_samplePaths)[i].path[j].throughput.getLuminance() << std::endl;
-                }
-
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
@@ -1448,8 +1442,11 @@ public:
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
             film->clear();
+            resetSDTree();
 
             if(m_reweight && m_isFinalIter){
+                reweightCurrentPaths(sampler);
+
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                 previousSamples->clear();
 
@@ -1459,12 +1456,6 @@ public:
                 }
 
                 film->put(previousSamples);
-            }
-
-            resetSDTree();
-
-            if(m_reweight && m_iter > 1){
-                reweightCurrentPaths(sampler);
             }
 
             Float variance;
