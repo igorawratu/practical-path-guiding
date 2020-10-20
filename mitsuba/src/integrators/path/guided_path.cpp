@@ -1454,7 +1454,7 @@ public:
 
             resetSDTree();
 
-            if(m_reweight && m_isFinalIter){
+            if(m_reweight && m_iter > 1){
                 reweightCurrentPaths(sampler);
             }
 
