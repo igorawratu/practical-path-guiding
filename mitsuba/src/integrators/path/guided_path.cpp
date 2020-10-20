@@ -1367,7 +1367,7 @@ public:
                 if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
                     std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
                         (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << " " << bsf << " " <<
-                        (*m_samplePaths)[i].path[j].throughput.r << " " << (*m_samplePaths)[i].path[j].throughput.g << " " << (*m_samplePaths)[i].path[j].throughput.b << std::endl;
+                        (*m_samplePaths)[i].path[j].throughput.getLuminance() << std::endl;
                 }
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
