@@ -1440,7 +1440,7 @@ public:
 
             film->clear();
 
-            if(m_reweight && m_isFinalIter){
+            if(m_reweight && m_iter > 1){
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                 previousSamples->clear();
 
