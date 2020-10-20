@@ -1357,7 +1357,7 @@ public:
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
-                Float& bsf = dTree->bsdfSamplingFraction();
+                Float bsf = dTree->bsdfSamplingFraction();
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
