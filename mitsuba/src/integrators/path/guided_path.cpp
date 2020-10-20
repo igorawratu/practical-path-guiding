@@ -1440,7 +1440,7 @@ public:
 
             film->clear();
 
-            if(m_reweight){
+            if(m_reweight && m_isFinalIter){
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                 previousSamples->clear();
 
@@ -1454,7 +1454,7 @@ public:
 
             resetSDTree();
 
-            if(m_reweight){
+            if(m_reweight && m_isFinalIter){
                 reweightCurrentPaths(sampler);
             }
 
