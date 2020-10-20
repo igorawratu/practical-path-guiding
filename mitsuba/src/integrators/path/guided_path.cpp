@@ -1353,6 +1353,9 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize);
 
+                float oldwo = (*m_samplePaths)[i].path[j].woPdf;
+                float olddtpdf = (*m_samplePaths)[i].path[j].dTreePdf;
+
                 (*m_samplePaths)[i].path[j].dTree = dTree;
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
@@ -1360,6 +1363,10 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
+
+                if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 2.f){
+                    std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << (*m_samplePaths)[i].path[j].dTreePdf << std::endl;
+                }
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -1440,7 +1447,7 @@ public:
 
             film->clear();
 
-            if(m_reweight && m_iter > 1){
+            if(m_reweight && m_isFinalIter){
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                 previousSamples->clear();
 
