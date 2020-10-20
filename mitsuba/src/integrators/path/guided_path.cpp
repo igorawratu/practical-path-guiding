@@ -1365,7 +1365,8 @@ public:
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
                 if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 2.f){
-                    std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << (*m_samplePaths)[i].path[j].dTreePdf << std::endl;
+                    std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
+                        (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << " " << bsf << std::endl;
                 }
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
