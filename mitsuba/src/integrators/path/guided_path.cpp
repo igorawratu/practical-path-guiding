@@ -174,8 +174,8 @@ public:
         m_children = {};
         for (size_t i = 0; i < m_sum.size(); ++i) {
             m_sum[i].store(0, std::memory_order_relaxed);
+            m_visited[i].store(0, std::memory_order_relaxed);
         }
-        visited = 0;
     }
 
     void setSum(int index, Float val) {
@@ -183,7 +183,7 @@ public:
     }
 
     void setVisited(int index, int val) {
-        visited[index].store(val, std::memory_order_relaxed);
+        m_visited[index].store(val, std::memory_order_relaxed);
     }
 
     Float sum(int index) const {
@@ -191,7 +191,7 @@ public:
     }
 
     int visited(int index) const {
-        return visited[index].load(std::memory_order_relaxed);
+        return m_visited[index].load(std::memory_order_relaxed);
     }
 
     Float sumNormalized(int index) const {
@@ -403,7 +403,7 @@ public:
 private:
     std::array<std::atomic<Float>, 4> m_sum;
     std::array<uint16_t, 4> m_children;
-    std::array<std::atomic<int>, 4> visited;
+    std::array<std::atomic<int>, 4> m_visited;
 };
 
 
