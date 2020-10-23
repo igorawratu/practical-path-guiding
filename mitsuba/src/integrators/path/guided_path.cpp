@@ -174,7 +174,6 @@ public:
         m_children = {};
         for (size_t i = 0; i < m_sum.size(); ++i) {
             m_sum[i].store(0, std::memory_order_relaxed);
-            m_visited[i].store(0, std::memory_order_relaxed);
         }
     }
 
@@ -182,20 +181,8 @@ public:
         m_sum[index].store(val, std::memory_order_relaxed);
     }
 
-    void setVisited(int index, int val) {
-        m_visited[index].store(val, std::memory_order_relaxed);
-    }
-
     Float sum(int index) const {
         return m_sum[index].load(std::memory_order_relaxed);
-    }
-
-    int visited(int index) const {
-        return m_visited[index].load(std::memory_order_relaxed);
-    }
-
-    Float sumNormalized(int index) const {
-        return visited(index) == 0 ? 0.f : sum(index) / visited(index);
     }
 
     void copyFrom(const QuadTreeNode& arg) {
@@ -228,12 +215,6 @@ public:
         }
     }
 
-    void setVisited(int val) {
-        for (int i = 0; i < 4; ++i) {
-            setVisited(i, val);
-        }
-    }
-
     int childIndex(Point2& p) const {
         int res = 0;
         for (int i = 0; i < Point2::dim; ++i) {
@@ -255,7 +236,7 @@ public:
         SAssert(p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1);
         const int index = childIndex(p);
         if (isLeaf(index)) {
-            return 4 * sumNormalized(index);
+            return 4 * sum(index);
         } else {
             return 4 * nodes[child(index)].eval(p, nodes);
         }
@@ -268,8 +249,7 @@ public:
             return 0;
         }
 
-        const Float factor = 4 * sumNormalized(index) / (sumNormalized(0) + sumNormalized(1) + sumNormalized(2) + sumNormalized(3));
-        std::cout << factor << " " << index << " " << sumNormalized(index) << " " << sum(index) << std::endl;
+        const Float factor = 4 * sum(index) / (sum(0) + sum(1) + sum(2) + sum(3));
         if (isLeaf(index)) {
             return factor;
         } else {
@@ -290,10 +270,10 @@ public:
     Point2 sample(Sampler* sampler, const std::vector<QuadTreeNode>& nodes) const {
         int index = 0;
 
-        Float topLeft = sumNormalized(0);
-        Float topRight = sumNormalized(1);
-        Float partial = topLeft + sumNormalized(2);
-        Float total = partial + topRight + sumNormalized(3);
+        Float topLeft = sum(0);
+        Float topRight = sum(1);
+        Float partial = topLeft + sum(2);
+        Float total = partial + topRight + sum(3);
 
         // Should only happen when there are numerical instabilities.
         if (!(total > 0.0f)) {
@@ -342,7 +322,6 @@ public:
         } else {
             nodes[child(index)].record(p, irradiance, nodes);
         }
-        m_visited[index]++;
     }
 
     Float computeOverlappingArea(const Point2& min1, const Point2& max1, const Point2& min2, const Point2& max2) {
@@ -367,8 +346,6 @@ public:
                 } else {
                     nodes[child(i)].record(origin, size, childOrigin, childSize, value, nodes);
                 }
-
-                m_visited[i]++;
             }
         }
     }
@@ -404,7 +381,6 @@ public:
 private:
     std::array<std::atomic<Float>, 4> m_sum;
     std::array<uint16_t, 4> m_children;
-    std::array<std::atomic<int>, 4> m_visited;
 };
 
 
@@ -516,8 +492,10 @@ public:
 
             m_maxDepth = std::max(m_maxDepth, sNode.depth);
 
+            const QuadTreeNode& otherNode = sNode.otherDTree->m_nodes[sNode.otherNodeIndex];
+
             for (int i = 0; i < 4; ++i) {
-                const QuadTreeNode& otherNode = sNode.otherDTree->m_nodes[sNode.otherNodeIndex];
+               
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
@@ -532,7 +510,6 @@ public:
                     m_nodes[sNode.nodeIndex].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
                     m_nodes.back().setSum(otherNode.sum(i) / 4);
-                    m_nodes.back().setVisited(otherNode.visited(i));
 
                     if (m_nodes.size() > std::numeric_limits<uint16_t>::max()) {
                         SLog(EWarn, "DTreeWrapper hit maximum children count.");
