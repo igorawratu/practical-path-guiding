@@ -1399,7 +1399,7 @@ public:
                 if(!terminated){
                     Float successProb = oldwo / (*m_samplePaths)[i].path[j].woPdf;
                     if(sampler->next1D() > successProb){
-                        termination_iteration = j + 1;
+                        termination_iteration = j;
                         terminated = true;
 
                         std::cout << termination_iteration << " " << (*m_samplePaths)[i].path.size() << std::endl;
