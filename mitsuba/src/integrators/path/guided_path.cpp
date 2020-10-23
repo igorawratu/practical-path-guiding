@@ -341,7 +341,7 @@ public:
         } else {
             nodes[child(index)].record(p, irradiance, nodes);
         }
-        visited[index]++;
+        m_visited[index]++;
     }
 
     Float computeOverlappingArea(const Point2& min1, const Point2& max1, const Point2& min2, const Point2& max2) {
@@ -367,7 +367,7 @@ public:
                     nodes[child(i)].record(origin, size, childOrigin, childSize, value, nodes);
                 }
 
-                visited[index]++;
+                m_visited[index]++;
             }
         }
     }
