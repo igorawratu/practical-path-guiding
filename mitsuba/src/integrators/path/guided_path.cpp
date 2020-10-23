@@ -508,7 +508,7 @@ public:
 
                     m_nodes[sNode.nodeIndex].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
-                    //m_nodes.back().setSum(otherNode.sum(i) / 4);
+                    m_nodes.back().setSum(otherNode.sum(i) / 4);
 
                     if (m_nodes.size() > std::numeric_limits<uint16_t>::max()) {
                         SLog(EWarn, "DTreeWrapper hit maximum children count.");
@@ -1376,8 +1376,8 @@ public:
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
                 Float bsf = dTree->bsdfSamplingFraction();
-                (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
-                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
+                /*(*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
+                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;*/
 
                 /*if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
                     std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
@@ -1423,10 +1423,10 @@ public:
                 (*m_samplePaths)[i].Li += L;
             }
 
-            for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
-                (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
+            // for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
+            //     (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+            //         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            // }
         }
     }
 
