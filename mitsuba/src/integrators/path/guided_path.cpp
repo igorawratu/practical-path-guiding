@@ -1396,6 +1396,9 @@ public:
                 throughput /= successProb;*/
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
 
+                Float ratio = (*m_samplePaths)[i].path[j].woPdf / oldwo;
+                std::cout << ratio << std::endl;
+
                 /*if(!terminated){
                     Float successProb = oldwo / (*m_samplePaths)[i].path[j].woPdf;
                     if(sampler->next1D() > successProb){
