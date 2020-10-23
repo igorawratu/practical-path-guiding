@@ -1376,11 +1376,11 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-                if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
+                /*if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
                     std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
                         (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << " " << bsf << " " <<
                         (*m_samplePaths)[i].path[j].throughput.getLuminance() << " " << (*m_samplePaths)[i].radiance_record.size() << std::endl;
-                }
+                }*/
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -1409,10 +1409,10 @@ public:
                 (*m_samplePaths)[i].Li += L;
             }
 
-            for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
-                (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
+            // for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
+            //     (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+            //         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            // }
         }
     }
 
@@ -1755,7 +1755,7 @@ public:
                 //squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
-                if(m_reweight && pathRecord.radiance_record.size() > 0)
+                if(m_reweight/* && pathRecord.radiance_record.size() > 0*/)
                 {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
