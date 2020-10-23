@@ -1467,31 +1467,29 @@ public:
             if(m_reweight){
                 reweightCurrentPaths(sampler);
 
-                if(m_isFinalIter){
-                    ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+                ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
 
-                    for(int curr_iter = 0; curr_iter < m_iter; ++curr_iter){
-                        currentIterationFilm->clear();
+                for(int curr_iter = 0; curr_iter < m_iter; ++curr_iter){
+                    currentIterationFilm->clear();
 
-                        ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
-                        previousSamples->clear();
+                    ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
+                    previousSamples->clear();
 
-                        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                            if((*m_samplePaths)[i].iter == curr_iter){
-                                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                                previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                            }
+                    for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                        if((*m_samplePaths)[i].iter == curr_iter){
+                            Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                            previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
                         }
-
-                        currentIterationFilm->put(previousSamples);
-
-                        fs::path scene_path = scene->getDestinationFile();
-                        currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("iteration_" + std::to_string(curr_iter)), 0);
-
-                        currentIterationFilm->develop(scene, 0.f);
                     }
+
+                    currentIterationFilm->put(previousSamples);
+
+                    fs::path scene_path = scene->getDestinationFile();
+                    currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("iteration_" + 
+                        std::to_string(m_iter) + "_" + std::to_string(curr_iter)), 0);
+
+                    currentIterationFilm->develop(scene, 0.f);
                 }
-                
             }
 
             Float variance;
