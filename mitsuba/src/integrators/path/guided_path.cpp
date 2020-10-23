@@ -1482,7 +1482,7 @@ public:
                 currentIterationFilm->put(previousSamples);
 
                 fs::path scene_path = scene->getDestinationFile();
-                currentIterationFilm->setDestinationFile(scene_path.parent_path() / "iteration_" + std::to_string(m_iter), 0);
+                currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("iteration_" + std::to_string(m_iter)), 0);
 
                 currentIterationFilm->develop(scene, 0.f);
             }
