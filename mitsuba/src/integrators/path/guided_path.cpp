@@ -269,7 +269,7 @@ public:
         }
 
         const Float factor = 4 * sumNormalized(index) / (sumNormalized(0) + sumNormalized(1) + sumNormalized(2) + sumNormalized(3));
-        std::cout << factor << " " << index << " " << sumNormalized(index) << std::endl;
+        std::cout << factor << " " << index << " " << sumNormalized(index) << " " << sum(index) << std::endl;
         if (isLeaf(index)) {
             return factor;
         } else {
