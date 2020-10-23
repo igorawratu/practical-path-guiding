@@ -1401,11 +1401,11 @@ public:
                     if(sampler->next1D() > successProb){
                         termination_iteration = j + 1;
                         terminated = true;
+
+                        std::cout << termination_iteration << " " << (*m_samplePaths)[i].path.size() << std::endl;
                     }
                 }
             }
-
-            std::cout << termination_iteration << " " << (*m_samplePaths)[i].path.size() << std::endl;
 
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
