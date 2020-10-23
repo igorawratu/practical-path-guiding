@@ -1380,7 +1380,7 @@ public:
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
 
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf > oldwo ? oldwo : newWoPdf;
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf > oldwo ? newWoPdf : oldwo;
                 /*if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
                     std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
                         (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << " " << bsf << " " <<
