@@ -33,6 +33,18 @@
 
 MTS_NAMESPACE_BEGIN
 
+ref<Film> createFilm(std::uint32_t width, std::uint32_t height, bool hdr){
+    Properties props = hdr ? Properties("hdrfilm") : Properties("ldrfilm");
+    props.setInteger("width", width);
+    props.setInteger("height", height);
+    props.setFloat("gamma", 2.2);
+    props.setBoolean("banner", false);
+
+    ref<Film> film = static_cast<Film*> (PluginManager::getInstance()->createObject(MTS_CLASS(Film), props));
+
+    return film;
+}
+
 class BlobWriter {
 public:
     BlobWriter(const std::string& filename)
@@ -1404,6 +1416,8 @@ public:
         }
     }
 
+
+
     bool renderSPP(Scene *scene, RenderQueue *queue, const RenderJob *job,
         int sceneResID, int sensorResID, int samplerResID, int integratorResID) {
 
@@ -1453,15 +1467,24 @@ public:
             if(m_reweight){
                 reweightCurrentPaths(sampler);
 
+                ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                 previousSamples->clear();
 
                 for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                    Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                    previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                    if((*m_samplePaths)[i].iter == m_iter){
+                        Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                        previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                    }
                 }
 
-                film->put(previousSamples);
+                currentIterationFilm->put(previousSamples);
+
+                fs::path scene_path = scene->getDestinationFile();
+                currentIterationFilm->setDestinationFile(scene_path.parent_path() / "iteration_" + std::to_string(m_iter), 0);
+
+                currentIterationFilm->develop(scene, 0.f);
             }
 
             Float variance;
@@ -1887,6 +1910,7 @@ public:
         Spectrum spec;
         Spectrum Li;
         Float alpha;
+        int iter;
     };
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
@@ -2315,6 +2339,7 @@ public:
 
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
+        pathRecord.iter = m_iter;
 
         return Li;
     }
