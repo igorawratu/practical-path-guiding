@@ -1401,8 +1401,6 @@ public:
                     if(sampler->next1D() > successProb){
                         termination_iteration = j;
                         terminated = true;
-
-                        std::cout << termination_iteration << " " << (*m_samplePaths)[i].path.size() << std::endl;
                     }
                 }
             }
