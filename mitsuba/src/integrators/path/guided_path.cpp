@@ -367,7 +367,7 @@ public:
                     nodes[child(i)].record(origin, size, childOrigin, childSize, value, nodes);
                 }
 
-                m_visited[index]++;
+                m_visited[i]++;
             }
         }
     }
