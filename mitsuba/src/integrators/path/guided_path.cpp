@@ -1360,6 +1360,8 @@ public:
             Spectrum throughput(1.0f);
 
             (*m_samplePaths)[i].Li = Spectrum(0.f);
+            bool terminated = false;
+            std::uint32_t termination_iteration = (*m_samplePaths)[i].path.size();
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -1385,6 +1387,15 @@ public:
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
+
+                if(!terminated){
+                    Float successProb = oldwo / (*m_samplePaths)[i].path[j].woPdf;
+                    if(sampler->next1D() > successProb){
+                        termination_iteration = j + 1;
+                        terminated = true;
+                    }
+                }
+                
                 
                 /*Float successProb = 1.f;
                 if(!m_isBuilt){
@@ -1398,6 +1409,9 @@ public:
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
+                if(pos >= termination_iteration){
+                    continue;
+                }
 
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
                 if(pos >= 0){
