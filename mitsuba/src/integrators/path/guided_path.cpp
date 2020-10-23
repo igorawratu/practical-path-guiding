@@ -1473,7 +1473,7 @@ public:
                 previousSamples->clear();
 
                 for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                    if((*m_samplePaths)[i].iter == m_iter){
+                    if((*m_samplePaths)[i].iter == m_iter - 1){
                         Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
                         previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
                     }
