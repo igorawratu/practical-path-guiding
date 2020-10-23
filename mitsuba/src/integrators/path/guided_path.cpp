@@ -1396,13 +1396,13 @@ public:
                 throughput /= successProb;*/
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
 
-                if(!terminated){
+                /*if(!terminated){
                     Float successProb = oldwo / (*m_samplePaths)[i].path[j].woPdf;
                     if(sampler->next1D() > successProb){
                         termination_iteration = j;
                         terminated = true;
                     }
-                }
+                }*/
             }
 
             //this assumes no NEE, will need to change to account for NEE later
