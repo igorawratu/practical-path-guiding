@@ -495,7 +495,6 @@ public:
             const QuadTreeNode& otherNode = sNode.otherDTree->m_nodes[sNode.otherNodeIndex];
 
             for (int i = 0; i < 4; ++i) {
-               
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
@@ -509,7 +508,7 @@ public:
 
                     m_nodes[sNode.nodeIndex].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
-                    m_nodes.back().setSum(otherNode.sum(i) / 4);
+                    //m_nodes.back().setSum(otherNode.sum(i) / 4);
 
                     if (m_nodes.size() > std::numeric_limits<uint16_t>::max()) {
                         SLog(EWarn, "DTreeWrapper hit maximum children count.");
@@ -1771,8 +1770,8 @@ public:
                 pathRecord.sample_pos = samplePos;
                 pathRecord.spec = spec;
                 spec *= Li(sensorRay, rRec, pathRecord);
-                //block->put(samplePos, spec, rRec.alpha);
-                //squaredBlock->put(samplePos, spec * spec, rRec.alpha);
+                block->put(samplePos, spec, rRec.alpha);
+                squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
                 if(m_reweight/* && pathRecord.radiance_record.size() > 0*/)
