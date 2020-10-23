@@ -1468,6 +1468,7 @@ public:
                 reweightCurrentPaths(sampler);
 
                 ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+                currentIterationFilm->clear();
 
                 ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                 previousSamples->clear();
