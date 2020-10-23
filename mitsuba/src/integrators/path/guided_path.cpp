@@ -1388,15 +1388,6 @@ public:
                 throughput *= bsdfWeight;
                 (*m_samplePaths)[i].path[j].throughput = throughput;
 
-                if(!terminated){
-                    Float successProb = oldwo / (*m_samplePaths)[i].path[j].woPdf;
-                    if(sampler->next1D() > successProb){
-                        termination_iteration = j + 1;
-                        terminated = true;
-                    }
-                }
-                
-                
                 /*Float successProb = 1.f;
                 if(!m_isBuilt){
                     successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
@@ -1404,7 +1395,17 @@ public:
                 successProb = std::max(0.1f, std::min(successProb, 0.99f));
                 throughput /= successProb;*/
                 (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
+
+                if(!terminated){
+                    Float successProb = oldwo / (*m_samplePaths)[i].path[j].woPdf;
+                    if(sampler->next1D() > successProb){
+                        termination_iteration = j + 1;
+                        terminated = true;
+                    }
+                }
             }
+
+            std::cout << termination_iteration << " " << (*m_samplePaths)[i].path.size() << std::endl;
 
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
