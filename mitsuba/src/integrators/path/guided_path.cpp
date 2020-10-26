@@ -1376,11 +1376,9 @@ public:
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
                 Float bsf = dTree->bsdfSamplingFraction();
-                Float newWoPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
+                (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf > oldwo ? newWoPdf : oldwo;
                 /*if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
                     std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
                         (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << " " << bsf << " " <<
@@ -1389,7 +1387,7 @@ public:
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-                (*m_samplePaths)[i].path[j].throughput = newWoPdf > oldwo ? throughput : Spectrum(0.f);
+                (*m_samplePaths)[i].path[j].throughput = throughput;
 
                 /*Float successProb = 1.f;
                 if(!m_isBuilt){
@@ -1425,10 +1423,10 @@ public:
                 (*m_samplePaths)[i].Li += L;
             }
 
-            // for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
-            //     (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-            //         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            // }
+            for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
+                (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
         }
     }
 
