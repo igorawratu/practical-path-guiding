@@ -1124,7 +1124,7 @@ public:
     void resetSDTree() {
         Log(EInfo, "Resetting distributions for sampling.");
 
-        m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
+        //m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
         m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold); });
     }
 
@@ -1423,10 +1423,10 @@ public:
                 (*m_samplePaths)[i].Li += L;
             }
 
-            for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
-                (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
+            // for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
+            //     (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+            //         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            // }
         }
     }
 
