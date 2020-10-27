@@ -756,6 +756,7 @@ struct STreeNode {
         children = {};
         isLeaf = true;
         axis = 0;
+        level = 0;
     }
 
     int childIndex(Point& p) const {
@@ -772,9 +773,10 @@ struct STreeNode {
         return children[childIndex(p)];
     }
 
-    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes) {
+    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes, int& spatialLevel) {
         SAssert(p[axis] >= 0 && p[axis] <= 1);
         if (isLeaf) {
+            spatialLevel = level;
             return &dTree;
         } else {
             size[axis] /= 2;
@@ -856,6 +858,7 @@ struct STreeNode {
     DTreeWrapper dTree;
     int axis;
     std::array<uint32_t, 2> children;
+    int level;
 };
 
 
@@ -902,6 +905,7 @@ public:
             cur.children[i] = idx;
             nodes[idx].axis = (cur.axis + 1) % 3;
             nodes[idx].dTree = cur.dTree;
+            nodes[idx].level = cur.level + 1;
             nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding() / 2);
         }
         cur.isLeaf = false;
@@ -1366,7 +1370,8 @@ public:
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize);
+                int spatialLevel;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize, spatialLevel);
 
                 float oldwo = (*m_samplePaths)[i].path[j].woPdf;
                 float olddtpdf = (*m_samplePaths)[i].path[j].dTreePdf;
@@ -1376,7 +1381,7 @@ public:
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
                 Float bsf = dTree->bsdfSamplingFraction();
-                Float weightRatio = (*m_samplePaths)[i].path[j].sTreeSWeight / dTree->statisticalWeight();
+                Float weightRatio = Float(1 << ((*m_samplePaths)[i].path[j].level - spatialLevel));
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf * weightRatio;
 
@@ -1872,7 +1877,7 @@ public:
         Point p;
         Vector wo;
         Float eta;
-        Float sTreeSWeight;
+        int level;
 
         void record(const Spectrum& r) {
             radiance += r;
@@ -2118,12 +2123,13 @@ public:
 
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = nullptr;
+                int spatialLevel = 0;
 
                 // We only guide smooth BRDFs for now. Analytic product sampling
                 // would be conceivable for discrete decisions such as refraction vs
                 // reflection.
                 if (bsdf->getType() & BSDF::ESmooth) {
-                    dTree = m_sdTree->dTreeWrapper(its.p, dTreeVoxelSize);
+                    dTree = m_sdTree->dTreeWrapper(its.p, dTreeVoxelSize, spatialLevel);
                 }
 
                 Float bsdfSamplingFraction = m_bsdfSamplingFraction;
@@ -2196,7 +2202,7 @@ public:
                                         its.p,
                                         bRec.its.toWorld(bRec.wo),
                                         bRec.eta,
-                                        dTree->statisticalWeight()
+                                        spatialLevel
                                     };
 
                                     pathRecord.path.push_back(v);
@@ -2255,7 +2261,7 @@ public:
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
                                 eta,
-                                dTree->statisticalWeight()
+                                spatialLevel
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2304,7 +2310,7 @@ public:
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
                                 eta,
-                                dTree->statisticalWeight()
+                                spatialLevel
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
