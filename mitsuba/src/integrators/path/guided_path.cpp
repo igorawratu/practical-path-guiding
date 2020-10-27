@@ -419,7 +419,7 @@ public:
                     Point2 origin = p;
                     origin.x -= size / 2;
                     origin.y -= size / 2;
-                    m_nodes[0].record(origin, size, Point2(0.0f), 1.0f, irradiance/* * statisticalWeight *// (size * size), m_nodes);
+                    m_nodes[0].record(origin, size, Point2(0.0f), 1.0f, irradiance * statisticalWeight / (size * size), m_nodes);
                 }
             }
         }
