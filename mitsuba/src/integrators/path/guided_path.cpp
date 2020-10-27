@@ -419,7 +419,7 @@ public:
                     Point2 origin = p;
                     origin.x -= size / 2;
                     origin.y -= size / 2;
-                    m_nodes[0].record(origin, size, Point2(0.0f), 1.0f, irradiance * statisticalWeight / (size * size), m_nodes);
+                    m_nodes[0].record(origin, size, Point2(0.0f), 1.0f, irradiance/* * statisticalWeight *// (size * size), m_nodes);
                 }
             }
         }
@@ -902,7 +902,7 @@ public:
             cur.children[i] = idx;
             nodes[idx].axis = (cur.axis + 1) % 3;
             nodes[idx].dTree = cur.dTree;
-            nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding()/* / 2*/);
+            nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding() / 2);
         }
         cur.isLeaf = false;
         cur.dTree = {}; // Reset to an empty dtree to save memory.
