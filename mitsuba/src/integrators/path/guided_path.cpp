@@ -772,10 +772,9 @@ struct STreeNode {
         return children[childIndex(p)];
     }
 
-    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes, int& spatialLevel) {
+    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes) {
         SAssert(p[axis] >= 0 && p[axis] <= 1);
         if (isLeaf) {
-            spatialLevel = level;
             return &dTree;
         } else {
             size[axis] /= 2;
@@ -857,7 +856,6 @@ struct STreeNode {
     DTreeWrapper dTree;
     int axis;
     std::array<uint32_t, 2> children;
-    int level;
 };
 
 
