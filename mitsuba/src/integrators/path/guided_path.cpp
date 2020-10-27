@@ -780,7 +780,7 @@ struct STreeNode {
             return &dTree;
         } else {
             size[axis] /= 2;
-            return nodes[nodeIndex(p)].dTreeWrapper(p, size, nodes);
+            return nodes[nodeIndex(p)].dTreeWrapper(p, size, nodes, spatialLevel);
         }
     }
 
@@ -912,19 +912,19 @@ public:
         cur.dTree = {}; // Reset to an empty dtree to save memory.
     }
 
-    DTreeWrapper* dTreeWrapper(Point p, Vector& size) {
+    DTreeWrapper* dTreeWrapper(Point p, Vector& size, int& spatialLevel) {
         size = m_aabb.getExtents();
         p = Point(p - m_aabb.min);
         p.x /= size.x;
         p.y /= size.y;
         p.z /= size.z;
 
-        return m_nodes[0].dTreeWrapper(p, size, m_nodes);
+        return m_nodes[0].dTreeWrapper(p, size, m_nodes, spatialLevel);
     }
 
-    DTreeWrapper* dTreeWrapper(Point p) {
+    DTreeWrapper* dTreeWrapper(Point p, int& spatialLevel) {
         Vector size;
-        return dTreeWrapper(p, size);
+        return dTreeWrapper(p, size, spatialLevel);
     }
 
     void forEachDTreeWrapperConst(std::function<void(const DTreeWrapper*)> func) const {
