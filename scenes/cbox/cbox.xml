@@ -23,9 +23,7 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
 		<boolean name="reweight" value="true"/>
-		<string name="directionalFilter" value="box"/>
-		<string name="spatialFilter" value="stochastic"/>
-		
+
 	</integrator>
 
 	<sensor type="perspective">

@@ -772,9 +772,10 @@ struct STreeNode {
         return children[childIndex(p)];
     }
 
-    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes) {
+    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes, int& spatialLevel) {
         SAssert(p[axis] >= 0 && p[axis] <= 1);
         if (isLeaf) {
+            spatialLevel = level;
             return &dTree;
         } else {
             size[axis] /= 2;
@@ -856,6 +857,7 @@ struct STreeNode {
     DTreeWrapper dTree;
     int axis;
     std::array<uint32_t, 2> children;
+    int level;
 };
 
 
@@ -1376,8 +1378,9 @@ public:
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
                 Float bsf = dTree->bsdfSamplingFraction();
+                Float weightRatio = (*m_samplePaths)[i].path[j].sTreeSWeight / dTree->statisticalWeight();
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
-                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
+                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf * weightRatio;
 
                 /*if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
                     std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
@@ -1871,6 +1874,7 @@ public:
         Point p;
         Vector wo;
         Float eta;
+        Float sTreeSWeight;
 
         void record(const Spectrum& r) {
             radiance += r;
@@ -2193,7 +2197,8 @@ public:
                                         false,
                                         its.p,
                                         bRec.its.toWorld(bRec.wo),
-                                        bRec.eta
+                                        bRec.eta,
+                                        dTree->statisticalWeight()
                                     };
 
                                     pathRecord.path.push_back(v);
@@ -2251,7 +2256,8 @@ public:
                                 true,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                eta
+                                eta,
+                                dTree->statisticalWeight()
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2299,7 +2305,8 @@ public:
                                 isDelta,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                eta
+                                eta,
+                                dTree->statisticalWeight()
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
