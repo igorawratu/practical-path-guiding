@@ -1911,7 +1911,8 @@ public:
                         offset.z *= sampler->next1D() - 0.5f;
 
                         Point origin = sdTree.aabb().clip(ray.o + offset);
-                        splatDTree = sdTree.dTreeWrapper(origin);
+                        int spatialLevel;
+                        splatDTree = sdTree.dTreeWrapper(origin, spatialLevel);
                         if (splatDTree) {
                             splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
                         }
