@@ -1381,7 +1381,8 @@ public:
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
 
                 Float bsf = dTree->bsdfSamplingFraction();
-                Float weightRatio = Float(1 << ((*m_samplePaths)[i].path[j].level - spatialLevel));
+                Float weightRatio = Float(1 << (spatialLevel - (*m_samplePaths)[i].path[j].level));
+
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf * weightRatio;
 
