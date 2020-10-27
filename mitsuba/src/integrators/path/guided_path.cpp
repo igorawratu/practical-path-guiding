@@ -1384,7 +1384,7 @@ public:
                 Float weightRatio = Float(1 << (spatialLevel - (*m_samplePaths)[i].path[j].level));
 
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
-                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf * weightRatio;
+                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf/* * weightRatio*/;
 
                 /*if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
                     std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
