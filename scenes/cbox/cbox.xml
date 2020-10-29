@@ -21,7 +21,7 @@
 
 		<!-- Parameters for our guided path tracer -->
 		<string name="budgetType" value="spp"/>
-		<float name="budget" value="127"/>
+		<float name="budget" value="1024"/>
 		<boolean name="reweight" value="true"/>
 
 	</integrator>
