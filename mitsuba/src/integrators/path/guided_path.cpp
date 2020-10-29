@@ -502,9 +502,9 @@ public:
                     if (!otherNode.isLeaf(i)) {
                         SAssert(sNode.otherDTree == &previousDTree);
                         nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
-                    } /*else {
+                    } else {
                         nodeIndices.push({m_nodes.size(), m_nodes.size(), this, sNode.depth + 1});
-                    }*/
+                    }
 
                     m_nodes[sNode.nodeIndex].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
