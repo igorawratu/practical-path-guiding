@@ -881,6 +881,12 @@ public:
         m_nodes.emplace_back();
     }
 
+    void subdivide(int levels){
+        for(int i = 0; i < levels; ++i){
+            subdivideAll();
+        }
+    }
+
     void subdivideAll() {
         int nNodes = (int)m_nodes.size();
         for (int i = 0; i < nNodes; ++i) {
@@ -998,7 +1004,6 @@ public:
             // Subdivide if needed and leaf
             if (m_nodes[sNode.index].isLeaf) {
                 if (shallSplit(m_nodes[sNode.index], sNode.depth, sTreeThreshold)) {
-                    std::cout << "subdividing" << std::endl;
                     subdivide((int)sNode.index, m_nodes);
                 }
             }
@@ -1656,6 +1661,7 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
+        m_sdTree->subdivide(8);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<PGPath>>(new std::vector<PGPath>());
         m_iter = 0;
