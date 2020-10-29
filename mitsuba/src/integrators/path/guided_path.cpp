@@ -1004,6 +1004,7 @@ public:
             // Subdivide if needed and leaf
             if (m_nodes[sNode.index].isLeaf) {
                 if (shallSplit(m_nodes[sNode.index], sNode.depth, sTreeThreshold)) {
+                    std::cout << "subdividing" << std::endl;
                     subdivide((int)sNode.index, m_nodes);
                 }
             }
