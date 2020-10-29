@@ -23,7 +23,7 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
 		<boolean name="reweight" value="true"/>
-		<integer name="sTreeThreshold" value="4000"/>
+		<integer name="sTreeThreshold" value="1000"/>
 
 	</integrator>
 

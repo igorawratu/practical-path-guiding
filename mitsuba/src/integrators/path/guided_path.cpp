@@ -1373,9 +1373,6 @@ public:
                 int spatialLevel;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize, spatialLevel);
 
-                float oldwo = (*m_samplePaths)[i].path[j].woPdf;
-                float olddtpdf = (*m_samplePaths)[i].path[j].dTreePdf;
-
                 (*m_samplePaths)[i].path[j].dTree = dTree;
                 (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
                 (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
