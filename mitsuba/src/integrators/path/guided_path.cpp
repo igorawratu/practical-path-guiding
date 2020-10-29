@@ -1396,7 +1396,7 @@ public:
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-                (*m_samplePaths)[i].path[j].throughput = throughput;
+                //(*m_samplePaths)[i].path[j].throughput = throughput;
 
                 /*Float successProb = 1.f;
                 if(!m_isBuilt){
