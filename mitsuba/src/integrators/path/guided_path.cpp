@@ -1395,9 +1395,9 @@ public:
                         throughput = Spectrum(0.f);
                     }
                 }
-                //else{
+                else{
                     (*m_samplePaths)[i].path[j].woPdf = newWo;    
-                //}
+                }
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
