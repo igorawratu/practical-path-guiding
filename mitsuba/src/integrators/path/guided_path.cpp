@@ -1386,18 +1386,19 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
-
-                (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
+                Float newWo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight;
-
-                if(oldWo > (*m_samplePaths)[i].path[j].woPdf){
+                if(oldWo > newWo){
                     Float successProb = (*m_samplePaths)[i].path[j].woPdf / oldWo;
                     if(sampler->next1D() > successProb){
                         throughput = Spectrum(0.f);
                     }
+                }
+                else{
+                    (*m_samplePaths)[i].path[j].woPdf = newWo;
+                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
+                    throughput *= bsdfWeight;
                 }
 
                 (*m_samplePaths)[i].path[j].throughput = throughput;
