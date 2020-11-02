@@ -1390,16 +1390,17 @@ public:
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
                 if(oldWo > newWo){
-                    Float successProb = (*m_samplePaths)[i].path[j].woPdf / oldWo;
-                    if(sampler->next1D() > successProb){
+                    Float successProb = newWo / oldWo;
+                    if(sampler->next1D() < successProb){
                         throughput = Spectrum(0.f);
                     }
                 }
                 else{
-                    (*m_samplePaths)[i].path[j].woPdf = newWo;
-                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                    throughput *= bsdfWeight;
+                    (*m_samplePaths)[i].path[j].woPdf = newWo;    
                 }
+
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
+                throughput *= bsdfWeight;
 
                 (*m_samplePaths)[i].path[j].throughput = throughput;
 
