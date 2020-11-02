@@ -1385,17 +1385,21 @@ public:
 
                 Float bsf = dTree->bsdfSamplingFraction();
 
+                Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
+
                 (*m_samplePaths)[i].path[j].woPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-                /*if(oldwo / (*m_samplePaths)[i].path[j].woPdf > 10.f){
-                    std::cout << oldwo << " " << olddtpdf << " " << (*m_samplePaths)[i].path[j].woPdf << " " << 
-                        (*m_samplePaths)[i].path[j].dTreePdf << " " << (*m_samplePaths)[i].path[j].bsdfPdf << " " << bsf << " " <<
-                        (*m_samplePaths)[i].path[j].throughput.getLuminance() << " " << (*m_samplePaths)[i].radiance_record.size() << std::endl;
-                }*/
-
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
+
+                if(oldWo > (*m_samplePaths)[i].path[j].woPdf){
+                    Float successProb = (*m_samplePaths)[i].path[j].woPdf / oldWo;
+                    if(sampler->next1D() > successProb){
+                        throughput = Spectrum(0.f);
+                    }
+                }
+
                 (*m_samplePaths)[i].path[j].throughput = throughput;
 
                 /*Float successProb = 1.f;
