@@ -1389,12 +1389,12 @@ public:
                 Float newWo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
-                if(oldWo > newWo){
+                /*if(oldWo > newWo){
                     Float successProb = newWo / oldWo;
                     if(sampler->next1D() < successProb){
                         throughput = Spectrum(0.f);
                     }
-                }
+                }*/
                 //else{
                     (*m_samplePaths)[i].path[j].woPdf = newWo;    
                 //}
