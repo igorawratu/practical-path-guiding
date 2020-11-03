@@ -23,7 +23,7 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="1024"/>
 		<boolean name="reweight" value="true"/>
-		<float name="dTreeThreshold" value="0.01"/>
+		<float name="dTreeThreshold" value="0.05"/>
 
 	</integrator>
 
