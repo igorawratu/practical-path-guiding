@@ -1385,7 +1385,7 @@ public:
 
                 Float bsf = dTree->bsdfSamplingFraction();
 
-                Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
+                Float oldWo = (*m_samplePaths)[i].path[j].origWoPdf;
                 Float newWo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
                     (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
 
@@ -1398,10 +1398,6 @@ public:
                 //else{
                     (*m_samplePaths)[i].path[j].woPdf = oldWo * oldWo / newWo;    
                 //}
-
-                if((*m_samplePaths)[i].path[j].woPdf == 0.f){
-                    std::cout << oldWo << " " << newWo << std::endl;
-                }
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -1884,6 +1880,7 @@ public:
         Vector wo;
         Float eta;
         int level;
+        Float origWoPdf;
 
         void record(const Spectrum& r) {
             radiance += r;
@@ -2209,7 +2206,8 @@ public:
                                         its.p,
                                         bRec.its.toWorld(bRec.wo),
                                         bRec.eta,
-                                        spatialLevel
+                                        spatialLevel,
+                                        dRec.pdf
                                     };
 
                                     pathRecord.path.push_back(v);
@@ -2268,7 +2266,8 @@ public:
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
                                 eta,
-                                spatialLevel
+                                spatialLevel,
+                                woPdf
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
@@ -2317,7 +2316,8 @@ public:
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
                                 eta,
-                                spatialLevel
+                                spatialLevel,
+                                woPdf
                             };
 
                             pathRecord.path.push_back(vertices[nVertices]);
