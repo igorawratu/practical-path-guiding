@@ -2382,6 +2382,11 @@ public:
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
 
+        if(pathRecord.radiance_record.size() == 0){
+            pathRecord.path.clear();
+            pathRecord.path.shrink_to_fit();
+        }
+
         return Li;
     }
 
