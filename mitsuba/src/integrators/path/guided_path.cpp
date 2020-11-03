@@ -1396,11 +1396,11 @@ public:
                     }
                 }
                 else{
+                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
+                    throughput *= bsdfWeight;
+
                     (*m_samplePaths)[i].path[j].woPdf = newWo;    
                 }
-
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight;
 
                 (*m_samplePaths)[i].path[j].throughput = throughput;
 
