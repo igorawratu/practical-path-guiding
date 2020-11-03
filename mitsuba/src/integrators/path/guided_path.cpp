@@ -2204,7 +2204,6 @@ public:
                                         false,
                                         its.p,
                                         bRec.its.toWorld(bRec.wo),
-                                        bRec.eta,
                                         spatialLevel,
                                         dRec.pdf
                                     };
@@ -2264,7 +2263,6 @@ public:
                                 true,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                eta,
                                 spatialLevel,
                                 woPdf
                             };
@@ -2314,7 +2312,6 @@ public:
                                 isDelta,
                                 its.p,
                                 bRec.its.toWorld(bRec.wo),
-                                eta,
                                 spatialLevel,
                                 woPdf
                             };
