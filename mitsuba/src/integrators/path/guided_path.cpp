@@ -1395,9 +1395,9 @@ public:
                         throughput = Spectrum(0.f);
                     }
                 }
-                else{
+                //else{
                     (*m_samplePaths)[i].path[j].woPdf = newWo;    
-                }
+                //}
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -1457,11 +1457,6 @@ public:
 
         m_progress = std::unique_ptr<ProgressReporter>(new ProgressReporter("Rendering", nPasses, job));
 
-        Properties props("independent");
-        ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
-        sampler->configure();
-        sampler->generate(Point2i(0));
-
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
@@ -1486,6 +1481,11 @@ public:
             resetSDTree();
 
             if(m_reweight){
+                Properties props("independent");
+                ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
+                sampler->configure();
+                sampler->generate(Point2i(0));
+
                 reweightCurrentPaths(sampler);
 
                 ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
