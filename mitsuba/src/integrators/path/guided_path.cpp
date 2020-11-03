@@ -1399,6 +1399,10 @@ public:
                     (*m_samplePaths)[i].path[j].woPdf = oldWo * oldWo / newWo;    
                 //}
 
+                if((*m_samplePaths)[i].path[j].woPdf == 0.f){
+                    std::cout << oldWo << " " << newWo << std::endl;
+                }
+
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
