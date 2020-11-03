@@ -1878,7 +1878,6 @@ public:
 
         Point p;
         Vector wo;
-        Float eta;
         int level;
         Float origWoPdf;
 
