@@ -776,7 +776,6 @@ struct STreeNode {
     DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes) {
         SAssert(p[axis] >= 0 && p[axis] <= 1);
         if (isLeaf) {
-            spatialLevel = level;
             return &dTree;
         } else {
             size[axis] /= 2;
@@ -928,7 +927,7 @@ public:
         return m_nodes[0].dTreeWrapper(p, size, m_nodes);
     }
 
-    DTreeWrapper* dTreeWrapper(Point pl) {
+    DTreeWrapper* dTreeWrapper(Point p) {
         Vector size;
         return dTreeWrapper(p, size);
     }
@@ -1380,17 +1379,17 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float owo = (*m_samplePaths)[i].path[j].woPdf;
-                Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
-                Float rwo = oldWo * oldWo / newWo;    
+                Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dTreePdf;
+                Float rwo = owo * owo / nwo;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / rwo;
                 throughput *= bsdfWeight;
 
                 vertices.push_back(     
-                    Vertex{ 
+                    RWVertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        ray,
+                        (*m_samplePaths)[i].path[j].ray,
                         throughput,
                         (*m_samplePaths)[i].path[j].bsdfVal,
                         Spectrum{0.0f},
