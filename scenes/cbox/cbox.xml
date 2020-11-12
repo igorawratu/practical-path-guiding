@@ -21,9 +21,10 @@
 
 		<!-- Parameters for our guided path tracer -->
 		<string name="budgetType" value="spp"/>
-		<float name="budget" value="1024"/>
+		<float name="budget" value="512"/>
 		<boolean name="reweight" value="true"/>
-		<float name="dTreeThreshold" value="0.05"/>
+		<string name="spatialFilter" value="stochastic"/>
+		<string name="directionalFilter" value="box"/>
 
 	</integrator>
 
