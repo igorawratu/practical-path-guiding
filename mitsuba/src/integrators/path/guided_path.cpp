@@ -1379,14 +1379,14 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float owo = (*m_samplePaths)[i].path[j].woPdf;
-                Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dTreePdf;
+                Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float rwo = owo * owo / nwo;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / rwo;
                 throughput *= bsdfWeight;
 
                 vertices.push_back(     
-                    RWVertex{ 
+                    Vertex{ 
                         dTree,
                         dTreeVoxelSize,
                         (*m_samplePaths)[i].path[j].ray,
