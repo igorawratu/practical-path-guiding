@@ -1907,6 +1907,7 @@ public:
     };
 
     struct RWVertex{
+        Ray ray,
         Point p;
         Vector wo;
         Spectrum bsdfVal;
@@ -2186,11 +2187,10 @@ public:
                                         dRec.pdf,
                                         bsdfPdf,
                                         dTreePdf,
-                                        bsdfSamplingFraction,
                                         false
                                     };
 
-                                    pathRecord.path.push_back(RWVertex{its.p, bRec.its.toWorld(bRec.wo), bsdfVal, dRec.pdf, bsdfPdf, false});
+                                    pathRecord.path.push_back(RWVertex{Ray(its.p, dRec.d, 0), its.p, bRec.its.toWorld(bRec.wo), bsdfVal, dRec.pdf, bsdfPdf, false});
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                 }
@@ -2241,11 +2241,10 @@ public:
                                 woPdf,
                                 bsdfPdf,
                                 dTreePdf,
-                                bsdfSamplingFraction,
                                 true
                             };
 
-                            pathRecord.path.push_back(RWVertex{its.p, bRec.its.toWorld(bRec.wo), bsdfWeight * woPdf, woPdf, bsdfPdf, true});
+                            pathRecord.path.push_back(RWVertex{ray, its.p, bRec.its.toWorld(bRec.wo), bsdfWeight * woPdf, woPdf, bsdfPdf, true});
 
                             ++nVertices;
                         }
@@ -2286,11 +2285,10 @@ public:
                                 woPdf,
                                 bsdfPdf,
                                 dTreePdf,
-                                bsdfSamplingFraction,
                                 isDelta
                             };
 
-                            pathRecord.path.push_back(RWVertex{its.p, bRec.its.toWorld(bRec.wo), bsdfWeight * woPdf, woPdf, bsdfPdf, isDelta});
+                            pathRecord.path.push_back(RWVertex{ray, its.p, bRec.its.toWorld(bRec.wo), bsdfWeight * woPdf, woPdf, bsdfPdf, isDelta});
 
                             if(!L.isZero()){
                                 pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
