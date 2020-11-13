@@ -773,14 +773,13 @@ struct STreeNode {
         return children[childIndex(p)];
     }
 
-    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes, int& spatialLevel) {
+    DTreeWrapper* dTreeWrapper(Point& p, Vector& size, std::vector<STreeNode>& nodes) {
         SAssert(p[axis] >= 0 && p[axis] <= 1);
         if (isLeaf) {
-            spatialLevel = level;
             return &dTree;
         } else {
             size[axis] /= 2;
-            return nodes[nodeIndex(p)].dTreeWrapper(p, size, nodes, spatialLevel);
+            return nodes[nodeIndex(p)].dTreeWrapper(p, size, nodes);
         }
     }
 
@@ -918,19 +917,19 @@ public:
         cur.dTree = {}; // Reset to an empty dtree to save memory.
     }
 
-    DTreeWrapper* dTreeWrapper(Point p, Vector& size, int& spatialLevel) {
+    DTreeWrapper* dTreeWrapper(Point p, Vector& size) {
         size = m_aabb.getExtents();
         p = Point(p - m_aabb.min);
         p.x /= size.x;
         p.y /= size.y;
         p.z /= size.z;
 
-        return m_nodes[0].dTreeWrapper(p, size, m_nodes, spatialLevel);
+        return m_nodes[0].dTreeWrapper(p, size, m_nodes);
     }
 
-    DTreeWrapper* dTreeWrapper(Point p, int& spatialLevel) {
+    DTreeWrapper* dTreeWrapper(Point p) {
         Vector size;
-        return dTreeWrapper(p, size, spatialLevel);
+        return dTreeWrapper(p, size);
     }
 
     void forEachDTreeWrapperConst(std::function<void(const DTreeWrapper*)> func) const {
@@ -1368,70 +1367,56 @@ public:
 
     void reweightCurrentPaths(ref<Sampler> sampler){
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-            Spectrum throughput(1.0f);
+            std::vector<Vertex> vertices;
 
+            Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
-            bool terminated = false;
-            std::uint32_t termination_iteration = (*m_samplePaths)[i].path.size();
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                int spatialLevel;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize, spatialLevel);
-
-                (*m_samplePaths)[i].path[j].dTree = dTree;
-                (*m_samplePaths)[i].path[j].dTreeVoxelSize = dTreeVoxelSize;
-                (*m_samplePaths)[i].path[j].dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
-
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d);
                 Float bsf = dTree->bsdfSamplingFraction();
 
-                Float oldWo = (*m_samplePaths)[i].path[j].origWoPdf;
-                Float newWo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf +
-                    (1 - bsf) * (*m_samplePaths)[i].path[j].dTreePdf;
+                Float owo = (*m_samplePaths)[i].path[j].woPdf;
+                Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                Float rwo = owo * owo / nwo;
 
-                /*if(oldWo > newWo){
-                    Float successProb = newWo / oldWo;
-                    if(sampler->next1D() < successProb){
-                        throughput = Spectrum(0.f);
-                    }
-                }*/
-                //else{
-                    (*m_samplePaths)[i].path[j].woPdf = oldWo * oldWo / newWo;    
-                //}
-
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / rwo;
                 throughput *= bsdfWeight;
 
-                (*m_samplePaths)[i].path[j].throughput = throughput;
-
-                /*Float successProb = 1.f;
-                if(!m_isBuilt){
-                    successProb = throughput.max() * (*m_samplePaths)[i].path[j].eta * (*m_samplePaths)[i].path[j].eta;
-                }
-                successProb = std::max(0.1f, std::min(successProb, 0.99f));
-                throughput /= successProb;*/
-                (*m_samplePaths)[i].path[j].radiance = Spectrum(0.f);
+                vertices.push_back(     
+                    Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_samplePaths)[i].path[j].ray,
+                        throughput,
+                        (*m_samplePaths)[i].path[j].bsdfVal,
+                        Spectrum{0.0f},
+                        rwo,
+                        (*m_samplePaths)[i].path[j].bsdfPdf,
+                        dtreePdf,
+                        bsf,
+                        (*m_samplePaths)[i].path[j].isDelta
+                    });
             }
 
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
-                if(pos >= termination_iteration){
-                    continue;
-                }
 
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
                 if(pos >= 0){
-                    L *= (*m_samplePaths)[i].path[pos].throughput;
+                    L *= vertices[pos].throughput;
                     for(std::uint32_t k = 0; k <= pos; ++k){
-                        (*m_samplePaths)[i].path[j].radiance += L;
+                        vertices[k].radiance += L;
                     }
                 }
                 (*m_samplePaths)[i].Li += L;
             }
 
-            for (int j = 0; j < (*m_samplePaths)[i].path.size(); ++j) {
-                (*m_samplePaths)[i].path[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+            for (int j = 0; j < vertices.size(); ++j) {
+                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
         }
@@ -1876,11 +1861,6 @@ public:
         Float woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction;
         bool isDelta;
 
-        Point p;
-        Vector wo;
-        int level;
-        Float origWoPdf;
-
         void record(const Spectrum& r) {
             radiance += r;
         }
@@ -1914,7 +1894,7 @@ public:
 
                         Point origin = sdTree.aabb().clip(ray.o + offset);
                         int spatialLevel;
-                        splatDTree = sdTree.dTreeWrapper(origin, spatialLevel);
+                        splatDTree = sdTree.dTreeWrapper(origin);
                         if (splatDTree) {
                             splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
                         }
@@ -1927,13 +1907,20 @@ public:
         }
     };
 
+    struct RWVertex{
+        Ray ray;
+        Spectrum bsdfVal;
+        Float woPdf, bsdfPdf;
+        bool isDelta;
+    };
+
     struct RadianceRecord{
         int pos;
         Spectrum L;
     };
 
     struct PGPath{
-        std::vector<Vertex> path;
+        std::vector<RWVertex> path;
         std::vector<RadianceRecord> radiance_record;
         Point2 sample_pos;
         Spectrum spec;
@@ -2126,13 +2113,12 @@ public:
 
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = nullptr;
-                int spatialLevel = 0;
 
                 // We only guide smooth BRDFs for now. Analytic product sampling
                 // would be conceivable for discrete decisions such as refraction vs
                 // reflection.
                 if (bsdf->getType() & BSDF::ESmooth) {
-                    dTree = m_sdTree->dTreeWrapper(its.p, dTreeVoxelSize, spatialLevel);
+                    dTree = m_sdTree->dTreeWrapper(its.p, dTreeVoxelSize);
                 }
 
                 Float bsdfSamplingFraction = m_bsdfSamplingFraction;
@@ -2201,14 +2187,10 @@ public:
                                         bsdfPdf,
                                         dTreePdf,
                                         bsdfSamplingFraction,
-                                        false,
-                                        its.p,
-                                        bRec.its.toWorld(bRec.wo),
-                                        spatialLevel,
-                                        dRec.pdf
+                                        false
                                     };
 
-                                    pathRecord.path.push_back(v);
+                                    pathRecord.path.push_back(RWVertex{Ray(its.p, dRec.d, 0), bsdfVal, dRec.pdf, bsdfPdf, false});
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                 }
@@ -2260,14 +2242,10 @@ public:
                                 bsdfPdf,
                                 dTreePdf,
                                 bsdfSamplingFraction,
-                                true,
-                                its.p,
-                                bRec.its.toWorld(bRec.wo),
-                                spatialLevel,
-                                woPdf
+                                true
                             };
 
-                            pathRecord.path.push_back(vertices[nVertices]);
+                            pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, woPdf, bsdfPdf, true});
 
                             ++nVertices;
                         }
@@ -2309,14 +2287,10 @@ public:
                                 bsdfPdf,
                                 dTreePdf,
                                 bsdfSamplingFraction,
-                                isDelta,
-                                its.p,
-                                bRec.its.toWorld(bRec.wo),
-                                spatialLevel,
-                                woPdf
+                                isDelta
                             };
 
-                            pathRecord.path.push_back(vertices[nVertices]);
+                            pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, woPdf, bsdfPdf, isDelta});
 
                             if(!L.isZero()){
                                 pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
