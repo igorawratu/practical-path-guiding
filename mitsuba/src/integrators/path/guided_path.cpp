@@ -1374,8 +1374,8 @@ public:
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
-                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d);
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float owo = (*m_samplePaths)[i].path[j].woPdf;
@@ -1396,7 +1396,6 @@ public:
                         rwo,
                         (*m_samplePaths)[i].path[j].bsdfPdf,
                         dtreePdf,
-                        bsf,
                         (*m_samplePaths)[i].path[j].isDelta
                     });
             }
@@ -1858,7 +1857,7 @@ public:
 
         Spectrum radiance;
 
-        Float woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction;
+        Float woPdf, bsdfPdf, dTreePdf;
         bool isDelta;
 
         void record(const Spectrum& r) {
@@ -1908,7 +1907,8 @@ public:
     };
 
     struct RWVertex{
-        Ray ray;
+        Point p;
+        Vector wo;
         Spectrum bsdfVal;
         Float woPdf, bsdfPdf;
         bool isDelta;
@@ -2190,7 +2190,7 @@ public:
                                         false
                                     };
 
-                                    pathRecord.path.push_back(RWVertex{Ray(its.p, dRec.d, 0), bsdfVal, dRec.pdf, bsdfPdf, false});
+                                    pathRecord.path.push_back(RWVertex{its.p, bRec.its.toWorld(bRec.wo), bsdfVal, dRec.pdf, bsdfPdf, false});
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                 }
@@ -2245,7 +2245,7 @@ public:
                                 true
                             };
 
-                            pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, woPdf, bsdfPdf, true});
+                            pathRecord.path.push_back(RWVertex{its.p, bRec.its.toWorld(bRec.wo), bsdfWeight * woPdf, woPdf, bsdfPdf, true});
 
                             ++nVertices;
                         }
@@ -2290,7 +2290,7 @@ public:
                                 isDelta
                             };
 
-                            pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, woPdf, bsdfPdf, isDelta});
+                            pathRecord.path.push_back(RWVertex{its.p, bRec.its.toWorld(bRec.wo), bsdfWeight * woPdf, woPdf, bsdfPdf, isDelta});
 
                             if(!L.isZero()){
                                 pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
