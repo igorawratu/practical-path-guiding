@@ -1374,13 +1374,13 @@ public:
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].p, dTreeVoxelSize);
-                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].wo);
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d);
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float owo = (*m_samplePaths)[i].path[j].woPdf;
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
-                Float rwo = owo * owo / nwo;
+                Float rwo = nwo;//owo * owo / nwo;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / rwo;
                 throughput *= bsdfWeight;
