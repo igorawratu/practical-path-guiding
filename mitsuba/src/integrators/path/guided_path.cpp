@@ -1907,7 +1907,7 @@ public:
     };
 
     struct RWVertex{
-        Ray ray,
+        Ray ray;
         Point p;
         Vector wo;
         Spectrum bsdfVal;
