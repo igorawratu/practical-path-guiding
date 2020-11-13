@@ -1107,6 +1107,7 @@ public:
         m_dumpSDTree = props.getBoolean("dumpSDTree", false);
 
         m_reweight = props.getBoolean("reweight", false);
+        m_renderReweightIterations = props.getBoolean("renderReweightIterations", false);
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -1366,6 +1367,7 @@ public:
     }
 
     void reweightCurrentPaths(ref<Sampler> sampler){
+        #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             std::vector<Vertex> vertices;
 
@@ -1414,6 +1416,7 @@ public:
             }
 
             for (int j = 0; j < vertices.size(); ++j) {
+                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
@@ -1473,26 +1476,36 @@ public:
 
                 ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
 
-                for(int curr_iter = 0; curr_iter < m_iter; ++curr_iter){
-                    currentIterationFilm->clear();
+                if(m_renderReweightIterations){
+                    for(int curr_iter = 0; curr_iter < m_iter; ++curr_iter){
+                        currentIterationFilm->clear();
 
-                    ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
-                    previousSamples->clear();
+                        ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
+                        previousSamples->clear();
 
-                    for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                        if((*m_samplePaths)[i].iter == curr_iter){
-                            Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                            previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                            if((*m_samplePaths)[i].iter == curr_iter){
+                                Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                                previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                            }
                         }
+
+                        currentIterationFilm->put(previousSamples);
+
+                        fs::path scene_path = scene->getDestinationFile();
+                        currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("iterations") / std::string("iteration_" + 
+                            std::to_string(m_iter) + "_" + std::to_string(curr_iter)), 0);
+
+                        currentIterationFilm->develop(scene, 0.f);
                     }
+                }
 
-                    currentIterationFilm->put(previousSamples);
-
-                    fs::path scene_path = scene->getDestinationFile();
-                    currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("iterations") / std::string("iteration_" + 
-                        std::to_string(m_iter) + "_" + std::to_string(curr_iter)), 0);
-
-                    currentIterationFilm->develop(scene, 0.f);
+                if(m_isFinalIter){
+                    #pragma omp parallel for
+                    for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                        Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                        film->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                    }
                 }
             }
 
@@ -2613,6 +2626,7 @@ private:
     std::unique_ptr<std::mutex> m_samplePathMutex;
 
     bool m_reweight;
+    bool m_renderReweightIterations;
     size_t sampleCount;
 
 public:
