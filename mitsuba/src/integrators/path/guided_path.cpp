@@ -1783,7 +1783,7 @@ public:
                 squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
 
-                if(m_reweight/* && pathRecord.radiance_record.size() > 0*/)
+                if(m_reweight)
                 {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
