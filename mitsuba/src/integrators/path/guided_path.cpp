@@ -397,6 +397,54 @@ public:
         return m_nodes[i];
     }
 
+    std::pair<Float, Float> getMajorizingFactor(const DTree& other){
+        struct NodePair {
+            size_t nodeIndex;
+            size_t otherNodeIndex;
+            Float nodeFactor;
+            Float otherNodeFactor;
+        };
+
+        std::pair<Float, Float> pdfPair;
+        Float largestScalingFactor = 0.f;
+
+        std::stack<NodePair> pairStack;
+        pairStack.push({0, 0, 1.f, 1.f});
+
+        while (!pairStack.empty()) {
+            StackNode nodePair = pairStack.top();
+            pairStack.pop();
+
+            const QuadTreeNode& node = m_nodes[nodePair.nodeIndex];
+            const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherNodeIndex];
+
+            Float denom = node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3);
+            Float otherDenom = otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3);
+
+            for (int i = 0; i < 4; ++i) {
+                Float pdf = nodePair.nodeFactor * 4 * node.sum(i) / denom;
+                Float otherPdf = nodePair.otherNodeFactor * 4 * otherNode.sum(i) / otherDenom;
+
+                //one of the nodes are a leaf node, we can just compute the ratio here and not go further
+                if(node.isLeaf(i) || otherNode.isLeaf(i)){
+                    Float scalingFactor = otherPdf / pdf;
+                    if(scalingFactor > largestScalingFactor){
+                        largestScalingFactor = scalingFactor;
+                        pdfPair = std::make_pair(pdf, otherPdf);
+                    }
+                }
+                else{
+                    const QuadTreeNode& childnode = m_nodes[node.child(i)];
+                    const QuadTreeNode& otherChildnode = other.m_nodes[otherNode.child(i)];
+
+                    pairStack.push({node.child(i), otherNode.child(i), pdf, otherPdf});
+                }
+            }
+        }
+
+        return largestScalingFactor;
+    }
+
     Float mean() const {
         if (m_atomic.statisticalWeight == 0) {
             return 0;
@@ -583,7 +631,7 @@ struct DTreeRecord {
 
 struct DTreeWrapper {
 public:
-    DTreeWrapper() {
+    DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
     }
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
@@ -622,8 +670,10 @@ public:
     }
 
     void build() {
+        previous = sampling;
         building.build();
         sampling = building;
+        m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
 
     void reset(int maxDepth, Float subdivisionThreshold) {
@@ -724,9 +774,15 @@ public:
         }
     }
 
+    Float getMajorizingFactor(){
+        return m_rejPdfPair;
+    }
+
 private:
     DTree building;
     DTree sampling;
+    DTree previous;
+    std::pair<Float, Float> m_rejPdfPair;
 
     AdamOptimizer bsdfSamplingFractionOptimizer{0.01f};
 
@@ -1108,6 +1164,9 @@ public:
 
         m_reweight = props.getBoolean("reweight", false);
         m_renderReweightIterations = props.getBoolean("renderReweightIterations", false);
+
+        m_reject = props.getBoolean("reject", false);
+        m_renderRejectIterations = props.getBoolean("renderRejectIterations", false);
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -1366,6 +1425,95 @@ public:
         }
     }
 
+    void rejectCurrentPaths(ref<Sampler> sampler){
+        #pragma omp parallel for
+        for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+            //empty paths are ignored as they represent paths where all the vertices have been rejected
+            if((*m_samplePaths)[i].path.size() == 0){
+                continue;
+            }
+
+            std::vector<Vertex> vertices;
+
+            //first try reject path
+            std::uint32_t termination_iter = (*m_samplePaths)[i].path.size();
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d);
+                Float bsf = dTree->bsdfSamplingFraction();
+
+                //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
+                std::pair<Float, Float> maxPdfPair = dTree->getMajorizingFactor();
+                Float oldPdfBound = (1 - bsf) * maxPdfPair.first;
+                Float newPdfBound = bsf + (1 - bsf) * maxPdfPair.second;
+                Float c = newPdfBound / oldPdfBound;
+
+                Float newWoPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
+
+                //rejected
+                if(sampler->next1D() > acceptProb){
+                    termination_iter = j;
+                    break;
+                }
+                else{
+                    vertices.push_back(     
+                        Vertex{ 
+                            dTree,
+                            dTreeVoxelSize,
+                            (*m_samplePaths)[i].path[j].ray,
+                            (*m_samplePaths)[i].path[j].throughput,
+                            (*m_samplePaths)[i].path[j].bsdfVal,
+                            (*m_samplePaths)[i].path[j].Li,
+                            (*m_samplePaths)[i].path[j].woPdf,
+                            (*m_samplePaths)[i].path[j].bsdfPdf,
+                            dtreePdf,
+                            (*m_samplePaths)[i].path[j].isDelta
+                        });
+                }
+            }
+
+            (*m_samplePaths)[i].path.resize(termination_iter);
+
+            //removes light contrib for rejected vertices
+            //this assumes no NEE, will need to change to account for NEE later
+            int radiance_record_term = -1;
+            Spectrum totalL(0.f);
+
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
+                std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
+
+                if(pos >= termination_iter){
+                    if(radiance_record_term < 0){
+                        radiance_record_term = j;
+                    }
+
+                    Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
+                    L *= vertices[pos].throughput;
+                    totalL += L;
+                }
+            }
+
+            if(radiance_record_term >= 0){
+                (*m_samplePaths)[i].radiance_record.resize(radiance_record_term);
+            }
+
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+                (*m_samplePaths)[i].path[h].Li -= totalL;
+                vertices[j].radiance -= totalL;
+            }
+
+            (*m_samplePaths)[i].Li -= totalL;
+
+            for (int j = 0; j < vertices.size(); ++j) {
+                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
+        }
+    }
+
     void reweightCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
@@ -1423,8 +1571,6 @@ public:
         }
     }
 
-
-
     bool renderSPP(Scene *scene, RenderQueue *queue, const RenderJob *job,
         int sceneResID, int sensorResID, int samplerResID, int integratorResID) {
 
@@ -1474,9 +1620,9 @@ public:
 
                 reweightCurrentPaths(sampler);
 
-                ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
-
                 if(m_renderReweightIterations){
+                    ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+
                     for(int curr_iter = 0; curr_iter < m_iter; ++curr_iter){
                         currentIterationFilm->clear();
 
@@ -1508,6 +1654,53 @@ public:
                     for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
                         Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
                         previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
+                    }
+
+                    film->put(previousSamples);
+                }
+            }
+            else if(m_reject){
+                Properties props("independent");
+                ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
+                sampler->configure();
+                sampler->generate(Point2i(0));
+
+                rejectCurrentPaths(sampler);
+
+                if(m_renderRejectIterations){
+                    ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+
+                    for(int curr_iter = 0; curr_iter < m_iter; ++curr_iter){
+                        currentIterationFilm->clear();
+
+                        ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
+                        previousSamples->clear();
+
+                        for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+                            if((*m_rejSamplePaths)[i].iter == curr_iter){
+                                Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
+                                previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
+                            }
+                        }
+
+                        currentIterationFilm->put(previousSamples);
+
+                        fs::path scene_path = scene->getDestinationFile();
+                        currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("iterations") / std::string("iteration_" + 
+                            std::to_string(m_iter) + "_" + std::to_string(curr_iter)), 0);
+
+                        currentIterationFilm->develop(scene, 0.f);
+                    }
+                }
+
+                if(m_isFinalIter){
+                    ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
+                    previousSamples->clear();
+
+                    #pragma omp parallel for
+                    for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+                        Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
+                        previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
                     }
 
                     film->put(previousSamples);
@@ -1602,6 +1795,9 @@ public:
 
             if(m_reweight){
                 reweightCurrentPaths(sampler);
+            }
+            else if(m_reject){
+                rejectCurrentPaths(sampler);
             }
 
             Float variance;
@@ -1776,9 +1972,13 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 PGPath pathRecord;
+                RPGPath rpathRecord;
                 pathRecord.sample_pos = samplePos;
                 pathRecord.spec = spec;
-                spec *= Li(sensorRay, rRec, pathRecord);
+                rpathRecord.sample_pos = samplePos;
+                rpathRecord.spec = spec;
+
+                spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
                 block->put(samplePos, spec, rRec.alpha);
                 squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 sampler->advance();
@@ -1787,6 +1987,10 @@ public:
                 {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
+                }
+                else if(m_reject){
+                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                    m_rejSamplePaths->push_back(std::move(rpathRecord))
                 }
             }
         }
@@ -1923,6 +2127,13 @@ public:
         }
     };
 
+    struct RejVertex{
+        Ray ray;
+        Spectrum throughput, bsdfVal, Li;
+        Float bsdfPdf, woPdf;
+        bool isDelta;
+    }
+
     struct RWVertex{
         Ray ray;
         Spectrum bsdfVal;
@@ -1933,6 +2144,16 @@ public:
     struct RadianceRecord{
         int pos;
         Spectrum L;
+    };
+
+    struct RPGPath{
+        std::vector<RejVertex> path;
+        std::vector<RadianceRecord> radiance_record;
+        Point2 sample_pos;
+        Spectrum spec;
+        Spectrum Li;
+        Float alpha;
+        int iter;
     };
 
     struct PGPath{
@@ -1951,7 +2172,7 @@ public:
         return Li(r, rRec, pathRecord);
     }
 
-    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec, PGPath& pathRecord) const {
+    Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec, PGPath& pathRecord, RPGPath& rpathRecord) const {
         static const int MAX_NUM_VERTICES = 32;
         std::array<Vertex, MAX_NUM_VERTICES> vertices;
 
@@ -1974,8 +2195,13 @@ public:
 
         auto recordRadiance = [&](Spectrum radiance) {
             Li += radiance;
+            rpathRecord.Li += radiance;
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].record(radiance);
+            }
+
+            for (int i = 0; i < rpathRecord.path.size(); ++i) {
+                rpathRecord.path[i].Li += radiance;
             }
         };
 
@@ -2096,6 +2322,7 @@ public:
 
                         if(!value.isZero()){
                             pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
+                            rpathRecord.radiance_record.push_back({rpathRecord.path.size() - 1, value});
                         }
                     }
 
@@ -2109,6 +2336,7 @@ public:
                     recordRadiance(eL);
                     if(!eL.isZero()){
                         pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, eL});
+                        rpathRecord.radiance_record.push_back({rpathRecord.path.size() - 1, eL});
                     }
                 }
 
@@ -2206,6 +2434,8 @@ public:
                                     };
 
                                     pathRecord.path.push_back(RWVertex{Ray(its.p, dRec.d, 0), bsdfVal, bsdfPdf, false});
+                                    rpathRecord.path.push_back(RejVertex{Ray(its.p, dRec.d, 0), throughput * bsdfVal / dRec.pdf, 
+                                        bsdfVal, L, bsdfPdf, dRec.pdf, false});
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                 }
@@ -2260,6 +2490,8 @@ public:
                             };
 
                             pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, true});
+                            rpathRecord.path.push_back(RejVertex{ray, throughput, 
+                                bsdfWeight * woPdf, Spectrum(0.f), bsdfPdf, woPdf, true});
 
                             ++nVertices;
                         }
@@ -2304,9 +2536,12 @@ public:
                             };
 
                             pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, isDelta});
+                            rpathRecord.path.push_back(RejVertex{ray, throughput, 
+                                bsdfWeight * woPdf, (m_nee == EAlways) ? Spectrum{0.0f} : L, bsdfPdf, woPdf, isDelta});
 
                             if(!L.isZero()){
                                 pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
+                                rpathRecord.radiance_record.push_back({rpathRecord.path.size() - 1, value});
                             }
 
                             ++nVertices;
@@ -2360,6 +2595,9 @@ public:
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
+
+        rpathRecord.alpha = rRec.alpha;
+        rpathRecord.iter = m_iter;
 
         if(pathRecord.radiance_record.size() == 0){
             pathRecord.path.clear();
@@ -2628,10 +2866,13 @@ private:
     std::chrono::steady_clock::time_point m_startTime;
 
     std::unique_ptr<std::vector<PGPath>> m_samplePaths;
+    std::unique_ptr<std::vector<RPGPath>> m_rejSamplePaths;
     std::unique_ptr<std::mutex> m_samplePathMutex;
 
     bool m_reweight;
     bool m_renderReweightIterations;
+    bool m_reject;
+    bool m_renderRejectIterations;
     size_t sampleCount;
 
 public:
