@@ -1504,7 +1504,7 @@ public:
 
             (*m_rejSamplePaths)[i].Li -= totalL;
 
-            for (int j = 0; j < vertices.size(); ++j) {
+            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
@@ -1561,7 +1561,7 @@ public:
                 (*m_samplePaths)[i].Li += L;
             }
 
-            for (int j = 0; j < vertices.size(); ++j) {
+            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
@@ -2111,7 +2111,7 @@ public:
                         offset.z *= sampler->next1D() - 0.5f;
 
                         Point origin = sdTree.aabb().clip(ray.o + offset);
-                        int spatialLevel;
+
                         splatDTree = sdTree.dTreeWrapper(origin);
                         if (splatDTree) {
                             splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
@@ -2199,7 +2199,7 @@ public:
                 vertices[i].record(radiance);
             }
 
-            for (int i = 0; i < rpathRecord.path.size(); ++i) {
+            for (std::uint32_t i = 0; i < rpathRecord.path.size(); ++i) {
                 rpathRecord.path[i].Li += radiance;
             }
         };
@@ -2320,8 +2320,8 @@ public:
                         recordRadiance(value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
-                            rpathRecord.radiance_record.push_back({rpathRecord.path.size() - 1, value});
+                            pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value});
+                            rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value});
                         }
                     }
 
@@ -2334,8 +2334,8 @@ public:
                     Spectrum eL = throughput * its.Le(-ray.d);
                     recordRadiance(eL);
                     if(!eL.isZero()){
-                        pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, eL});
-                        rpathRecord.radiance_record.push_back({rpathRecord.path.size() - 1, eL});
+                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL});
+                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL});
                     }
                 }
 
