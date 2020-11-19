@@ -405,14 +405,14 @@ public:
             Float otherNodeFactor;
         };
 
-        std::pair<Float, Float> pdfPair;
+        std::pair<Float, Float> pdfPair(1.f, 1.f);
         Float largestScalingFactor = 0.f;
 
         std::stack<NodePair> pairStack;
         pairStack.push({0, 0, 1.f, 1.f});
 
         while (!pairStack.empty()) {
-            StackNode nodePair = pairStack.top();
+            NodePair nodePair = pairStack.top();
             pairStack.pop();
 
             const QuadTreeNode& node = m_nodes[nodePair.nodeIndex];
@@ -434,15 +434,12 @@ public:
                     }
                 }
                 else{
-                    const QuadTreeNode& childnode = m_nodes[node.child(i)];
-                    const QuadTreeNode& otherChildnode = other.m_nodes[otherNode.child(i)];
-
                     pairStack.push({node.child(i), otherNode.child(i), pdf, otherPdf});
                 }
             }
         }
 
-        return largestScalingFactor;
+        return pdfPair;
     }
 
     Float mean() const {
@@ -774,7 +771,7 @@ public:
         }
     }
 
-    Float getMajorizingFactor(){
+    std::pair<Float, Float> getMajorizingFactor(){
         return m_rejPdfPair;
     }
 
@@ -1429,17 +1426,18 @@ public:
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             //empty paths are ignored as they represent paths where all the vertices have been rejected
-            if((*m_samplePaths)[i].path.size() == 0){
+            if((*m_rejSamplePaths)[i].path.size() == 0){
                 continue;
             }
 
             std::vector<Vertex> vertices;
 
             //first try reject path
-            std::uint32_t termination_iter = (*m_samplePaths)[i].path.size();
-            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
-                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d);
+            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d);
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
@@ -1448,9 +1446,9 @@ public:
                 Float newPdfBound = bsf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / oldPdfBound;
 
-                Float newWoPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
-                Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
+                Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                Float acceptProb = newWoPdf / (c * (*m_rejSamplePaths)[i].path[j].woPdf);
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
                 if(sampler->next1D() > acceptProb){
@@ -1462,49 +1460,49 @@ public:
                         Vertex{ 
                             dTree,
                             dTreeVoxelSize,
-                            (*m_samplePaths)[i].path[j].ray,
-                            (*m_samplePaths)[i].path[j].throughput,
-                            (*m_samplePaths)[i].path[j].bsdfVal,
-                            (*m_samplePaths)[i].path[j].Li,
-                            (*m_samplePaths)[i].path[j].woPdf,
-                            (*m_samplePaths)[i].path[j].bsdfPdf,
+                            (*m_rejSamplePaths)[i].path[j].ray,
+                            (*m_rejSamplePaths)[i].path[j].throughput,
+                            (*m_rejSamplePaths)[i].path[j].bsdfVal,
+                            (*m_rejSamplePaths)[i].path[j].Li,
+                            (*m_rejSamplePaths)[i].path[j].woPdf,
+                            (*m_rejSamplePaths)[i].path[j].bsdfPdf,
                             dtreePdf,
-                            (*m_samplePaths)[i].path[j].isDelta
+                            (*m_rejSamplePaths)[i].path[j].isDelta
                         });
                 }
             }
 
-            (*m_samplePaths)[i].path.resize(termination_iter);
+            (*m_rejSamplePaths)[i].path.resize(termination_iter);
 
             //removes light contrib for rejected vertices
             //this assumes no NEE, will need to change to account for NEE later
             int radiance_record_term = -1;
             Spectrum totalL(0.f);
 
-            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
-                std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
+                std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
 
                 if(pos >= termination_iter){
                     if(radiance_record_term < 0){
                         radiance_record_term = j;
                     }
 
-                    Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
+                    Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
                     L *= vertices[pos].throughput;
                     totalL += L;
                 }
             }
 
             if(radiance_record_term >= 0){
-                (*m_samplePaths)[i].radiance_record.resize(radiance_record_term);
+                (*m_rejSamplePaths)[i].radiance_record.resize(radiance_record_term);
             }
 
-            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                (*m_samplePaths)[i].path[h].Li -= totalL;
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
+                (*m_rejSamplePaths)[i].path[j].Li -= totalL;
                 vertices[j].radiance -= totalL;
             }
 
-            (*m_samplePaths)[i].Li -= totalL;
+            (*m_rejSamplePaths)[i].Li -= totalL;
 
             for (int j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
@@ -1990,7 +1988,7 @@ public:
                 }
                 else if(m_reject){
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                    m_rejSamplePaths->push_back(std::move(rpathRecord))
+                    m_rejSamplePaths->push_back(std::move(rpathRecord));
                 }
             }
         }
@@ -2132,7 +2130,7 @@ public:
         Spectrum throughput, bsdfVal, Li;
         Float bsdfPdf, woPdf;
         bool isDelta;
-    }
+    };
 
     struct RWVertex{
         Ray ray;
@@ -2168,8 +2166,9 @@ public:
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
         PGPath pathRecord;
+        RPGPath rpathRecord;
 
-        return Li(r, rRec, pathRecord);
+        return Li(r, rRec, pathRecord, rpathRecord);
     }
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec, PGPath& pathRecord, RPGPath& rpathRecord) const {
