@@ -2539,8 +2539,8 @@ public:
                                 bsdfWeight * woPdf, (m_nee == EAlways) ? Spectrum{0.0f} : L, bsdfPdf, woPdf, isDelta});
 
                             if(!L.isZero()){
-                                pathRecord.radiance_record.push_back({pathRecord.path.size() - 1, value});
-                                rpathRecord.radiance_record.push_back({rpathRecord.path.size() - 1, value});
+                                pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value});
+                                rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value});
                             }
 
                             ++nVertices;
