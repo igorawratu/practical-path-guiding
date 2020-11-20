@@ -1423,7 +1423,7 @@ public:
     }
 
     void rejectCurrentPaths(ref<Sampler> sampler){
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             //empty paths are ignored as they represent paths where all the vertices have been rejected
             if((*m_rejSamplePaths)[i].path.size() == 0){
