@@ -1489,6 +1489,7 @@ public:
 
                     Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
                     L *= vertices[pos].throughput;
+                    std::cout << j << std::endl;
                     totalL += L;
                 }
             }
