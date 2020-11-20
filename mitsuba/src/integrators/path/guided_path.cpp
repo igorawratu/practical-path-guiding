@@ -1451,11 +1451,11 @@ public:
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                if(sampler->next1D() > acceptProb){
+                /*if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
-                else{
+                else*/{
                     vertices.push_back(     
                         Vertex{ 
                             dTree,
