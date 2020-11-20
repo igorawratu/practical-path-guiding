@@ -22,10 +22,10 @@
 		<!-- Parameters for our guided path tracer -->
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
-		<boolean name="reweight" value="true"/>
+		<boolean name="reject" value="true"/>
 		<string name="spatialFilter" value="stochastic"/>
 		<string name="directionalFilter" value="box"/>
-		<boolean name="renderReweightIterations" value="true"/>
+		<boolean name="renderRejectIterations" value="true"/>
 
 	</integrator>
 
