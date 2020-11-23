@@ -1442,8 +1442,8 @@ public:
 
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
                 std::pair<Float, Float> maxPdfPair = dTree->getMajorizingFactor();
-                Float oldPdfBound = (1 - bsf) * maxPdfPair.first;
-                Float newPdfBound = bsf + (1 - bsf) * maxPdfPair.second;
+                Float oldPdfBound = /*bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + */(1 - bsf) * maxPdfPair.first;
+                Float newPdfBound = bsf/* * (*m_rejSamplePaths)[i].path[j].bsdfPdf */+ (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / oldPdfBound;
 
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
@@ -1521,11 +1521,92 @@ public:
                 (*m_rejSamplePaths)[i].Li -= totalL;
             }
 
-            /*for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }*/
+            }
+        }
+    }
+
+    void rejectReweightHybrid(ref<Sampler> sampler){
+        //#pragma omp parallel for
+        for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+            //empty paths are ignored as they represent paths where all the vertices have been rejected
+            if((*m_rejSamplePaths)[i].path.size() == 0){
+                continue;
+            }
+
+            (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
+
+            std::vector<Vertex> vertices;
+
+            //first try reject path
+            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d);
+                Float bsf = dTree->bsdfSamplingFraction();
+
+                Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                Float acceptProb = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
+
+                //rescaling
+                if(acceptProb > 1.f){
+                    (*m_rejSamplePaths)[i].path[j].throughput *= acceptProb;
+                }
+                //rejection
+                else if(sampler->next1D() > acceptProb)
+                    termination_iter = j;
+                    break;
+                }
+
+                vertices.push_back(     
+                    Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_rejSamplePaths)[i].path[j].ray,
+                        (*m_rejSamplePaths)[i].path[j].throughput,
+                        (*m_rejSamplePaths)[i].path[j].bsdfVal,
+                        (*m_rejSamplePaths)[i].path[j].Li,
+                        (*m_rejSamplePaths)[i].path[j].woPdf,
+                        (*m_rejSamplePaths)[i].path[j].bsdfPdf,
+                        dtreePdf,
+                        (*m_rejSamplePaths)[i].path[j].isDelta
+                    });
+            }
+
+            (*m_rejSamplePaths)[i].path.resize(termination_iter);
+
+            //removes light contrib for rejected vertices
+            //this assumes no NEE, will need to change to account for NEE later
+            Spectrum totalL(0.f);
+
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
+                std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
+
+                if(pos >= termination_iter){
+                    continue;
+                }
+
+                Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
+                L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+
+                for(std::uint32_t k = 0; k < pos; ++k){
+                    (*m_rejSamplePaths)[i].path[k] += L;
+                    vertices[k].radiance += L;
+                }
+                (*m_rejSamplePaths)[i].Li += L;
+            }
+
+            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
         }
     }
 
@@ -1692,6 +1773,10 @@ public:
                         previousSamples->clear();
 
                         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+                            if((*m_rejSamplePaths)[i].paths.size() == 0){
+                                continue;
+                            }
+
                             if((*m_rejSamplePaths)[i].iter == curr_iter){
                                 Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
                                 previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
@@ -1714,8 +1799,10 @@ public:
 
                     #pragma omp parallel for
                     for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                        Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
-                        previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
+                        if((*m_rejSamplePaths)[i].paths.size() > 0){
+                            Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
+                            previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
+                        }                        
                     }
 
                     film->put(previousSamples);
