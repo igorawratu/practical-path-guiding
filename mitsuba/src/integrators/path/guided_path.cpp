@@ -2182,6 +2182,7 @@ public:
         MediumSamplingRecord mRec;
         RayDifferential ray(r);
         Spectrum Li(0.0f);
+        rpathRecord.Li = Li;
         Float eta = 1.0f;
 
         /* Perform the first ray intersection (or ignore if the
@@ -2598,7 +2599,6 @@ public:
 
         rpathRecord.alpha = rRec.alpha;
         rpathRecord.iter = m_iter;
-        rpathRecord.Li = Li;
 
         if(pathRecord.radiance_record.size() == 0){
             pathRecord.path.clear();
