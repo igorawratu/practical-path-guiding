@@ -2598,6 +2598,7 @@ public:
 
         rpathRecord.alpha = rRec.alpha;
         rpathRecord.iter = m_iter;
+        rpathRecord.Li = Li;
 
         if(pathRecord.radiance_record.size() == 0){
             pathRecord.path.clear();
