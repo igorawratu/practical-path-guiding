@@ -1596,7 +1596,7 @@ public:
                 L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
                 for(std::uint32_t k = 0; k < pos; ++k){
-                    (*m_rejSamplePaths)[i].path[k] += L;
+                    (*m_rejSamplePaths)[i].path[k].Li += L;
                     vertices[k].radiance += L;
                 }
                 (*m_rejSamplePaths)[i].Li += L;
@@ -1773,7 +1773,7 @@ public:
                         previousSamples->clear();
 
                         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                            if((*m_rejSamplePaths)[i].paths.size() == 0){
+                            if((*m_rejSamplePaths)[i].path.size() == 0){
                                 continue;
                             }
 
@@ -1799,7 +1799,7 @@ public:
 
                     #pragma omp parallel for
                     for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                        if((*m_rejSamplePaths)[i].paths.size() > 0){
+                        if((*m_rejSamplePaths)[i].path.size() > 0){
                             Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
                             previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
                         }                        
