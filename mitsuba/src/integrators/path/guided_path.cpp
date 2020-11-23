@@ -1498,8 +1498,14 @@ public:
             }
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
-                (*m_rejSamplePaths)[i].path[j].Li -= totalL;
-                vertices[j].radiance -= totalL;
+                if(std::abs(totalL.getLuminance() - (*m_rejSamplePaths)[i].path[j].Li.getLuminance()) < 0.0005f){
+                    (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
+                }
+                else{
+                    (*m_rejSamplePaths)[i].path[j].Li -= totalL;
+                }
+
+                vertices[j].radiance = (*m_rejSamplePaths)[i].path[j].Li;
             }
 
             (*m_rejSamplePaths)[i].Li -= totalL;
