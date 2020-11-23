@@ -1472,7 +1472,7 @@ public:
                 }
             }
 
-            (*m_rejSamplePaths)[i].path.resize(termination_iter);
+            /*(*m_rejSamplePaths)[i].path.resize(termination_iter);
 
             //removes light contrib for rejected vertices
             //this assumes no NEE, will need to change to account for NEE later
@@ -1508,7 +1508,7 @@ public:
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
+            }*/
         }
     }
 
