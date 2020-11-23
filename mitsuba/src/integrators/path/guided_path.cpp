@@ -1559,7 +1559,7 @@ public:
                     (*m_rejSamplePaths)[i].path[j].throughput *= acceptProb;
                 }
                 //rejection
-                else if(sampler->next1D() > acceptProb)
+                else if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
