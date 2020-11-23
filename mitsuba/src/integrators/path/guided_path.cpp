@@ -1774,9 +1774,9 @@ public:
                         previousSamples->clear();
 
                         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                            if((*m_rejSamplePaths)[i].path.size() == 0){
+                            /*if((*m_rejSamplePaths)[i].path.size() == 0){
                                 continue;
-                            }
+                            }*/
 
                             if((*m_rejSamplePaths)[i].iter == curr_iter){
                                 Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
@@ -1800,7 +1800,7 @@ public:
 
                     #pragma omp parallel for
                     for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                        if((*m_rejSamplePaths)[i].path.size() > 0){
+                        /*if((*m_rejSamplePaths)[i].path.size() > 0)*/{
                             Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
                             previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
                         }                        
