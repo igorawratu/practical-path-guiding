@@ -1497,8 +1497,12 @@ public:
                 (*m_rejSamplePaths)[i].radiance_record.resize(radiance_record_term);
             }
 
+            Float totalLLum = totalL.getLuminance();
+
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
-                if(std::abs(totalL.getLuminance() - (*m_rejSamplePaths)[i].path[j].Li.getLuminance()) < 0.0005f){
+                Float vertLum = (*m_rejSamplePaths)[i].path[j].Li.getLuminance();\
+
+                if(vertLum < totalLLum || std::abs(totalLLum - vertLum) < 0.0005f){
                     (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
                 }
                 else{
@@ -1508,7 +1512,14 @@ public:
                 vertices[j].radiance = (*m_rejSamplePaths)[i].path[j].Li;
             }
 
-            (*m_rejSamplePaths)[i].Li -= totalL;
+            Float totalPathLum = (*m_rejSamplePaths)[i].Li.getLuminance();
+
+            if(totalPathLum < totalLLum || std::abs(totalLLum - totalPathLum) < 0.0005f){
+                (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
+            }
+            else{
+                (*m_rejSamplePaths)[i].Li -= totalL;
+            }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
