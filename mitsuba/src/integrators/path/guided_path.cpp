@@ -1442,8 +1442,8 @@ public:
 
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
                 std::pair<Float, Float> maxPdfPair = dTree->getMajorizingFactor();
-                Float oldPdfBound = /*bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + */(1 - bsf) * maxPdfPair.first;
-                Float newPdfBound = bsf /** (*m_rejSamplePaths)[i].path[j].bsdfPdf*/ + (1 - bsf) * maxPdfPair.second;
+                Float oldPdfBound = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.first;
+                Float newPdfBound = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / oldPdfBound;
 
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
