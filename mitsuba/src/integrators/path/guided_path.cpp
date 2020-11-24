@@ -1772,8 +1772,8 @@ public:
                 sampler->configure();
                 sampler->generate(Point2i(0));
 
-                //rejectCurrentPaths(sampler);
-                rejectReweightHybrid(sampler);
+                rejectCurrentPaths(sampler);
+                //rejectReweightHybrid(sampler);
 
                 if(m_renderRejectIterations){
                     ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
