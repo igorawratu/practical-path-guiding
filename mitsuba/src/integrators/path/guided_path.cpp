@@ -33,6 +33,8 @@
 
 MTS_NAMESPACE_BEGIN
 
+const float EPSILON = 0.0001f;
+
 ref<Film> createFilm(std::uint32_t width, std::uint32_t height, bool hdr){
     Properties props = hdr ? Properties("hdrfilm") : Properties("ldrfilm");
     props.setInteger("width", width);
@@ -439,10 +441,10 @@ public:
                     }
                 }
                 else{
-                    std::pair<size_t, int> idx = node.isLeaf(childIdx) ? std::make_pair(nodePair.nodeIndex.first, i) : 
-                        std::make_pair(m_nodes[nodePair.nodeIndex.first].child(i), -1);
-                    std::pair<size_t, int> otheridx = oldNode.isLeaf(i) ? std::make_pair(nodePair.otherNodeIndex.first, i) : 
-                        std::make_pair(other.m_nodes[nodePair.otherNodeIndex.first].child(i), -1);
+                    std::pair<size_t, int> idx = node.isLeaf(childIdx) ? std::make_pair(size_t(nodePair.nodeIndex.first), i) : 
+                        std::make_pair(size_t(m_nodes[nodePair.nodeIndex.first].child(i)), -1);
+                    std::pair<size_t, int> otheridx = oldNode.isLeaf(i) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), i) : 
+                        std::make_pair(size_t(other.m_nodes[nodePair.otherNodeIndex.first].child(i)), -1);
 
                     pairStack.push({idx, otheridx, pdf, otherPdf});
                 }
@@ -593,11 +595,11 @@ public:
         m_nodes.emplace_back();
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
-        A = majorizing_pair.first / majorizing_pair.second;
+        float A = majorizing_pair.first / majorizing_pair.second;
 
         //new is too similar to old, no need to create augmented distribution
         if(std::abs(A - 1) < EPSILON){
-            return;
+            return 0.f;
         }
 
         struct NodePair {
@@ -644,10 +646,10 @@ public:
                     m_nodes.emplace_back();
                     m_nodes.back().setSum(pdf / 4.f);
 
-                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(nodePair.newNodeIndex.first, i) : 
-                        std::make_pair(newDist.m_nodes[nodePair.newNodeIndex.first].child(i), -1);
-                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(nodePair.oldNodeIndex.first, i) : 
-                        std::make_pair(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(i), -1);
+                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(size_t(nodePair.newNodeIndex.first), i) : 
+                        std::make_pair(size_t(newDist.m_nodes[nodePair.newNodeIndex.first].child(i)), -1);
+                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(size_t(nodePair.oldNodeIndex.first), i) : 
+                        std::make_pair(size_t(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(i)), -1);
 
                     pairStack.push({newIdx, oldIdx, newPdf, oldPdf, m_nodes.size() - 1});
                 }
@@ -773,7 +775,7 @@ public:
         building.reset(sampling, maxDepth, subdivisionThreshold);
     }
 
-    Vector sample(Sampler* sampler) const {
+    Vector sample(Sampler* sampler) {
         current_samples++;
         return /*current_samples > req_augmented_samples ? */canonicalToDir(sampling.sample(sampler))/* : canonicalToDir(augmented.sample(sampler))*/;
     }
@@ -868,7 +870,7 @@ public:
         }
     }
 
-    std::pair<Float, Float> getMajorizingFactor(){
+    std::pair<Float, Float> getMajorizingFactor() const{
         return m_rejPdfPair;
     }
 
@@ -1300,7 +1302,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { dTree->build(sampler); });
+        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree, &sampler) { dTree->build(sampler); });
 
         // Gather statistics
         int maxDepth = 0;
