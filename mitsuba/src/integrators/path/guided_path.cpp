@@ -754,16 +754,18 @@ public:
         return {(cosTheta + 1) / 2, phi / (2 * M_PI)};
     }
 
-    void build(ref<Sampler> sampler) {
-        /*float B = augmented.buildAugmented(sampling, building);
-        float frac = B - int(B);
-        req_augmented_samples = B * current_samples;
-        if(sampler->next1D() < frac){
-            req_augmented_samples++;
+    void build(ref<Sampler> sampler, bool augmented) {
+        if(augmented){
+            float B = augmented.buildAugmented(sampling, building);
+            float frac = B - int(B);
+            req_augmented_samples = B * current_samples;
+            if(sampler->next1D() < frac){
+                req_augmented_samples++;
+            }
+
+            current_samples = 0;
         }
-
-        current_samples = 0;*/
-
+    
         previous = sampling;
         building.build();
         sampling = building;
@@ -774,16 +776,22 @@ public:
         building.reset(sampling, maxDepth, subdivisionThreshold);
     }
 
-    Vector sample(Sampler* sampler) const{
-        return /*current_samples > req_augmented_samples ? */canonicalToDir(sampling.sample(sampler))/* : canonicalToDir(augmented.sample(sampler))*/;
+    Vector sample(Sampler* sampler, bool augment) const{
+        if(augment){
+            return current_samples > req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
+        }
+        else return canonicalToDir(sampling.sample(sampler));
     }
 
     void incSampleCount(){
         current_samples++;
     }
 
-    Float pdf(const Vector& dir) const {
-        return sampling.pdf(dirToCanonical(dir));
+    Float pdf(const Vector& dir, bool augment) const {
+        if(augment){
+            return current_samples > req_augmented_samples ? sampling.pdf(dirToCanonical(dir)) : augmented.pdf(dirToCanonical(dir)); 
+        }
+        else return sampling.pdf(dirToCanonical(dir));
     }
 
     Float diff(const DTreeWrapper& other) const {
@@ -1270,6 +1278,8 @@ public:
 
         m_reject = props.getBoolean("reject", false);
         m_renderRejectIterations = props.getBoolean("renderRejectIterations", false);
+
+        m_augment = props.getBoolean("augment", false);
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -1304,7 +1314,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([&sampler](DTreeWrapper* dTree) { dTree->build(sampler); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, &this->m_augment](DTreeWrapper* dTree) { dTree->build(sampler, m_augment); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -2253,11 +2263,17 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler));
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
             result = bsdf->eval(bRec);
         }
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
+
+        //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
+        if(m_augment){
+            dTree->incSampleCount();
+        }
+
         if (woPdf == 0) {
             return Spectrum{0.0f};
         }
@@ -2280,7 +2296,7 @@ public:
             return;
         }
 
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo));
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
@@ -3091,6 +3107,7 @@ private:
     bool m_renderReweightIterations;
     bool m_reject;
     bool m_renderRejectIterations;
+    bool m_augment;
     size_t sampleCount;
 
 public:
