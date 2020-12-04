@@ -399,7 +399,7 @@ public:
         return m_nodes[i];
     }
 
-    std::pair<Float, Float> getMajorizingFactor(const DTree& other){
+    std::pair<Float, Float> getMajorizingFactor(const DTree& other) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
             std::pair<size_t, int> otherNodeIndex;
@@ -443,7 +443,7 @@ public:
                 else{
                     std::pair<size_t, int> idx = node.isLeaf(childIdx) ? std::make_pair(size_t(nodePair.nodeIndex.first), i) : 
                         std::make_pair(size_t(m_nodes[nodePair.nodeIndex.first].child(i)), -1);
-                    std::pair<size_t, int> otheridx = oldNode.isLeaf(i) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), i) : 
+                    std::pair<size_t, int> otheridx = otherNode.isLeaf(i) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), i) : 
                         std::make_pair(size_t(other.m_nodes[nodePair.otherNodeIndex.first].child(i)), -1);
 
                     pairStack.push({idx, otheridx, pdf, otherPdf});
@@ -870,7 +870,7 @@ public:
         }
     }
 
-    std::pair<Float, Float> getMajorizingFactor() const{
+    std::pair<Float, Float> getMajorizingFactor(){
         return m_rejPdfPair;
     }
 
@@ -1302,7 +1302,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree, &sampler) { dTree->build(sampler); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler](DTreeWrapper* dTree) { dTree->build(sampler); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -2220,7 +2220,7 @@ public:
         }
     }
 
-    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, const DTreeWrapper* dTree) const {
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree) const {
         Point2 sample = rRec.nextSample2D();
 
         auto type = bsdf->getType();
