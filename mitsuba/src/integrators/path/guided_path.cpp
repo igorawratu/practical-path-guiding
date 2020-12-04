@@ -775,9 +775,12 @@ public:
         building.reset(sampling, maxDepth, subdivisionThreshold);
     }
 
-    Vector sample(Sampler* sampler) {
-        current_samples++;
+    Vector sample(Sampler* sampler) const{
         return /*current_samples > req_augmented_samples ? */canonicalToDir(sampling.sample(sampler))/* : canonicalToDir(augmented.sample(sampler))*/;
+    }
+
+    void incSampleCount(){
+        current_samples++;
     }
 
     Float pdf(const Vector& dir) const {
@@ -2220,7 +2223,7 @@ public:
         }
     }
 
-    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree) const {
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, const DTreeWrapper* dTree) const {
         Point2 sample = rRec.nextSample2D();
 
         auto type = bsdf->getType();
