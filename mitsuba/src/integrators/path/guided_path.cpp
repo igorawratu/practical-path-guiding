@@ -1314,7 +1314,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, &this->m_augment](DTreeWrapper* dTree) { dTree->build(sampler, m_augment); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this->m_augment](DTreeWrapper* dTree) { dTree->build(sampler, m_augment); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -1553,7 +1553,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
-                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d);
+                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, false);
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
@@ -1663,7 +1663,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
-                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d);
+                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, false);
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
@@ -1748,7 +1748,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
-                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d);
+                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d, false);
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
@@ -2232,7 +2232,7 @@ public:
         }
     }
 
-    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, const DTreeWrapper* dTree) const {
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree) const {
         Point2 sample = rRec.nextSample2D();
 
         auto type = bsdf->getType();
