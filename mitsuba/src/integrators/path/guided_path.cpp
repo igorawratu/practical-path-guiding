@@ -754,8 +754,8 @@ public:
         return {(cosTheta + 1) / 2, phi / (2 * M_PI)};
     }
 
-    void build(ref<Sampler> sampler, bool augmented) {
-        if(augmented){
+    void build(ref<Sampler> sampler, bool augment) {
+        if(augment){
             float B = augmented.buildAugmented(sampling, building);
             float frac = B - int(B);
             req_augmented_samples = B * current_samples;
