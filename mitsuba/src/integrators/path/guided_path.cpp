@@ -399,8 +399,8 @@ public:
 
     std::pair<Float, Float> getMajorizingFactor(const DTree& other){
         struct NodePair {
-            size_t nodeIndex;
-            size_t otherNodeIndex;
+            std::pair<size_t, int> nodeIndex;
+            std::pair<size_t, int> otherNodeIndex;
             Float nodeFactor;
             Float otherNodeFactor;
         };
@@ -409,24 +409,29 @@ public:
         Float largestScalingFactor = 0.f;
 
         std::stack<NodePair> pairStack;
-        pairStack.push({0, 0, 1.f, 1.f});
+        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f});
 
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
             pairStack.pop();
 
-            const QuadTreeNode& node = m_nodes[nodePair.nodeIndex];
-            const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherNodeIndex];
+            const QuadTreeNode& node = m_nodes[nodePair.nodeIndex.first];
+            const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherNodeIndex.first];
 
-            Float denom = node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3);
-            Float otherDenom = otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3);
+            Float denom = nodePair.nodeIndex.second < 0 ? node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3) : 
+                node.sum(nodePair.nodeIndex.second) * 4.f;
+            Float otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
+                otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
 
             for (int i = 0; i < 4; ++i) {
-                Float pdf = nodePair.nodeFactor * 4 * node.sum(i) / denom;
-                Float otherPdf = nodePair.otherNodeFactor * 4 * otherNode.sum(i) / otherDenom;
+                std::uint32_t childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;
+                std::uint32_t otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
 
-                //one of the nodes are a leaf node, we can just compute the ratio here and not go further
-                if(node.isLeaf(i) || otherNode.isLeaf(i)){
+                Float pdf = nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
+                Float otherPdf = nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
+
+                //both nodes are leaf, we can compute the scaling factors here
+                if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = otherPdf / pdf;
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
@@ -434,7 +439,12 @@ public:
                     }
                 }
                 else{
-                    pairStack.push({node.child(i), otherNode.child(i), pdf, otherPdf});
+                    std::pair<size_t, int> idx = node.isLeaf(childIdx) ? std::make_pair(nodePair.nodeIndex.first, i) : 
+                        std::make_pair(m_nodes[nodePair.nodeIndex.first].child(i), -1);
+                    std::pair<size_t, int> otheridx = oldNode.isLeaf(i) ? std::make_pair(nodePair.otherNodeIndex.first, i) : 
+                        std::make_pair(other.m_nodes[nodePair.otherNodeIndex.first].child(i), -1);
+
+                    pairStack.push({idx, otheridx, pdf, otherPdf});
                 }
             }
         }
@@ -572,6 +582,83 @@ public:
         }
     }
 
+    float computeAugmentedPdf(float oldPdf, float newPdf, float A){
+        return (A * newPdf - oldPdf) / (A - 1.f);
+    }
+
+    float buildAugmented(const DTree& oldDist, const DTree& newDist){
+        m_atomic = Atomic{};
+        m_maxDepth = 0;
+        m_nodes.clear();
+        m_nodes.emplace_back();
+
+        auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
+        A = majorizing_pair.first / majorizing_pair.second;
+
+        //new is too similar to old, no need to create augmented distribution
+        if(std::abs(A - 1) < EPSILON){
+            return;
+        }
+
+        struct NodePair {
+            std::pair<size_t, int> newNodeIndex;
+            std::pair<size_t, int> oldNodeIndex;
+            Float newNodeFactor;
+            Float oldNodeFactor;
+            std::uint32_t nodeIdx;
+        };
+
+        std::pair<Float, Float> pdfPair(1.f, 1.f);
+        Float largestScalingFactor = 0.f;
+
+        std::stack<NodePair> pairStack;
+        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
+        m_nodes.emplace_back();
+        m_nodes[0].setSum(computeAugmentedPdf(1.f, 1.f, A));
+
+        while (!pairStack.empty()) {
+            NodePair nodePair = pairStack.top();
+            pairStack.pop();
+
+            const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex.first];
+            const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex.first];
+
+            //required because trees might not be same depth
+            Float oldDenom = nodePair.oldNodeIndex.second < 0 ? oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3) :
+                oldNode.sum(nodePair.oldNodeIndex.second) * 4.f;
+            Float newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
+                newNode.sum(nodePair.newNodeIndex.second) * 4.f;
+
+            for (int i = 0; i < 4; ++i) {
+                std::uint32_t oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
+                std::uint32_t newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
+
+                Float oldPdf = nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
+                Float newPdf = nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
+
+                Float pdf = computeAugmentedPdf(oldPdf, newPdf, A);
+
+                //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
+                if(!(newNode.isLeaf(newChildIdx) && oldNode.isLeaf(oldChildIdx))){
+                    m_nodes[nodePair.nodeIdx].setChild(i, static_cast<uint16_t>(m_nodes.size()));
+                    m_nodes.emplace_back();
+                    m_nodes.back().setSum(pdf / 4.f);
+
+                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(nodePair.newNodeIndex.first, i) : 
+                        std::make_pair(newDist.m_nodes[nodePair.newNodeIndex.first].child(i), -1);
+                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(nodePair.oldNodeIndex.first, i) : 
+                        std::make_pair(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(i), -1);
+
+                    pairStack.push({newIdx, oldIdx, newPdf, oldPdf, m_nodes.size() - 1});
+                }
+
+                m_nodes[nodePair.nodeIdx].setSum(i, pdf);
+            }
+        }
+
+        return A - 1.f;
+    }
+
     size_t approxMemoryFootprint() const {
         return m_nodes.capacity() * sizeof(QuadTreeNode) + sizeof(*this);
     }
@@ -666,7 +753,16 @@ public:
         return {(cosTheta + 1) / 2, phi / (2 * M_PI)};
     }
 
-    void build() {
+    void build(ref<Sampler> sampler) {
+        /*float B = augmented.buildAugmented(sampling, building);
+        float frac = B - int(B);
+        req_augmented_samples = B * current_samples;
+        if(sampler->next1D() < frac){
+            req_augmented_samples++;
+        }
+
+        current_samples = 0;*/
+
         previous = sampling;
         building.build();
         sampling = building;
@@ -678,7 +774,8 @@ public:
     }
 
     Vector sample(Sampler* sampler) const {
-        return canonicalToDir(sampling.sample(sampler));
+        current_samples++;
+        return /*current_samples > req_augmented_samples ? */canonicalToDir(sampling.sample(sampler))/* : canonicalToDir(augmented.sample(sampler))*/;
     }
 
     Float pdf(const Vector& dir) const {
@@ -779,6 +876,11 @@ private:
     DTree building;
     DTree sampling;
     DTree previous;
+    DTree augmented;
+
+    std::uint32_t current_samples;
+    std::uint32_t req_augmented_samples;
+
     std::pair<Float, Float> m_rejPdfPair;
 
     AdamOptimizer bsdfSamplingFractionOptimizer{0.01f};
@@ -1194,11 +1296,11 @@ public:
         m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold); });
     }
 
-    void buildSDTree() {
+    void buildSDTree(ref<Sampler> sampler) {
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { dTree->build(); });
+        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { dTree->build(sampler); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -1696,6 +1798,11 @@ public:
 
         m_progress = std::unique_ptr<ProgressReporter>(new ProgressReporter("Rendering", nPasses, job));
 
+        Properties props("independent");
+        ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
+        sampler->configure();
+        sampler->generate(Point2i(0));
+
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
@@ -1720,11 +1827,6 @@ public:
             resetSDTree();
 
             if(m_reweight){
-                Properties props("independent");
-                ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
-                sampler->configure();
-                sampler->generate(Point2i(0));
-
                 reweightCurrentPaths(sampler);
 
                 if(m_renderReweightIterations){
@@ -1767,11 +1869,6 @@ public:
                 }
             }
             else if(m_reject){
-                Properties props("independent");
-                ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
-                sampler->configure();
-                sampler->generate(Point2i(0));
-
                 rejectCurrentPaths(sampler);
                 //rejectReweightHybrid(sampler);
 
@@ -1853,7 +1950,7 @@ public:
                     break;
                 }
             }
-            buildSDTree();
+            buildSDTree(sampler);
 
             if (m_dumpSDTree) {
                 dumpSDTree(scene, sensor);
@@ -1952,7 +2049,7 @@ public:
                     elapsedSeconds = computeElapsedSeconds(m_startTime);
                 } while (elapsedSeconds < nSeconds);
             }
-            buildSDTree();
+            buildSDTree(sampler);
 
             if (m_dumpSDTree) {
                 dumpSDTree(scene, sensor);
