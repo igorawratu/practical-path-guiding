@@ -607,11 +607,10 @@ public:
             std::pair<size_t, int> oldNodeIndex;
             Float newNodeFactor;
             Float oldNodeFactor;
-            std::uint32_t nodeIdx;
+            size_t nodeIdx;
         };
 
         std::pair<Float, Float> pdfPair(1.f, 1.f);
-        Float largestScalingFactor = 0.f;
 
         std::stack<NodePair> pairStack;
         pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
