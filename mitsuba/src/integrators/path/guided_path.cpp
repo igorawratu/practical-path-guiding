@@ -1817,7 +1817,7 @@ public:
         sampler->configure();
         sampler->generate(Point2i(0));
 
-        film-clear();
+        film->clear();
 
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
