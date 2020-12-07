@@ -1118,7 +1118,7 @@ public:
     void forEachDTreeWrapperParallel(std::function<void(DTreeWrapper*)> func) {
         int nDTreeWrappers = static_cast<int>(m_nodes.size());
 
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int i = 0; i < nDTreeWrappers; ++i) {
             if (m_nodes[i].isLeaf) {
                 func(&m_nodes[i].dTree);
