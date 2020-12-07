@@ -1852,7 +1852,7 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
-            film->clear();
+            //film->clear();
             resetSDTree(m_augment);
 
             if(m_reweight){
