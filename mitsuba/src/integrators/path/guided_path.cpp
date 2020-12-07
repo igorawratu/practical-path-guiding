@@ -594,6 +594,7 @@ public:
         m_nodes.clear();
         m_nodes.emplace_back();
 
+        std::cout << "getting majorizing factor" << std::endl;
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first / majorizing_pair.second;
 
@@ -617,6 +618,7 @@ public:
         m_nodes.emplace_back();
         m_nodes[0].setSum(computeAugmentedPdf(1.f, 1.f, A));
 
+        std::cout << "creating augmented distribution" << std::endl;
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
             pairStack.pop();
@@ -756,7 +758,9 @@ public:
 
     void build(ref<Sampler> sampler, bool augment) {
         if(augment){
+            std::cout << "building augmented" << std::endl;
             float B = augmented.buildAugmented(sampling, building);
+            std::cout << "resetting sample counts" << std::endl;
             float frac = B - int(B);
             req_augmented_samples = B * current_samples;
             if(sampler->next1D() < frac){
