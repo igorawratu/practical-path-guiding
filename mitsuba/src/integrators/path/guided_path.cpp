@@ -580,7 +580,7 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        if(!augment){
+        if(true/*!augment*/){
             for (auto& node : m_nodes) {
                 node.setSum(0);
             }
@@ -770,7 +770,7 @@ public:
             }
             else{
                 float frac = B - int(B);
-                req_augmented_samples = B * total_samples;
+                req_augmented_samples = B * current_samples;
                 if(sampler->next1D() < frac){
                     req_augmented_samples++;
                 }
@@ -1852,7 +1852,7 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
-            //film->clear();
+            film->clear();
             resetSDTree(m_augment);
 
             if(m_reweight){
