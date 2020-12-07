@@ -759,6 +759,9 @@ public:
     }
 
     void build(ref<Sampler> sampler, bool augment) {
+        previous = sampling;
+        building.build();
+        
         if(augment){
             float B = augmented.buildAugmented(sampling, building);
 
@@ -775,9 +778,7 @@ public:
 
             current_samples = 0;
         }
-    
-        previous = sampling;
-        building.build();
+
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
