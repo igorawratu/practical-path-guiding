@@ -426,8 +426,8 @@ public:
                 otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
 
             for (int i = 0; i < 4; ++i) {
-                std::uint32_t childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;
-                std::uint32_t otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
+                int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;
+                int otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
 
                 Float pdf = nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
                 Float otherPdf = nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
@@ -633,8 +633,8 @@ public:
                 newNode.sum(nodePair.newNodeIndex.second) * 4.f;
 
             for (int i = 0; i < 4; ++i) {
-                std::uint32_t oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
-                std::uint32_t newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
+                int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
+                int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
 
                 Float oldPdf = nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
                 Float newPdf = nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
