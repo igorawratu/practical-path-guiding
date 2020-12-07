@@ -441,10 +441,10 @@ public:
                     }
                 }
                 else{
-                    std::pair<size_t, int> idx = node.isLeaf(childIdx) ? std::make_pair(size_t(nodePair.nodeIndex.first), i) : 
-                        std::make_pair(size_t(m_nodes[nodePair.nodeIndex.first].child(i)), -1);
-                    std::pair<size_t, int> otheridx = otherNode.isLeaf(i) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), i) : 
-                        std::make_pair(size_t(other.m_nodes[nodePair.otherNodeIndex.first].child(i)), -1);
+                    std::pair<size_t, int> idx = node.isLeaf(childIdx) ? std::make_pair(size_t(nodePair.nodeIndex.first), childIdx) : 
+                        std::make_pair(size_t(m_nodes[nodePair.nodeIndex.first].child(childIdx)), -1);
+                    std::pair<size_t, int> otheridx = otherNode.isLeaf(otherChildIdx) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), otherChildIdx) : 
+                        std::make_pair(size_t(other.m_nodes[nodePair.otherNodeIndex.first].child(otherChildIdx)), -1);
 
                     pairStack.push({idx, otheridx, pdf, otherPdf});
                 }
@@ -647,10 +647,10 @@ public:
                     m_nodes.emplace_back();
                     m_nodes.back().setSum(pdf / 4.f);
 
-                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(size_t(nodePair.newNodeIndex.first), i) : 
-                        std::make_pair(size_t(newDist.m_nodes[nodePair.newNodeIndex.first].child(i)), -1);
-                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(size_t(nodePair.oldNodeIndex.first), i) : 
-                        std::make_pair(size_t(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(i)), -1);
+                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(size_t(nodePair.newNodeIndex.first), newChildIdx) : 
+                        std::make_pair(size_t(newDist.m_nodes[nodePair.newNodeIndex.first].child(newChildIdx)), -1);
+                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(size_t(nodePair.oldNodeIndex.first), oldChildIdx) : 
+                        std::make_pair(size_t(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(oldChildIdx)), -1);
 
                     pairStack.push({newIdx, oldIdx, newPdf, oldPdf, m_nodes.size() - 1});
                 }
