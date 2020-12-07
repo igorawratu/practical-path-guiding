@@ -1309,7 +1309,7 @@ public:
         Log(EInfo, "Resetting distributions for sampling.");
 
         m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
-        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
+        m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
     void buildSDTree(ref<Sampler> sampler) {
@@ -1842,7 +1842,7 @@ public:
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
             //film->clear();
-            resetSDTree();
+            resetSDTree(m_augment);
 
             if(m_reweight){
                 reweightCurrentPaths(sampler);
@@ -2020,7 +2020,7 @@ public:
             const auto startIter = std::chrono::steady_clock::now();
 
             film->clear();
-            resetSDTree();
+            resetSDTree(m_augment);
 
             if(m_reweight){
                 reweightCurrentPaths(sampler);
