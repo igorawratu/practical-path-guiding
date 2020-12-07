@@ -580,7 +580,7 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        if(!augment){
+        if(true/*!augment*/){
             for (auto& node : m_nodes) {
                 node.setSum(0);
             }
