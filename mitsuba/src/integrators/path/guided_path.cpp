@@ -598,6 +598,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first / majorizing_pair.second;
+        std::cout << A << std::endl;
 
         //new is too similar to old, no need to create augmented distribution
         if(std::abs(A - 1) < EPSILON){
@@ -770,9 +771,6 @@ public:
                     req_augmented_samples++;
                 }
             }
-            
-
-            std::cout << req_augmented_samples << " " << current_samples << " " << B << std::endl;
 
             current_samples = 0;
         }
