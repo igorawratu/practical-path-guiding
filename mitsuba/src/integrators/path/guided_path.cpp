@@ -759,11 +759,18 @@ public:
     void build(ref<Sampler> sampler, bool augment) {
         if(augment){
             float B = augmented.buildAugmented(sampling, building);
-            float frac = B - int(B);
-            req_augmented_samples = B * current_samples;
-            if(sampler->next1D() < frac){
-                req_augmented_samples++;
+
+            if(B < EPSILON){
+                req_augmented_samples = 0;
             }
+            else{
+                float frac = B - int(B);
+                req_augmented_samples = B * current_samples;
+                if(sampler->next1D() < frac){
+                    req_augmented_samples++;
+                }
+            }
+            
 
             std::cout << req_augmented_samples << " " << current_samples << " " << B << std::endl;
 
@@ -1118,7 +1125,7 @@ public:
     void forEachDTreeWrapperParallel(std::function<void(DTreeWrapper*)> func) {
         int nDTreeWrappers = static_cast<int>(m_nodes.size());
 
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int i = 0; i < nDTreeWrappers; ++i) {
             if (m_nodes[i].isLeaf) {
                 func(&m_nodes[i].dTree);
