@@ -775,9 +775,9 @@ public:
                     req_augmented_samples++;
                 }
             }
-
-            current_samples = 0;
         }
+
+        current_samples = 0;
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
