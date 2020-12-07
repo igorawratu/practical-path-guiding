@@ -523,7 +523,7 @@ public:
         m_atomic.statisticalWeight = statisticalWeight;
     }
 
-    void reset(const DTree& previousDTree, int newMaxDepth, Float subdivisionThreshold) {
+    void reset(const DTree& previousDTree, int newMaxDepth, Float subdivisionThreshold, bool augment) {
         m_atomic = Atomic{};
         m_maxDepth = 0;
         m_nodes.clear();
@@ -579,8 +579,10 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        for (auto& node : m_nodes) {
-            node.setSum(0);
+        if(!augment){
+            for (auto& node : m_nodes) {
+                node.setSum(0);
+            }
         }
     }
 
@@ -594,7 +596,6 @@ public:
         m_nodes.clear();
         m_nodes.emplace_back();
 
-        std::cout << "getting majorizing factor" << std::endl;
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first / majorizing_pair.second;
 
@@ -618,7 +619,6 @@ public:
         m_nodes.emplace_back();
         m_nodes[0].setSum(computeAugmentedPdf(1.f, 1.f, A));
 
-        std::cout << "creating augmented distribution" << std::endl;
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
             pairStack.pop();
@@ -758,9 +758,7 @@ public:
 
     void build(ref<Sampler> sampler, bool augment) {
         if(augment){
-            std::cout << "building augmented" << std::endl;
             float B = augmented.buildAugmented(sampling, building);
-            std::cout << "resetting sample counts" << std::endl;
             float frac = B - int(B);
             req_augmented_samples = B * current_samples;
             if(sampler->next1D() < frac){
@@ -776,8 +774,8 @@ public:
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
 
-    void reset(int maxDepth, Float subdivisionThreshold) {
-        building.reset(sampling, maxDepth, subdivisionThreshold);
+    void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
+        building.reset(sampling, maxDepth, subdivisionThreshold, augment);
     }
 
     Vector sample(Sampler* sampler, bool augment) const{
@@ -1118,7 +1116,7 @@ public:
     void forEachDTreeWrapperParallel(std::function<void(DTreeWrapper*)> func) {
         int nDTreeWrappers = static_cast<int>(m_nodes.size());
 
-//#pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < nDTreeWrappers; ++i) {
             if (m_nodes[i].isLeaf) {
                 func(&m_nodes[i].dTree);
@@ -1307,18 +1305,17 @@ public:
         return proc;
     }
 
-    void resetSDTree() {
+    void resetSDTree(bool augment) {
         Log(EInfo, "Resetting distributions for sampling.");
 
         m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
-        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold); });
+        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
     void buildSDTree(ref<Sampler> sampler) {
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        std::cout << "parallel d-tree construction" << std::endl;
         m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment); });
 
         // Gather statistics
@@ -1338,7 +1335,6 @@ public:
         int nPoints = 0;
         int nPointsNodes = 0;
 
-        std::cout << "gathering d-tree stats" << std::endl;
         m_sdTree->forEachDTreeWrapperConst([&](const DTreeWrapper* dTree) {
             const int depth = dTree->depth();
             maxDepth = std::max(maxDepth, depth);
@@ -1846,7 +1842,6 @@ public:
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
             //film->clear();
-            std::cout << "resetting sd tree" << std::endl;
             resetSDTree();
 
             if(m_reweight){
@@ -1941,8 +1936,6 @@ public:
                 }
             }
 
-            std::cout << "performing render passes" << std::endl;
-
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
@@ -1975,7 +1968,6 @@ public:
                     break;
                 }
             }
-            std::cout << "building sd tree" << std::endl;
             buildSDTree(sampler);
 
             if (m_dumpSDTree) {
