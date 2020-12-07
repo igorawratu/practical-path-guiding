@@ -1314,6 +1314,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
+        std::cout << "parallel d-tree construction" << std::endl;
         m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment); });
 
         // Gather statistics
@@ -1333,6 +1334,7 @@ public:
         int nPoints = 0;
         int nPointsNodes = 0;
 
+        std::cout << "gathering d-tree stats" << std::endl;
         m_sdTree->forEachDTreeWrapperConst([&](const DTreeWrapper* dTree) {
             const int depth = dTree->depth();
             maxDepth = std::max(maxDepth, depth);
