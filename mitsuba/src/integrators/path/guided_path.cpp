@@ -720,6 +720,7 @@ struct DTreeRecord {
 struct DTreeWrapper {
 public:
     DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
+        total_samples = 0;
     }
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
@@ -762,7 +763,6 @@ public:
         building.build();
         
         if(augment && isBuilt){
-            std::cout << req_augmented_samples << " " << current_samples << std::endl;
             float B = augmented.buildAugmented(sampling, building);
 
             if(B < EPSILON){
@@ -770,7 +770,7 @@ public:
             }
             else{
                 float frac = B - int(B);
-                req_augmented_samples = B * current_samples;
+                req_augmented_samples = B * total_samples;
                 if(sampler->next1D() < frac){
                     req_augmented_samples++;
                 }
@@ -796,6 +796,7 @@ public:
 
     void incSampleCount(){
         current_samples++;
+        total_samples++;
     }
 
     Float pdf(const Vector& dir, bool augment) const {
@@ -903,6 +904,7 @@ private:
 
     std::uint32_t current_samples;
     std::uint32_t req_augmented_samples;
+    std::uint32_t total_samples;
 
     std::pair<Float, Float> m_rejPdfPair;
 
