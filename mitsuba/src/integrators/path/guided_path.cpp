@@ -1817,6 +1817,8 @@ public:
         sampler->configure();
         sampler->generate(Point2i(0));
 
+        film-clear();
+
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
@@ -1837,7 +1839,8 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
-            film->clear();
+            //film->clear();
+            std::cout << "resetting sd tree" << std::endl;
             resetSDTree();
 
             if(m_reweight){
@@ -1932,6 +1935,8 @@ public:
                 }
             }
 
+            std::cout << "performing render passes" << std::endl;
+
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
@@ -1964,6 +1969,7 @@ public:
                     break;
                 }
             }
+            std::cout << "building sd tree" << std::endl;
             buildSDTree(sampler);
 
             if (m_dumpSDTree) {
