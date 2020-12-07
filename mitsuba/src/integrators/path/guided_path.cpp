@@ -430,7 +430,7 @@ public:
                 int otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
 
                 Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
-                Float otherPdf = otherDenom < 0.f ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
+                Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
 
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
