@@ -762,7 +762,7 @@ public:
         previous = sampling;
         building.build();
         
-        if(augment){
+        if(augment && m_isBuilt){
             float B = augmented.buildAugmented(sampling, building);
 
             if(B < EPSILON){
