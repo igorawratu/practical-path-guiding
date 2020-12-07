@@ -435,7 +435,7 @@ public:
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = otherPdf / pdf;
-                    std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << denom << " : " << scalingFactor << std::endl;
+                    std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
                         pdfPair = std::make_pair(pdf, otherPdf);
