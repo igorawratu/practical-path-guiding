@@ -758,11 +758,11 @@ public:
         return {(cosTheta + 1) / 2, phi / (2 * M_PI)};
     }
 
-    void build(ref<Sampler> sampler, bool augment) {
+    void build(ref<Sampler> sampler, bool augment, bool isBuilt) {
         previous = sampling;
         building.build();
         
-        if(augment && m_isBuilt){
+        if(augment && isBuilt){
             float B = augmented.buildAugmented(sampling, building);
 
             if(B < EPSILON){
@@ -1325,7 +1325,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment, this->m_isBuilt); });
 
         // Gather statistics
         int maxDepth = 0;
