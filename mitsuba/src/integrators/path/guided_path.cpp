@@ -598,7 +598,7 @@ public:
         m_nodes.emplace_back();
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
-        float A = majorizing_pair.first / majorizing_pair.second;
+        float A = majorizing_pair.second / majorizing_pair.first;
         std::cout << majorizing_pair.first << " " << majorizing_pair.second << " " << A << std::endl;
 
         //new is too similar to old, no need to create augmented distribution
