@@ -580,7 +580,7 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        if(!augment){
+        /*if(!augment)*/{
             for (auto& node : m_nodes) {
                 node.setSum(0);
             }
@@ -659,6 +659,7 @@ public:
                 m_nodes[nodePair.nodeIdx].setSum(i, pdf);
             }
         }
+        return 0.f;
         return A - 1.f;
     }
 
