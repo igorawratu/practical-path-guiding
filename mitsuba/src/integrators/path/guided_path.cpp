@@ -659,7 +659,7 @@ public:
                 m_nodes[nodePair.nodeIdx].setSum(i, pdf);
             }
         }
-        return 0.f;
+
         return A - 1.f;
     }
 
@@ -769,7 +769,7 @@ public:
                 req_augmented_samples = 0;
             }
             else{
-                float req = B * total_samples;
+                float req = B * current_samples;
                 float frac = req - int(req);
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
