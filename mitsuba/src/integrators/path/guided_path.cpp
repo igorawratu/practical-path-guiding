@@ -839,8 +839,8 @@ public:
 
     Vector sample(Sampler* sampler, bool augment) const{
         if(augment){
-            return current_samples > req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
-            //return canonicalToDir(sampling.sample(sampler));
+            //return current_samples > req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
+            return canonicalToDir(sampling.sample(sampler));
         }
         else return canonicalToDir(sampling.sample(sampler));
     }
@@ -852,8 +852,8 @@ public:
 
     Float pdf(const Vector& dir, bool augment) const {
         if(augment){
-            return current_samples > req_augmented_samples ? sampling.pdf(dirToCanonical(dir)) : augmented.pdf(dirToCanonical(dir));
-            //return sampling.pdf(dirToCanonical(dir));
+            //return current_samples > req_augmented_samples ? sampling.pdf(dirToCanonical(dir)) : augmented.pdf(dirToCanonical(dir));
+            return sampling.pdf(dirToCanonical(dir));
         }
         else return sampling.pdf(dirToCanonical(dir));
     }
