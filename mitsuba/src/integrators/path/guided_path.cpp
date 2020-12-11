@@ -399,6 +399,56 @@ public:
         return m_nodes[i];
     }
 
+    bool validateMajorizingFactor(const DTree& other, float factor){
+        struct NodePair {
+            std::pair<size_t, int> nodeIndex;
+            std::pair<size_t, int> otherNodeIndex;
+            Float nodeFactor;
+            Float otherNodeFactor;
+        };
+
+        std::stack<NodePair> pairStack;
+        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f});
+
+        while (!pairStack.empty()) {
+            NodePair nodePair = pairStack.top();
+            pairStack.pop();
+
+            const QuadTreeNode& node = m_nodes[nodePair.nodeIndex.first];
+            const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherNodeIndex.first];
+
+            Float denom = nodePair.nodeIndex.second < 0 ? node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3) : 
+                node.sum(nodePair.nodeIndex.second) * 4.f;
+            Float otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
+                otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
+
+            for (int i = 0; i < 4; ++i) {
+                int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;
+                int otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
+
+                Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
+                Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
+
+                //both nodes are leaf, check if majorization factor majorizes
+                if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
+                    if(factor * pdf < otherPdf){
+                        return false;
+                    }
+                }
+                else{
+                    std::pair<size_t, int> idx = node.isLeaf(childIdx) ? std::make_pair(size_t(nodePair.nodeIndex.first), childIdx) : 
+                        std::make_pair(size_t(m_nodes[nodePair.nodeIndex.first].child(childIdx)), -1);
+                    std::pair<size_t, int> otheridx = otherNode.isLeaf(otherChildIdx) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), otherChildIdx) : 
+                        std::make_pair(size_t(other.m_nodes[nodePair.otherNodeIndex.first].child(otherChildIdx)), -1);
+
+                    pairStack.push({idx, otheridx, pdf, otherPdf});
+                }
+            }
+        }
+
+        return true;
+    }
+
     std::pair<Float, Float> getMajorizingFactor(const DTree& other) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
@@ -580,7 +630,7 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        /*if(!augment)*/{
+        if(!augment){
             for (auto& node : m_nodes) {
                 node.setSum(0);
             }
@@ -659,7 +709,6 @@ public:
                 m_nodes[nodePair.nodeIdx].setSum(i, pdf);
             }
         }
-
         return A - 1.f;
     }
 
@@ -769,7 +818,7 @@ public:
                 req_augmented_samples = 0;
             }
             else{
-                float req = B * current_samples;
+                float req = B * total_samples;
                 float frac = req - int(req);
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
@@ -1322,7 +1371,7 @@ public:
     void resetSDTree(bool augment) {
         Log(EInfo, "Resetting distributions for sampling.");
 
-        m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
+        //m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
@@ -1855,7 +1904,7 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
-            film->clear();
+            //film->clear();
             resetSDTree(m_augment);
 
             if(m_reweight){
