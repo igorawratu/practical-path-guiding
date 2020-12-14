@@ -2019,6 +2019,7 @@ public:
                 fs::path scene_path = scene->getDestinationFile();
                 currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
                     std::to_string(m_iter)), 0);
+                std::cout << m_images.size() << std::endl;
                 currentIterationFilm->setBitmap(m_images.back());
 
                 currentIterationFilm->develop(scene, 0.f);
