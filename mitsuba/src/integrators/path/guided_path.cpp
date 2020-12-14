@@ -30,10 +30,11 @@
 #include <iomanip>
 #include <sstream>
 #include <mutex>
+#include <limits>
 
 MTS_NAMESPACE_BEGIN
 
-const float EPSILON = 0.0001f;
+const float EPSILON = std::numeric_limits<float>::min() * 10.f;
 
 ref<Film> createFilm(std::uint32_t width, std::uint32_t height, bool hdr){
     Properties props = hdr ? Properties("hdrfilm") : Properties("ldrfilm");
