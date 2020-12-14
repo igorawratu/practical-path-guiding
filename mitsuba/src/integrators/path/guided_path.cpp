@@ -837,6 +837,16 @@ public:
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
 
+    bool verifySufficientAugmentedSamples(){
+        bool sufficient = current_samples > req_augmented_samples;
+
+        if(!sufficient){
+            std::cout << "Insufficient augmented samples at " << current_samples << " to " << req_augmented_samples << std::endl;
+        }
+
+        return sufficient;
+    }
+
     void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
         building.reset(sampling, maxDepth, subdivisionThreshold, augment);
     }
@@ -1379,6 +1389,10 @@ public:
 
         //m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
+    }
+
+    void verifySDTree(bool augment) {
+        m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->verifySufficientAugmentedSamples(); });
     }
 
     void buildSDTree(ref<Sampler> sampler) {
@@ -2050,6 +2064,11 @@ public:
                     break;
                 }
             }
+
+            if(m_augment){
+                verifySDTree();
+            }
+            
             buildSDTree(sampler);
 
             if (m_dumpSDTree) {
