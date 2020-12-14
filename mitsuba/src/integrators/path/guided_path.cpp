@@ -1554,17 +1554,6 @@ public:
 
         m_renderProcesses.clear();
 
-        if(m_renderIntermediateAugmented){
-            ref<Film> film = sensor->getFilm();
-            ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
-            fs::path scene_path = scene->getDestinationFile();
-            currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
-                std::to_string(m_iter)), 0);
-            currentIterationFilm->put(m_image);
-
-            currentIterationFilm->develop(scene, 0.f);
-        }
-
         variance = 0;
         Bitmap* squaredImage = m_squaredImage->getBitmap();
         Bitmap* image = m_image->getBitmap();
@@ -2023,6 +2012,16 @@ public:
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
                 break;
+            }
+
+            if(m_renderIntermediateAugmented){
+                ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+                fs::path scene_path = scene->getDestinationFile();
+                currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
+                    std::to_string(m_iter)), 0);
+                currentIterationFilm->setBitmap(m_images.back());
+
+                currentIterationFilm->develop(scene, 0.f);
             }
 
             const Float lastVarAtEnd = currentVarAtEnd;
