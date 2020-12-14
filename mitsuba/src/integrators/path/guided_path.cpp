@@ -652,6 +652,10 @@ public:
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
+        if(A > 5.f){
+            std::cout << A << " " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
+        }
+
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
         //new is too similar to old, no need to create augmented distribution
@@ -817,10 +821,6 @@ public:
         
         if(augment && isBuilt){
             float B = augmented.buildAugmented(sampling, building);
-
-            if(B > 5.f){
-                std::cout << B << std::endl;
-            }
 
             if(B < EPSILON){
                 req_augmented_samples = 0;
