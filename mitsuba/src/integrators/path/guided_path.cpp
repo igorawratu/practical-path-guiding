@@ -632,7 +632,7 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        /*if(!augment)*/{
+        if(!augment){
             for (auto& node : m_nodes) {
                 node.setSum(0);
             }
@@ -817,15 +817,12 @@ public:
         
         if(augment && isBuilt){
             float B = augmented.buildAugmented(sampling, building);
-            if(B > 5.f){
-                std::cout << B << std::endl;
-            }
 
             if(B < EPSILON){
                 req_augmented_samples = 0;
             }
             else{
-                float req = B * current_samples;
+                float req = B * total_samples;
                 float frac = req - int(req);
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
@@ -1926,8 +1923,6 @@ public:
             Log(EInfo, "ITERATION %d, %d passes", m_iter, passesThisIteration);
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
-
-            film->clear();
 
             if(!m_augment){
                 //film->clear();
