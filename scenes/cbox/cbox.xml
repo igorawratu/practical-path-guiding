@@ -23,8 +23,6 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
 		<boolean name="augment" value="true"/>
-		<string name="spatialFilter" value="stochastic"/>
-		<string name="directionalFilter" value="box"/>
 		<boolean name="renderIntermediateAugmented" value="false"/>
 
 	</integrator>
