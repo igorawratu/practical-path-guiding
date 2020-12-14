@@ -652,7 +652,7 @@ public:
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.second / majorizing_pair.first;
 
-        bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
+        //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
         //new is too similar to old, no need to create augmented distribution
         if(std::abs(A - 1) < EPSILON){
