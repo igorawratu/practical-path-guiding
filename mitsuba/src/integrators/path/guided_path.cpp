@@ -1558,7 +1558,7 @@ public:
         Bitmap* squaredImage = m_squaredImage->getBitmap();
         Bitmap* image = m_image->getBitmap();
 
-        /*if (m_sampleCombination == ESampleCombination::EInverseVariance) */{
+        if (m_sampleCombination == ESampleCombination::EInverseVariance) {
             // Record all previously rendered iterations such that later on all iterations can be
             // combined by weighting them by their estimated inverse pixel variance.
             m_images.push_back(image->clone());
@@ -2015,14 +2015,10 @@ public:
             }
 
             if(m_renderIntermediateAugmented){
-                ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
-                fs::path scene_path = scene->getDestinationFile();
-                currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
+                film->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
                     std::to_string(m_iter)), 0);
-                std::cout << m_images.size() << std::endl;
-                currentIterationFilm->setBitmap(m_images.back());
 
-                currentIterationFilm->develop(scene, 0.f);
+                film->develop(scene, 0.f);
             }
 
             const Float lastVarAtEnd = currentVarAtEnd;
