@@ -1391,7 +1391,7 @@ public:
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
-    void verifySDTree(bool augment) {
+    void verifySDTree() {
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->verifySufficientAugmentedSamples(); });
     }
 
@@ -2068,7 +2068,7 @@ public:
             if(m_augment){
                 verifySDTree();
             }
-            
+
             buildSDTree(sampler);
 
             if (m_dumpSDTree) {
