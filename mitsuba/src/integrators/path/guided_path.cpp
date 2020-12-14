@@ -651,7 +651,11 @@ public:
         float A = majorizing_pair.second / majorizing_pair.first;
 
         bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
-        std::cout << "Majorizes: " << majorizes << std::endl;
+
+        if(!majorizes){
+            std::cout << A << " does not majorizes" << std::endl;
+        }
+        
 
         //new is too similar to old, no need to create augmented distribution
         if(std::abs(A - 1) < EPSILON){
