@@ -650,6 +650,9 @@ public:
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.second / majorizing_pair.first;
 
+        bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
+        std::cout << "Majorizes: " << majorizes << std::endl;
+
         //new is too similar to old, no need to create augmented distribution
         if(std::abs(A - 1) < EPSILON){
             return 0.f;
@@ -1904,7 +1907,7 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
-            film->clear();
+            //film->clear();
             resetSDTree(m_augment);
 
             if(m_reweight){
