@@ -822,7 +822,7 @@ public:
                 req_augmented_samples = 0;
             }
             else{
-                float req = B * total_samples;
+                float req = B * current_samples;
                 float frac = req - int(req);
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
