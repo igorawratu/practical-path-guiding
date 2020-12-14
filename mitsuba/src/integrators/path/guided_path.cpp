@@ -1392,7 +1392,7 @@ public:
     }
 
     void verifySDTree() {
-        m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->verifySufficientAugmentedSamples(); });
+        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { dTree->verifySufficientAugmentedSamples(); });
     }
 
     void buildSDTree(ref<Sampler> sampler) {
