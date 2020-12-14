@@ -2015,10 +2015,11 @@ public:
             }
 
             if(m_renderIntermediateAugmented){
+                fs::path scene_path = scene->getDestinationFile();
                 film->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
                     std::to_string(m_iter)), 0);
-
                 film->develop(scene, 0.f);
+                film->setDestinationFile(scene_path);
             }
 
             const Float lastVarAtEnd = currentVarAtEnd;
