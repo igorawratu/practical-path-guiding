@@ -1558,7 +1558,7 @@ public:
         Bitmap* squaredImage = m_squaredImage->getBitmap();
         Bitmap* image = m_image->getBitmap();
 
-        if (m_sampleCombination == ESampleCombination::EInverseVariance) {
+        /*if (m_sampleCombination == ESampleCombination::EInverseVariance) */{
             // Record all previously rendered iterations such that later on all iterations can be
             // combined by weighting them by their estimated inverse pixel variance.
             m_images.push_back(image->clone());
