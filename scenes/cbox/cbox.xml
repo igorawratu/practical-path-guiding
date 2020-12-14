@@ -25,7 +25,7 @@
 		<boolean name="augment" value="true"/>
 		<string name="spatialFilter" value="stochastic"/>
 		<string name="directionalFilter" value="box"/>
-		<boolean name="renderRejectIterations" value="false"/>
+		<boolean name="renderIntermediateAugmented" value="true"/>
 
 	</integrator>
 
