@@ -838,7 +838,7 @@ public:
     }
 
     bool verifySufficientAugmentedSamples(){
-        bool sufficient = current_samples > req_augmented_samples;
+        bool sufficient = current_samples >= req_augmented_samples;
 
         if(!sufficient){
             std::cout << "Insufficient augmented samples at " << current_samples << " to " << req_augmented_samples << std::endl;
