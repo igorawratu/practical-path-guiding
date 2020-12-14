@@ -399,7 +399,7 @@ public:
         return m_nodes[i];
     }
 
-    bool validateMajorizingFactor(const DTree& other, float factor){
+    bool validateMajorizingFactor(const DTree& other, float factor), const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
             std::pair<size_t, int> otherNodeIndex;
@@ -630,7 +630,7 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        /*if(!augment)*/{
+        if(!augment){
             for (auto& node : m_nodes) {
                 node.setSum(0);
             }
@@ -1348,6 +1348,8 @@ public:
         m_renderRejectIterations = props.getBoolean("renderRejectIterations", false);
 
         m_augment = props.getBoolean("augment", false);
+
+        m_renderIntermediateAugmented = props.getBoolean("renderIntermediateAugmented", false);
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -2006,6 +2008,16 @@ public:
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
                 break;
+            }
+
+            if(m_renderIntermediateAugmented){
+                ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+                fs::path scene_path = scene->getDestinationFile();
+                currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
+                    std::to_string(m_iter)), 0);
+                currentIterationFilm->put(m_image);
+
+                currentIterationFilm->develop(scene, 0.f);
             }
 
             const Float lastVarAtEnd = currentVarAtEnd;
@@ -3179,6 +3191,7 @@ private:
     bool m_renderRejectIterations;
     bool m_augment;
     size_t sampleCount;
+    bool m_renderIntermediateAugmented;
 
 public:
     MTS_DECLARE_CLASS()
