@@ -432,7 +432,7 @@ public:
                 //both nodes are leaf, check if majorization factor majorizes
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
                     float mpdf = factor * pdf;
-                    if(mpdf < otherPdf){
+                    if((mpdf - otherPdf) < EPSILON){
                         std::cout << "Factor " << factor << " does not majorize " << mpdf << " over " << otherPdf << std::endl;
                         return false;
                     }
