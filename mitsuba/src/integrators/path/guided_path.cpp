@@ -818,6 +818,10 @@ public:
         if(augment && isBuilt){
             float B = augmented.buildAugmented(sampling, building);
 
+            if(B > 2){
+                std::cout << B << std::endl;
+            }
+
             if(B < EPSILON){
                 req_augmented_samples = 0;
             }
