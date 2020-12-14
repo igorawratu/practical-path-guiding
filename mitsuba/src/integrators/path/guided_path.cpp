@@ -1911,7 +1911,7 @@ public:
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
             if(!m_augment){
-                film->clear();
+                //film->clear();
             }
             
             resetSDTree(m_augment);
