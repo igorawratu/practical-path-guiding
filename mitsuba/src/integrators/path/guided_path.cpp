@@ -1910,6 +1910,8 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
+            film->clear();
+
             if(!m_augment){
                 //film->clear();
             }
