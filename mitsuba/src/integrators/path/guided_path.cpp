@@ -486,7 +486,7 @@ public:
 
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
-                    Float scalingFactor = otherPdf / pdf;
+                    Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
@@ -650,7 +650,7 @@ public:
         m_nodes.emplace_back();
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
-        float A = majorizing_pair.second / majorizing_pair.first;
+        float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -818,7 +818,7 @@ public:
         if(augment && isBuilt){
             float B = augmented.buildAugmented(sampling, building);
 
-            if(B > 2){
+            if(B > 5.f){
                 std::cout << B << std::endl;
             }
 
@@ -1929,7 +1929,7 @@ public:
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
             if(!m_augment){
-                //film->clear();
+                film->clear();
             }
             
             resetSDTree(m_augment);
