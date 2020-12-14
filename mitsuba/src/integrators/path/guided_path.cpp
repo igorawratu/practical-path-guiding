@@ -399,7 +399,7 @@ public:
         return m_nodes[i];
     }
 
-    bool validateMajorizingFactor(const DTree& other, float factor), const{
+    bool validateMajorizingFactor(const DTree& other, float factor) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
             std::pair<size_t, int> otherNodeIndex;
