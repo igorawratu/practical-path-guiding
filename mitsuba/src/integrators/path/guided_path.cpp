@@ -431,7 +431,9 @@ public:
 
                 //both nodes are leaf, check if majorization factor majorizes
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
-                    if(factor * pdf < otherPdf){
+                    float mpdf = factor * pdf;
+                    if(mdf < otherPdf){
+                        std::cout << "Factor " << factor << " does not majorize " << mpdf << " over " << otherPdf << std::endl;
                         return false;
                     }
                 }
@@ -651,11 +653,6 @@ public:
         float A = majorizing_pair.second / majorizing_pair.first;
 
         bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
-
-        if(!majorizes){
-            std::cout << A << " does not majorizes" << std::endl;
-        }
-        
 
         //new is too similar to old, no need to create augmented distribution
         if(std::abs(A - 1) < EPSILON){
