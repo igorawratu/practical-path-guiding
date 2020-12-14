@@ -23,7 +23,7 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
 		<boolean name="augment" value="true"/>
-		<boolean name="renderIntermediateAugmented" value="false"/>
+		<boolean name="renderIntermediateAugmented" value="true"/>
 
 	</integrator>
 
