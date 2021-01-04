@@ -479,7 +479,7 @@ public:
                 otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
 
             for (int i = 0; i < 4; ++i) {
-                int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;
+                int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;   
                 int otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
 
                 Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
@@ -1393,7 +1393,7 @@ public:
         Log(EInfo, "Resetting distributions for sampling.");
 
         //m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
-        m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
+        //m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
     void verifySDTree() {
