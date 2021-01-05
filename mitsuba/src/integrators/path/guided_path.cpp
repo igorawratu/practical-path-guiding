@@ -478,7 +478,7 @@ public:
             Float otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
                 otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
 
-            std::cout << nodePair.nodeIndex.first << " " << nodePair.otherNodeIndex.first << std::endl;
+            std::cout << nodePair.nodeIndex.first << " " << nodePair.otherNodeIndex.first << " " << nodePair.nodeIndex.second << " " << nodePair.otherNodeIndex.second << std::endl;
 
             for (int i = 0; i < 4; ++i) {
                 int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;   
