@@ -485,8 +485,9 @@ public:
                 Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
                 Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
 
-                if(pdf == 0.f && otherPdf != 0.f){
-                    std::cout << nodePair.nodeIndex.second << " " << i << " " << node.sum(childIdx) << std::endl;
+                if(pdf == 0.f && otherPdf > 0.f){
+                    std::cout << nodePair.nodeIndex.second << " " << i << " " << node.sum(childIdx) <<
+                        " " << nodePair.otherNodeIndex.second << " " << i << " " << otherNode.sum(otherChildIdx) std::endl;
                 }
 
                 //both nodes are leaf, we can compute the scaling factors here
