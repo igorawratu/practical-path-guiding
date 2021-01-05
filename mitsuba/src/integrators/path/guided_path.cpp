@@ -611,19 +611,16 @@ public:
                 SAssert(fraction <= 1.0f + Epsilon);
 
                 if (sNode.depth < newMaxDepth && fraction > subdivisionThreshold) {
+                    if (!otherNode.isLeaf(i)) {
+                        SAssert(sNode.otherDTree == &previousDTree);
+                        nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
+                    } else {
+                        nodeIndices.push({m_nodes.size(), m_nodes.size(), this, sNode.depth + 1});
+                    }
+
                     m_nodes[sNode.nodeIndex].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
-                    
-                    if (!otherNode.isLeaf(i)) {
-                        if(sNode.otherDTree != &previousDTree){
-                            std::cout << sNode.otherDTree << " " << &previousDTree << " " << this << std::endl;
-                        }
-                        SAssert(sNode.otherDTree == &previousDTree);
-                        nodeIndices.push({m_nodes.size() - 1, otherNode.child(i), &previousDTree, sNode.depth + 1});
-                    } else {
-                        nodeIndices.push({m_nodes.size() - 1, m_nodes.size() - 1, this, sNode.depth + 1});
-                        m_nodes.back().setSum(otherNode.sum(i) / 4);
-                    }
+                    m_nodes.back().setSum(otherNode.sum(i) / 4);
 
                     if (m_nodes.size() > std::numeric_limits<uint16_t>::max()) {
                         SLog(EWarn, "DTreeWrapper hit maximum children count.");
