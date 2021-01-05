@@ -478,17 +478,14 @@ public:
             Float otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
                 otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
 
+            std::cout << nodePair.nodeIndex.first << " " << nodePair.otherNodeIndex.first << std::endl;
+
             for (int i = 0; i < 4; ++i) {
                 int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;   
                 int otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
 
                 Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
                 Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
-
-                /*if(pdf == 0.f && otherPdf > 0.f)*/{
-                    std::cout << nodePair.nodeIndex.second << " " << i << " " << node.sum(childIdx) <<
-                        " " << nodePair.otherNodeIndex.second << " " << i << " " << otherNode.sum(otherChildIdx) << std::endl;
-                }
 
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
