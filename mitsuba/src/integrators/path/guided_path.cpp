@@ -485,10 +485,6 @@ public:
                 Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
                 Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
 
-                if(pdf == 0.f && otherPdf > 0.f){
-                    std::cout << nodePair.nodeIndex.first << " " << i << " " << node.sum(childIdx) << std::endl;
-                }
-
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
@@ -613,7 +609,7 @@ public:
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
-                if (sNode.depth < newMaxDepth && fraction > subdivisionThreshold) {
+                if (sNode.depth < newMaxDepth && (fraction > subdivisionThreshold || !otherNode.isLeaf(i))) {
                     if (!otherNode.isLeaf(i)) {
                         SAssert(sNode.otherDTree == &previousDTree);
                         nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
