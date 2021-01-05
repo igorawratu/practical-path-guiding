@@ -615,6 +615,9 @@ public:
                     m_nodes.emplace_back();
                     
                     if (!otherNode.isLeaf(i)) {
+                        if(sNode.otherDTree != &previousDTree){
+                            std::cout << sNode.otherDTree << " " << &previousDTree << " " << this << std::endl;
+                        }
                         SAssert(sNode.otherDTree == &previousDTree);
                         nodeIndices.push({m_nodes.size() - 1, otherNode.child(i), &previousDTree, sNode.depth + 1});
                     } else {
