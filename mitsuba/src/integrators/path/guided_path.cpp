@@ -587,10 +587,11 @@ public:
             size_t nodeIndex;
             size_t otherNodeIndex;
             const DTree* otherDTree;
+            int depth;
         };
 
         std::stack<StackNode> nodeIndices;
-        nodeIndices.push({0, 0, &previousDTree});
+        nodeIndices.push({0, 0, &previousDTree, 1});
 
         const Float total = previousDTree.m_atomic.sum;
         
@@ -612,12 +613,13 @@ public:
                 if (sNode.depth < newMaxDepth && fraction > subdivisionThreshold) {
                     m_nodes[sNode.nodeIndex].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
+                    
 
                     if (!otherNode.isLeaf(i)) {
                         SAssert(sNode.otherDTree == &previousDTree);
-                        nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree});
+                        nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
                     } else {
-                        nodeIndices.push({m_nodes.size(), m_nodes.size(), this});
+                        nodeIndices.push({m_nodes.size(), m_nodes.size(), this, sNode.depth + 1});
                         m_nodes.back().setSum(otherNode.sum(i) / 4);
                     }
 
