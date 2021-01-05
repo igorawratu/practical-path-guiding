@@ -587,11 +587,10 @@ public:
             size_t nodeIndex;
             size_t otherNodeIndex;
             const DTree* otherDTree;
-            int depth;
         };
 
         std::stack<StackNode> nodeIndices;
-        nodeIndices.push({0, 0, &previousDTree, 1});
+        nodeIndices.push({0, 0, &previousDTree});
 
         const Float total = previousDTree.m_atomic.sum;
         
@@ -606,20 +605,21 @@ public:
             const QuadTreeNode& otherNode = sNode.otherDTree->m_nodes[sNode.otherNodeIndex];
 
             for (int i = 0; i < 4; ++i) {
+                m_nodes[sNode.nodeIndex].setSum(i, otherNode.sum(i));
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
-                if (sNode.depth < newMaxDepth && (fraction > subdivisionThreshold || !otherNode.isLeaf(i))) {
-                    if (!otherNode.isLeaf(i)) {
-                        SAssert(sNode.otherDTree == &previousDTree);
-                        nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
-                    } else {
-                        nodeIndices.push({m_nodes.size(), m_nodes.size(), this, sNode.depth + 1});
-                    }
-
+                if (sNode.depth < newMaxDepth && fraction > subdivisionThreshold) {
                     m_nodes[sNode.nodeIndex].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
-                    m_nodes.back().setSum(otherNode.sum(i) / 4);
+
+                    if (!otherNode.isLeaf(i)) {
+                        SAssert(sNode.otherDTree == &previousDTree);
+                        nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree});
+                    } else {
+                        nodeIndices.push({m_nodes.size(), m_nodes.size(), this});
+                        m_nodes.back().setSum(otherNode.sum(i) / 4);
+                    }
 
                     if (m_nodes.size() > std::numeric_limits<uint16_t>::max()) {
                         SLog(EWarn, "DTreeWrapper hit maximum children count.");
@@ -653,9 +653,9 @@ public:
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
-        /*if(A > 5.f){
+        if(A > 5.f){
             std::cout << A << " " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
-        }*/
+        }
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
