@@ -736,6 +736,10 @@ public:
         m_atomic.sum.store(sum);
     }
 
+    float getTotalEnergy(){
+        return m_atomic.sum;
+    }
+
 private:
     std::vector<QuadTreeNode> m_nodes;
 
@@ -856,7 +860,7 @@ public:
         dTreePdf = 0;
 
         auto type = bsdf->getType();
-        if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
+        if (!dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
             woPdf = bsdfPdf = bsdf->pdf(bRec);
             return;
         }
@@ -867,15 +871,15 @@ public:
             return;
         }
 
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), true);
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
-    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, ref<Sampler> rRec, DTreeWrapper* dTree) const {
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, ref<Sampler> sampler, DTreeWrapper* dTree) const {
         Point2 sample = sampler->next2D();
 
         auto type = bsdf->getType();
-        if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
+        if (!dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
             auto result = bsdf->sample(bRec, bsdfPdf, sample);
             woPdf = bsdfPdf;
             dTreePdf = 0;
@@ -902,16 +906,11 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, true));
             result = bsdf->eval(bRec);
         }
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
-
-        //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment){
-            dTree->incSampleCount();
-        }
 
         if (woPdf == 0) {
             return Spectrum{0.0f};
@@ -931,17 +930,17 @@ public:
             }
 
             Float woPdf, bsdfPdf, dTreePdf;
-            Float bsdfSamplingFraction = bsdfSamplingFraction();
+            Float bsf = bsdfSamplingFraction();
 
             std::uint32_t idx = sampler->next1D() * point_cache.size();
             if(idx == point_cache.size()){
                 idx--;
             }
 
-            bsdfSamplingRecord bRec = point_cache[idx].first;
+            BsdfSamplingRecord bRec = point_cache[idx].first;
             BSDF* bsdf = point_cache[idx].second;
 
-            Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, sampler, this);
+            Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, this);
 
             Float estimatedRayWi = 0.f;
 
@@ -950,10 +949,10 @@ public:
             Intersection its;
             if(scene->rayIntersect(ray, its)){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                DTreeWrapper* dTree = spatial_tree->dTreeWrapper(ray.o, dTreeVoxelSize);
                 
                 //make this directional in the future
-                estimatedRayWi = dTree.estimatedEnergy();
+                estimatedRayWi = dTree->estimatedEnergy();
             }
 
             s *= estimatedRayWi;
@@ -964,14 +963,6 @@ public:
             current_samples++;
             total_samples++;
         }
-
-        bool sufficient = current_samples >= req_augmented_samples;
-
-        if(!sufficient){
-            std::cout << "Insufficient augmented samples at " << current_samples << " to " << req_augmented_samples << std::endl;
-        }
-
-        return sufficient;
     }
 
     void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
@@ -1527,8 +1518,8 @@ public:
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
-    void verifySDTree() {
-        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { dTree->verifySufficientAugmentedSamples(); });
+    void verifyAugmentedSDTree() {
+        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { dTree->addRequiredAugmentedSamples(); });
     }
 
     void buildSDTree(ref<Sampler> sampler) {
@@ -2826,7 +2817,7 @@ public:
                 if (wiDotGeoN * wiDotShN < 0 && m_strictNormals)
                     break;
 
-                const BSDF *bsdf = its.getBSDF();
+                BSDF *bsdf = its.getBSDF();
 
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = nullptr;
