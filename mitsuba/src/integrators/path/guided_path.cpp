@@ -386,123 +386,6 @@ private:
     std::array<uint16_t, 4> m_children;
 };
 
-void pdfMat(Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree) const {
-    dTreePdf = 0;
-
-    auto type = bsdf->getType();
-    if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
-        woPdf = bsdfPdf = bsdf->pdf(bRec);
-        return;
-    }
-
-    bsdfPdf = bsdf->pdf(bRec);
-    if (!std::isfinite(bsdfPdf)) {
-        woPdf = 0;
-        return;
-    }
-
-    dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
-    woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
-}
-
-Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree) const {
-    Point2 sample = rRec.nextSample2D();
-
-    auto type = bsdf->getType();
-    if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
-        auto result = bsdf->sample(bRec, bsdfPdf, sample);
-        woPdf = bsdfPdf;
-        dTreePdf = 0;
-        return result;
-    }
-
-    Spectrum result;
-    if (sample.x < bsdfSamplingFraction) {
-        sample.x /= bsdfSamplingFraction;
-        result = bsdf->sample(bRec, bsdfPdf, sample);
-        if (result.isZero()) {
-            woPdf = bsdfPdf = dTreePdf = 0;
-            return Spectrum{0.0f};
-        }
-
-        // If we sampled a delta component, then we have a 0 probability
-        // of sampling that direction via guiding, thus we can return early.
-        if (bRec.sampledType & BSDF::EDelta) {
-            dTreePdf = 0;
-            woPdf = bsdfPdf * bsdfSamplingFraction;
-            return result / bsdfSamplingFraction;
-        }
-
-        result *= bsdfPdf;
-    } else {
-        sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-        bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
-        result = bsdf->eval(bRec);
-    }
-
-    pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
-
-    //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-    if(m_augment){
-        dTree->incSampleCount();
-    }
-
-    if (woPdf == 0) {
-        return Spectrum{0.0f};
-    }
-
-    return result / woPdf;
-}
-
-Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, ref<Sampler> rRec, DTreeWrapper* dTree) const {
-    Point2 sample = sampler->next2D();
-
-    auto type = bsdf->getType();
-    if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
-        auto result = bsdf->sample(bRec, bsdfPdf, sample);
-        woPdf = bsdfPdf;
-        dTreePdf = 0;
-        return result;
-    }
-
-    Spectrum result;
-    if (sample.x < bsdfSamplingFraction) {
-        sample.x /= bsdfSamplingFraction;
-        result = bsdf->sample(bRec, bsdfPdf, sample);
-        if (result.isZero()) {
-            woPdf = bsdfPdf = dTreePdf = 0;
-            return Spectrum{0.0f};
-        }
-
-        // If we sampled a delta component, then we have a 0 probability
-        // of sampling that direction via guiding, thus we can return early.
-        if (bRec.sampledType & BSDF::EDelta) {
-            dTreePdf = 0;
-            woPdf = bsdfPdf * bsdfSamplingFraction;
-            return result / bsdfSamplingFraction;
-        }
-
-        result *= bsdfPdf;
-    } else {
-        sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-        bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment));
-        result = bsdf->eval(bRec);
-    }
-
-    pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
-
-    //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-    if(m_augment){
-        dTree->incSampleCount();
-    }
-
-    if (woPdf == 0) {
-        return Spectrum{0.0f};
-    }
-
-    return result / woPdf;
-}
-
 class DTree {
 public:
     DTree() {
@@ -967,6 +850,74 @@ public:
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
+    }
+
+    void pdfMat(Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree) const {
+        dTreePdf = 0;
+
+        auto type = bsdf->getType();
+        if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
+            woPdf = bsdfPdf = bsdf->pdf(bRec);
+            return;
+        }
+
+        bsdfPdf = bsdf->pdf(bRec);
+        if (!std::isfinite(bsdfPdf)) {
+            woPdf = 0;
+            return;
+        }
+
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
+        woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
+    }
+
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, ref<Sampler> rRec, DTreeWrapper* dTree) const {
+        Point2 sample = sampler->next2D();
+
+        auto type = bsdf->getType();
+        if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
+            auto result = bsdf->sample(bRec, bsdfPdf, sample);
+            woPdf = bsdfPdf;
+            dTreePdf = 0;
+            return result;
+        }
+
+        Spectrum result;
+        if (sample.x < bsdfSamplingFraction) {
+            sample.x /= bsdfSamplingFraction;
+            result = bsdf->sample(bRec, bsdfPdf, sample);
+            if (result.isZero()) {
+                woPdf = bsdfPdf = dTreePdf = 0;
+                return Spectrum{0.0f};
+            }
+
+            // If we sampled a delta component, then we have a 0 probability
+            // of sampling that direction via guiding, thus we can return early.
+            if (bRec.sampledType & BSDF::EDelta) {
+                dTreePdf = 0;
+                woPdf = bsdfPdf * bsdfSamplingFraction;
+                return result / bsdfSamplingFraction;
+            }
+
+            result *= bsdfPdf;
+        } else {
+            sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment));
+            result = bsdf->eval(bRec);
+        }
+
+        pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
+
+        //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
+        if(m_augment){
+            dTree->incSampleCount();
+        }
+
+        if (woPdf == 0) {
+            return Spectrum{0.0f};
+        }
+
+        return result / woPdf;
     }
 
     void addRequiredAugmentedSamples(STree* spatial_tree, Scene* scene){
@@ -2617,6 +2568,74 @@ public:
         Float alpha;
         int iter;
     };
+
+    void pdfMat(Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree) const {
+        dTreePdf = 0;
+
+        auto type = bsdf->getType();
+        if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
+            woPdf = bsdfPdf = bsdf->pdf(bRec);
+            return;
+        }
+
+        bsdfPdf = bsdf->pdf(bRec);
+        if (!std::isfinite(bsdfPdf)) {
+            woPdf = 0;
+            return;
+        }
+
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
+        woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
+    }
+
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree) const {
+        Point2 sample = rRec.nextSample2D();
+
+        auto type = bsdf->getType();
+        if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
+            auto result = bsdf->sample(bRec, bsdfPdf, sample);
+            woPdf = bsdfPdf;
+            dTreePdf = 0;
+            return result;
+        }
+
+        Spectrum result;
+        if (sample.x < bsdfSamplingFraction) {
+            sample.x /= bsdfSamplingFraction;
+            result = bsdf->sample(bRec, bsdfPdf, sample);
+            if (result.isZero()) {
+                woPdf = bsdfPdf = dTreePdf = 0;
+                return Spectrum{0.0f};
+            }
+
+            // If we sampled a delta component, then we have a 0 probability
+            // of sampling that direction via guiding, thus we can return early.
+            if (bRec.sampledType & BSDF::EDelta) {
+                dTreePdf = 0;
+                woPdf = bsdfPdf * bsdfSamplingFraction;
+                return result / bsdfSamplingFraction;
+            }
+
+            result *= bsdfPdf;
+        } else {
+            sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
+            result = bsdf->eval(bRec);
+        }
+
+        pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
+
+        //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
+        if(m_augment){
+            dTree->incSampleCount();
+        }
+
+        if (woPdf == 0) {
+            return Spectrum{0.0f};
+        }
+
+        return result / woPdf;
+    }
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
         PGPath pathRecord;
