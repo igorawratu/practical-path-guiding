@@ -1414,8 +1414,10 @@ public:
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
-    void verifyAugmentedSDTree() {
-        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { dTree->addRequiredAugmentedSamples(); });
+    void verifyAugmentedSDTree(Scene* scene) {
+        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { 
+            addRequiredAugmentedSamples(dTree, m_sdTree, scene);
+        });
     }
 
     void buildSDTree(ref<Sampler> sampler) {
@@ -2087,7 +2089,7 @@ public:
             }
 
             if(m_augment){
-                verifySDTree();
+                verifySDTree(scene);
             }
 
             buildSDTree(sampler);
@@ -2555,7 +2557,7 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment));
             result = bsdf->eval(bRec);
         }
 
@@ -2591,7 +2593,7 @@ public:
                 idx--;
             }
 
-            BsdfSamplingRecord bRec = dTree->point_cache[idx].first;
+            BSDFSamplingRecord bRec = dTree->point_cache[idx].first;
             BSDF* bsdf = dTree->point_cache[idx].second;
 
             Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, this);
@@ -2807,7 +2809,7 @@ public:
                 if (wiDotGeoN * wiDotShN < 0 && m_strictNormals)
                     break;
 
-                BSDF *bsdf = its.getBSDF();
+                const BSDF *bsdf = its.getBSDF();
 
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = nullptr;
