@@ -796,12 +796,12 @@ public:
         }
     }
 
-    void addPointToCache(BSDFSamplingRecord& brec, const BSDF* bsdf){
+    void addPointToCache(const Intersection& its){
         if(point_cache.size() >= max_cache_size){
-            point_cache[rand() % 100] = std::make_pair(brec, bsdf);
+            point_cache[rand() % 100] = its;
         }
         else{
-            point_cache.emplace_back(brec, bsdf);
+            point_cache.push_back(its);
         }
     }
 
@@ -1017,7 +1017,7 @@ private:
     } m_lock;
 
 public:
-    std::vector<std::pair<BSDFSamplingRecord, BSDF*>> point_cache;
+    std::vector<Intersection> point_cache;
 };
 
 struct STreeNode {
@@ -2593,8 +2593,8 @@ public:
                 idx--;
             }
 
-            BSDFSamplingRecord bRec = dTree->point_cache[idx].first;
-            BSDF* bsdf = dTree->point_cache[idx].second;
+            BSDFSamplingRecord bRec(dTree->point_cache[idx], sampler, ERadiance);
+            const BSDF* bsdf = dTree->point_cache[idx].getBSDF();
 
             Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, dTree);
 
@@ -2895,7 +2895,7 @@ public:
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                     if(m_augment){
-                                        dTree->addPointToCache(bRec, bsdf);
+                                        dTree->addPointToCache(its);
                                     }
                                 }
                             }
@@ -3004,7 +3004,7 @@ public:
                             }
 
                             if(m_augment){
-                                dTree->addPointToCache(bRec, bsdf);
+                                dTree->addPointToCache(its);
                             }
 
                             ++nVertices;
