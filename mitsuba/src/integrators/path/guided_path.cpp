@@ -797,12 +797,12 @@ public:
     }
 
     void addPointToCache(const Intersection& its){
-        /*if(point_cache.size() >= max_cache_size){
+        if(point_cache.size() >= max_cache_size){
             point_cache[rand() % point_cache.size()] = its;
         }
         else{
             point_cache.push_back(its);
-        }*/
+        }
     }
 
     static Vector canonicalToDir(Point2 p) {
