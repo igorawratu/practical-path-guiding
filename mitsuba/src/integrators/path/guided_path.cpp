@@ -797,6 +797,10 @@ public:
     }
 
     void addPointToCache(const Intersection& its){
+        if(!its.isValid()){
+            return;
+        }
+        
         if(point_cache.size() >= max_cache_size){
             point_cache[rand() % point_cache.size()] = its;
         }
