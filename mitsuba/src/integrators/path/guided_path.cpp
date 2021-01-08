@@ -796,17 +796,17 @@ public:
         }
     }
 
-    void addPointToCache(const Intersection& its){
+    void addPointToCache(Intersection its){
         if(!its.isValid()){
             return;
         }
 
-        /*if(point_cache.size() >= max_cache_size){
+        if(point_cache.size() >= max_cache_size){
             point_cache[rand() % point_cache.size()] = its;
         }
-        else{*/
+        else{
             point_cache.push_back(its);
-        //}
+        }
     }
 
     static Vector canonicalToDir(Point2 p) {
@@ -1419,9 +1419,9 @@ public:
     }
 
     void verifyAugmentedSDTree(Scene* scene) {
-        /*m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
+        m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
             this->addRequiredAugmentedSamples(dTree, m_sdTree.get(), scene);
-        });*/
+        });
     }
 
     void buildSDTree(ref<Sampler> sampler) {
