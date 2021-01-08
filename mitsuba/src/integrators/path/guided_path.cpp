@@ -1415,8 +1415,8 @@ public:
     }
 
     void verifyAugmentedSDTree(Scene* scene) {
-        m_sdTree->forEachDTreeWrapperParallel([](DTreeWrapper* dTree) { 
-            addRequiredAugmentedSamples(dTree, m_sdTree, scene);
+        m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
+            this->addRequiredAugmentedSamples(dTree, m_sdTree, scene);
         });
     }
 
@@ -2089,7 +2089,7 @@ public:
             }
 
             if(m_augment){
-                verifySDTree(scene);
+                verifyAugmentedSDTree(scene);
             }
 
             buildSDTree(sampler);
@@ -2596,7 +2596,7 @@ public:
             BSDFSamplingRecord bRec = dTree->point_cache[idx].first;
             BSDF* bsdf = dTree->point_cache[idx].second;
 
-            Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, this);
+            Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, dTree);
 
             Float estimatedRayWi = 0.f;
 
