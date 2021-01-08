@@ -2579,7 +2579,7 @@ public:
         Properties props("independent");
         ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
 
-        while(dTree->requiresAugmentedSamples()){
+        /*while(dTree->requiresAugmentedSamples()){
             if(dTree->point_cache.size() == 0){
                 std::cout << "Warning: no previous sample points to perform additional samples, terminating augmented correction..." << std::endl;
                 break;
@@ -2617,7 +2617,7 @@ public:
             dTree->record(rec, EDirectionalFilter::ENearest, EBsdfSamplingFractionLoss::ENone);
 
             dTree->incSampleCount();
-        }
+        }*/
     }
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
