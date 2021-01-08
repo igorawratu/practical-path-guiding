@@ -796,7 +796,7 @@ public:
         }
     }
 
-    void addPointToCache(BSDFSamplingRecord& brec, BSDF* bsdf){
+    void addPointToCache(BSDFSamplingRecord& brec, const BSDF* bsdf){
         if(point_cache.size() >= max_cache_size){
             point_cache[rand() % 100] = std::make_pair(brec, bsdf);
         }
@@ -1416,7 +1416,7 @@ public:
 
     void verifyAugmentedSDTree(Scene* scene) {
         m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
-            this->addRequiredAugmentedSamples(dTree, m_sdTree, scene);
+            this->addRequiredAugmentedSamples(dTree, m_sdTree.get(), scene);
         });
     }
 
