@@ -856,113 +856,8 @@ public:
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
 
-    void pdfMat(Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree) const {
-        dTreePdf = 0;
-
-        auto type = bsdf->getType();
-        if (!dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
-            woPdf = bsdfPdf = bsdf->pdf(bRec);
-            return;
-        }
-
-        bsdfPdf = bsdf->pdf(bRec);
-        if (!std::isfinite(bsdfPdf)) {
-            woPdf = 0;
-            return;
-        }
-
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), true);
-        woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
-    }
-
-    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, ref<Sampler> sampler, DTreeWrapper* dTree) const {
-        Point2 sample = sampler->next2D();
-
-        auto type = bsdf->getType();
-        if (!dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
-            auto result = bsdf->sample(bRec, bsdfPdf, sample);
-            woPdf = bsdfPdf;
-            dTreePdf = 0;
-            return result;
-        }
-
-        Spectrum result;
-        if (sample.x < bsdfSamplingFraction) {
-            sample.x /= bsdfSamplingFraction;
-            result = bsdf->sample(bRec, bsdfPdf, sample);
-            if (result.isZero()) {
-                woPdf = bsdfPdf = dTreePdf = 0;
-                return Spectrum{0.0f};
-            }
-
-            // If we sampled a delta component, then we have a 0 probability
-            // of sampling that direction via guiding, thus we can return early.
-            if (bRec.sampledType & BSDF::EDelta) {
-                dTreePdf = 0;
-                woPdf = bsdfPdf * bsdfSamplingFraction;
-                return result / bsdfSamplingFraction;
-            }
-
-            result *= bsdfPdf;
-        } else {
-            sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, true));
-            result = bsdf->eval(bRec);
-        }
-
-        pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
-
-        if (woPdf == 0) {
-            return Spectrum{0.0f};
-        }
-
-        return result / woPdf;
-    }
-
-    void addRequiredAugmentedSamples(STree* spatial_tree, Scene* scene){
-        Properties props("independent");
-        ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
-
-        while(current_samples < req_augmented_samples){
-            if(point_cache.size() == 0){
-                std::cout << "Warning: no previous sample points to perform additional samples, terminating augmented correction..." << std::endl;
-                break;
-            }
-
-            Float woPdf, bsdfPdf, dTreePdf;
-            Float bsf = bsdfSamplingFraction();
-
-            std::uint32_t idx = sampler->next1D() * point_cache.size();
-            if(idx == point_cache.size()){
-                idx--;
-            }
-
-            BsdfSamplingRecord bRec = point_cache[idx].first;
-            BSDF* bsdf = point_cache[idx].second;
-
-            Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, this);
-
-            Float estimatedRayWi = 0.f;
-
-            //raycast to find hit here
-            Ray ray(bRec.its.p, bRec.wo, 0.f);
-            Intersection its;
-            if(scene->rayIntersect(ray, its)){
-                Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = spatial_tree->dTreeWrapper(ray.o, dTreeVoxelSize);
-                
-                //make this directional in the future
-                estimatedRayWi = dTree->estimatedEnergy();
-            }
-
-            s *= estimatedRayWi;
-
-            DTreeRecord rec{ray.d, estimatedRayWi, s.average(), woPdf, bsdfPdf, dTreePdf, 1.f, false};
-            record(rec, EDirectionalFilter::ENearest, EBsdfSamplingFractionLoss::ENone);
-
-            current_samples++;
-            total_samples++;
-        }
+    bool requiresAugmentedSamples(){
+        return current_samples < req_augmented_samples;
     }
 
     void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
@@ -1121,6 +1016,7 @@ private:
         std::atomic_flag m_mutex;
     } m_lock;
 
+public:
     std::vector<std::pair<BSDFSamplingRecord, BSDF*>> point_cache;
 };
 
@@ -2626,6 +2522,100 @@ public:
         }
 
         return result / woPdf;
+    }
+
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, ref<Sampler> sampler, DTreeWrapper* dTree) const {
+        Point2 sample = sampler->next2D();
+
+        auto type = bsdf->getType();
+        if (!m_isBuilt || !dTree || (type & BSDF::EDelta) == (type & BSDF::EAll)) {
+            auto result = bsdf->sample(bRec, bsdfPdf, sample);
+            woPdf = bsdfPdf;
+            dTreePdf = 0;
+            return result;
+        }
+
+        Spectrum result;
+        if (sample.x < bsdfSamplingFraction) {
+            sample.x /= bsdfSamplingFraction;
+            result = bsdf->sample(bRec, bsdfPdf, sample);
+            if (result.isZero()) {
+                woPdf = bsdfPdf = dTreePdf = 0;
+                return Spectrum{0.0f};
+            }
+
+            // If we sampled a delta component, then we have a 0 probability
+            // of sampling that direction via guiding, thus we can return early.
+            if (bRec.sampledType & BSDF::EDelta) {
+                dTreePdf = 0;
+                woPdf = bsdfPdf * bsdfSamplingFraction;
+                return result / bsdfSamplingFraction;
+            }
+
+            result *= bsdfPdf;
+        } else {
+            sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
+            result = bsdf->eval(bRec);
+        }
+
+        pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
+
+        //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
+        if(m_augment){
+            dTree->incSampleCount();
+        }
+
+        if (woPdf == 0) {
+            return Spectrum{0.0f};
+        }
+
+        return result / woPdf;
+    }
+
+    void addRequiredAugmentedSamples(DTreeWrapper* dTree, STree* spatial_tree, Scene* scene){
+        Properties props("independent");
+        ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
+
+        while(dTree->requiresAugmentedSamples()){
+            if(dTree->point_cache.size() == 0){
+                std::cout << "Warning: no previous sample points to perform additional samples, terminating augmented correction..." << std::endl;
+                break;
+            }
+
+            Float woPdf, bsdfPdf, dTreePdf;
+            Float bsf = dTree->bsdfSamplingFraction();
+
+            std::uint32_t idx = sampler->next1D() * dTree->point_cache.size();
+            if(idx == dTree->point_cache.size()){
+                idx--;
+            }
+
+            BsdfSamplingRecord bRec = dTree->point_cache[idx].first;
+            BSDF* bsdf = dTree->point_cache[idx].second;
+
+            Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, this);
+
+            Float estimatedRayWi = 0.f;
+
+            //raycast to find hit here
+            Ray ray(bRec.its.p, bRec.its.toWorld(bRec.wo), 0.f);
+            Intersection its;
+            if(scene->rayIntersect(ray, its)){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = spatial_tree->dTreeWrapper(ray.o, dTreeVoxelSize);
+                
+                //make this directional in the future
+                estimatedRayWi = dTree->estimatedEnergy();
+            }
+
+            s *= estimatedRayWi;
+
+            DTreeRecord rec{ray.d, estimatedRayWi, s.average(), woPdf, bsdfPdf, dTreePdf, 1.f, false};
+            dTree->record(rec, EDirectionalFilter::ENearest, EBsdfSamplingFractionLoss::ENone);
+
+            dTree->incSampleCount();
+        }
     }
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
