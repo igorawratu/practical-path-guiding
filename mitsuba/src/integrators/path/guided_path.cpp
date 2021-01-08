@@ -796,7 +796,7 @@ public:
         }
     }
 
-    void addPointToCache(Intersection its){
+    void addPointToCache(const Intersection& its){
         if(!its.isValid()){
             return;
         }
@@ -2825,6 +2825,8 @@ public:
                     dTree = m_sdTree->dTreeWrapper(its.p, dTreeVoxelSize);
                 }
 
+                Intersection curr_its = its;
+
                 Float bsdfSamplingFraction = m_bsdfSamplingFraction;
                 if (dTree && m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) {
                     bsdfSamplingFraction = dTree->bsdfSamplingFraction();
@@ -2899,7 +2901,7 @@ public:
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                     if(m_augment){
-                                        dTree->addPointToCache(its);
+                                        dTree->addPointToCache(curr_its);
                                     }
                                 }
                             }
@@ -3008,7 +3010,7 @@ public:
                             }
 
                             if(m_augment){
-                                dTree->addPointToCache(its);
+                                dTree->addPointToCache(curr_its);
                             }
 
                             ++nVertices;
