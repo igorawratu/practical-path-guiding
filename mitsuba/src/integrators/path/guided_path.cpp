@@ -800,13 +800,13 @@ public:
         if(!its.isValid()){
             return;
         }
-        
-        if(point_cache.size() >= max_cache_size){
+
+        /*if(point_cache.size() >= max_cache_size){
             point_cache[rand() % point_cache.size()] = its;
         }
-        else{
+        else{*/
             point_cache.push_back(its);
-        }
+        //}
     }
 
     static Vector canonicalToDir(Point2 p) {
