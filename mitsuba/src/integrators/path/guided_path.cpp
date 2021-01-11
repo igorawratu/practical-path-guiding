@@ -1429,7 +1429,7 @@ public:
 
     void verifyAugmentedSDTree(Scene* scene) {
         m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
-            //this->addRequiredAugmentedSamples(dTree, m_sdTree.get(), scene);
+            this->addRequiredAugmentedSamples(dTree, m_sdTree.get(), scene);
         });
     }
 
