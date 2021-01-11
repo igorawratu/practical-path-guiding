@@ -783,6 +783,8 @@ public:
         previous_tree_samples = 0;
         req_augmented_samples = 0;
         max_cache_size = 100;
+
+        point_cache.resize(max_cache_size);
     }
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
@@ -797,7 +799,7 @@ public:
     }
 
     void addPointToCache(const Intersection& its){
-        /*if(!its.isValid()){
+        if(!its.isValid()){
             return;
         }
 
@@ -806,7 +808,7 @@ public:
         }
         else{
             point_cache.push_back(its);
-        }*/
+        }
     }
 
     static Vector canonicalToDir(Point2 p) {
