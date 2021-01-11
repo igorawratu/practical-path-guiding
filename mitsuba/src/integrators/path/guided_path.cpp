@@ -797,7 +797,7 @@ public:
     }
 
     void addPointToCache(const Intersection& its){
-        if(!its.isValid()){
+        /*if(!its.isValid()){
             return;
         }
 
@@ -806,7 +806,7 @@ public:
         }
         else{
             point_cache.push_back(its);
-        }
+        }*/
     }
 
     static Vector canonicalToDir(Point2 p) {
