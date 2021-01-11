@@ -805,7 +805,8 @@ public:
             return;
         }
 
-        point_cache[current_cache_idx++] = its;
+        point_cache[current_cache_idx] = its;
+        current_cache_idx = (current_cache_idx + 1) % point_cache.size();
         current_cache_size = std::min(point_cache.size(), size_t(current_cache_size + 1));
     }
 
