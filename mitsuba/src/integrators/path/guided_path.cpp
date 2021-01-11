@@ -782,9 +782,11 @@ public:
         total_samples = 0;
         previous_tree_samples = 0;
         req_augmented_samples = 0;
-        max_cache_size = 100;
+        
+        current_cache_size = 0;
+        current_cache_idx = 0;
 
-        //point_cache.resize(max_cache_size);
+        point_cache.resize(100);
     }
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
@@ -803,12 +805,16 @@ public:
             return;
         }
 
-        if(point_cache.size() >= max_cache_size){
-            point_cache[/*rand() % point_cache.size()*/0] = its;
+        point_cache[current_cache_idx++] = its;
+        current_cache_size = std::min(point_cache.size(), current_cache_size + 1);
+    }
+
+    Intersection* getCachedPoint(){
+        if(current_cache_size == 0){
+            return nullptr;
         }
-        else{
-            point_cache.emplace_back(its);
-        }
+
+        return &point_cache[rand() % current_cache_size];
     }
 
     static Vector canonicalToDir(Point2 p) {
@@ -996,7 +1002,10 @@ private:
     std::uint32_t total_samples;
     std::uint32_t previous_tree_samples;
 
-    std::uint32_t max_cache_size;
+    std::uint32_t current_cache_size;
+    std::uint32_t current_cache_idx;
+
+    std::vector<Intersection> point_cache;
 
     std::pair<Float, Float> m_rejPdfPair;
 
@@ -1021,9 +1030,6 @@ private:
     private:
         std::atomic_flag m_mutex;
     } m_lock;
-
-public:
-    std::vector<Intersection> point_cache;
 };
 
 struct STreeNode {
@@ -2585,8 +2591,9 @@ public:
         Properties props("independent");
         ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
 
-        /*while(dTree->requiresAugmentedSamples()){
-            if(dTree->point_cache.size() == 0){
+        while(dTree->requiresAugmentedSamples()){
+            Intersection* cached_point = dTree->getCachedPoint();
+            if(cached_point == nullptr){
                 std::cout << "Warning: no previous sample points to perform additional samples, terminating augmented correction..." << std::endl;
                 break;
             }
@@ -2594,13 +2601,8 @@ public:
             Float woPdf, bsdfPdf, dTreePdf;
             Float bsf = dTree->bsdfSamplingFraction();
 
-            std::uint32_t idx = sampler->next1D() * dTree->point_cache.size();
-            if(idx == dTree->point_cache.size()){
-                idx--;
-            }
-
-            BSDFSamplingRecord bRec(dTree->point_cache[idx], sampler, ERadiance);
-            const BSDF* bsdf = dTree->point_cache[idx].getBSDF();
+            BSDFSamplingRecord bRec(*cached_point, sampler, ERadiance);
+            const BSDF* bsdf = cached_point->getBSDF();
 
             Spectrum s = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsf, sampler, dTree);
 
@@ -2623,7 +2625,7 @@ public:
             dTree->record(rec, EDirectionalFilter::ENearest, EBsdfSamplingFractionLoss::ENone);
 
             dTree->incSampleCount();
-        }*/
+        }
     }
 
     Spectrum Li(const RayDifferential &r, RadianceQueryRecord &rRec) const {
