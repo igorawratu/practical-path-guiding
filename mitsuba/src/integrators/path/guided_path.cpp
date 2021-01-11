@@ -806,7 +806,7 @@ public:
         }
 
         point_cache[current_cache_idx++] = its;
-        current_cache_size = std::min(point_cache.size(), current_cache_size + 1);
+        current_cache_size = std::min(point_cache.size(), size_t(current_cache_size + 1));
     }
 
     Intersection* getCachedPoint(){
