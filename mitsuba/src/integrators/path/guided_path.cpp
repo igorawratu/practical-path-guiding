@@ -804,7 +804,7 @@ public:
         }
 
         if(point_cache.size() >= max_cache_size){
-            point_cache[rand() % point_cache.size()] = its;
+            point_cache[/*rand() % point_cache.size()*/0] = its;
         }
         else{
             point_cache.push_back(its);
