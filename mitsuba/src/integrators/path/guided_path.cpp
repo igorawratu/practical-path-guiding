@@ -784,7 +784,7 @@ public:
         req_augmented_samples = 0;
         max_cache_size = 100;
 
-        point_cache.resize(max_cache_size);
+        //point_cache.resize(max_cache_size);
     }
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
@@ -807,7 +807,7 @@ public:
             point_cache[/*rand() % point_cache.size()*/0] = its;
         }
         else{
-            point_cache.push_back(its);
+            point_cache.emplace_back(its);
         }
     }
 
