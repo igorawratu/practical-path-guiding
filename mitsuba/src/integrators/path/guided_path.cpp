@@ -2101,7 +2101,7 @@ public:
                 }
             }
 
-            if(m_augment){
+            if(m_augment && !m_isFinalIter){
                 verifyAugmentedSDTree(scene);
             }
 
