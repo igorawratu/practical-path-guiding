@@ -2623,6 +2623,7 @@ public:
             s *= estimatedRayWi;
 
             DTreeRecord rec{ray.d, estimatedRayWi, s.average(), woPdf, bsdfPdf, dTreePdf, 1.f, false};
+            std::cout << s.average() << std::endl;
             dTree->record(rec, EDirectionalFilter::ENearest, EBsdfSamplingFractionLoss::ENone);
 
             dTree->incSampleCount();
