@@ -22,8 +22,10 @@
 		<!-- Parameters for our guided path tracer -->
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
-		<boolean name="augment" value="true"/>
+		<!-- <boolean name="augment" value="true"/> -->
 		<!-- <boolean name="renderIntermediateAugmented" value="true"/> -->
+		<boolean name="reweight" value="true"/>
+		<boolean name="renderReweightIterations" value="true"/>
 
 	</integrator>
 

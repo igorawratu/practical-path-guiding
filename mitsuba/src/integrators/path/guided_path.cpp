@@ -644,11 +644,82 @@ public:
         return (A * newPdf - oldPdf) / (A - 1.f);
     }
 
+    float computeAugmentedPdf(float oldPdf, float newPdf){
+        return std::max(newPdf - oldPdf, 0.f);
+    }
+
+    float buildUnmajorizedAugmented(const DTree& oldDist, const DTree& newDist){
+        m_atomic = Atomic{};
+        m_nodes.clear();
+        m_nodes.emplace_back();
+
+        struct NodePair {
+            std::pair<size_t, int> newNodeIndex;
+            std::pair<size_t, int> oldNodeIndex;
+            Float newNodeFactor;
+            Float oldNodeFactor;
+            size_t nodeIdx;
+        };
+
+        std::pair<Float, Float> pdfPair(1.f, 1.f);
+
+        std::stack<NodePair> pairStack;
+        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
+
+        while (!pairStack.empty()) {
+            NodePair nodePair = pairStack.top();
+            pairStack.pop();
+
+            const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex.first];
+            const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex.first];
+
+            //required because trees might not be same depth
+            Float oldDenom = nodePair.oldNodeIndex.second < 0 ? oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3) :
+                oldNode.sum(nodePair.oldNodeIndex.second) * 4.f;
+            Float newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
+                newNode.sum(nodePair.newNodeIndex.second) * 4.f;
+
+            for (int i = 0; i < 4; ++i) {
+                int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
+                int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
+
+                Float oldPdf = nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
+                Float newPdf = nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
+
+                //both nodes are leaves, compute difference for pdf
+                if(newNode.isLeaf(newChildIdx) && oldNode.isLeaf(oldChildIdx)){
+                    Float pdf = computeAugmentedPdf(oldPdf, newPdf);
+                    m_nodes[nodePair.nodeIdx].setSum(i, pdf);
+                }
+                //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
+                else{
+                    m_nodes[nodePair.nodeIdx].setChild(i, static_cast<uint16_t>(m_nodes.size()));
+                    m_nodes.emplace_back();
+
+                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(size_t(nodePair.newNodeIndex.first), newChildIdx) : 
+                        std::make_pair(size_t(newDist.m_nodes[nodePair.newNodeIndex.first].child(newChildIdx)), -1);
+                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(size_t(nodePair.oldNodeIndex.first), oldChildIdx) : 
+                        std::make_pair(size_t(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(oldChildIdx)), -1);
+
+                    pairStack.push({newIdx, oldIdx, newPdf, oldPdf, m_nodes.size() - 1});
+                }
+                
+            }
+        }
+
+        build();
+
+        float integral = 0.f;
+        for(int i = 0; i < 4; ++i){
+            integral += m_nodes[0].sum(i);
+        }
+    
+        return integral;
+    }
+
     float buildAugmented(const DTree& oldDist, const DTree& newDist){
         m_atomic = Atomic{};
         m_maxDepth = 0;
-        m_nodes.clear();
-        m_nodes.emplace_back();
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
@@ -672,6 +743,8 @@ public:
 
         std::stack<NodePair> pairStack;
         pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
+
+        m_nodes.clear();
         m_nodes.emplace_back();
         m_nodes[0].setSum(computeAugmentedPdf(1.f, 1.f, A));
 
@@ -1423,7 +1496,7 @@ public:
     void resetSDTree(bool augment) {
         Log(EInfo, "Resetting distributions for sampling.");
 
-        //m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
+        m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
@@ -2101,10 +2174,6 @@ public:
                 }
             }
 
-            if(m_augment && !m_isFinalIter){
-                verifyAugmentedSDTree(scene);
-            }
-
             buildSDTree(sampler);
 
             if (m_dumpSDTree) {
@@ -2222,7 +2291,7 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
-        m_sdTree->subdivide(15);
+        //m_sdTree->subdivide(15);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<PGPath>>(new std::vector<PGPath>());
         m_rejSamplePaths = std::unique_ptr<std::vector<RPGPath>>(new std::vector<RPGPath>());
@@ -2623,7 +2692,6 @@ public:
             s *= estimatedRayWi;
 
             DTreeRecord rec{ray.d, estimatedRayWi, s.average(), woPdf, bsdfPdf, dTreePdf, 1.f, false};
-            std::cout << s.average() << std::endl;
             dTree->record(rec, EDirectionalFilter::ENearest, EBsdfSamplingFractionLoss::ENone);
 
             dTree->incSampleCount();
