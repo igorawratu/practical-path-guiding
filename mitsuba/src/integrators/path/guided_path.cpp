@@ -915,13 +915,20 @@ public:
         return {(cosTheta + 1) / 2, phi / (2 * M_PI)};
     }
 
-    void build(ref<Sampler> sampler, bool augment, bool isBuilt) {
+    void build(ref<Sampler> sampler, bool augment, bool augmentReweight, bool isBuilt) {
         previous = sampling;
         building.build();
         
-        if(augment && isBuilt){
+        if((augment || augmentReweight) && isBuilt){
             previous_tree_samples = total_samples;
-            float B = augmented.buildAugmented(sampling, building);
+            float B
+
+            if(augment){
+                B = augmented.buildAugmented(sampling, building);
+            }
+            else if(augmentReweight){
+                B = buildUnmajorizedAugmented;
+            }
 
             if(B < EPSILON){
                 req_augmented_samples = 0;
@@ -1467,6 +1474,9 @@ public:
         m_reject = props.getBoolean("reject", false);
         m_renderRejectIterations = props.getBoolean("renderRejectIterations", false);
 
+        m_rejectReweight = props.getBoolean("rejectReweight", false);
+        m_rejectAugment = props.getBoolean("rejectAugment", false);
+
         m_augment = props.getBoolean("augment", false);
 
         m_renderIntermediateAugmented = props.getBoolean("renderIntermediateAugmented", false);
@@ -1933,6 +1943,89 @@ public:
         }
     }
 
+    void rejectAugmentHybrid(ref<Sampler> sampler){
+        //#pragma omp parallel for
+        for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+            //empty paths are ignored as they represent paths where all the vertices have been rejected
+            if((*m_rejSamplePaths)[i].path.size() == 0){
+                continue;
+            }
+
+            (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
+            Spectrum throughput(1.0f);
+
+            std::vector<Vertex> vertices;
+
+            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, false);
+                Float bsf = dTree->bsdfSamplingFraction();
+
+                Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                Float acceptProb = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
+                Float oldWo = (*m_rejSamplePaths)[i].path[j].woPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
+
+
+                if(sampler->next1D() > acceptProb){
+                    termination_iter = j;
+                    break;
+                }
+                else{
+                    Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / oldWo;
+                    throughput *= bsdfWeight;
+                    (*m_rejSamplePaths)[i].path[j].throughput = throughput;
+                }
+
+                vertices.push_back(     
+                    Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_rejSamplePaths)[i].path[j].ray,
+                        (*m_rejSamplePaths)[i].path[j].throughput,
+                        (*m_rejSamplePaths)[i].path[j].bsdfVal,
+                        (*m_rejSamplePaths)[i].path[j].Li,
+                        (*m_rejSamplePaths)[i].path[j].woPdf,
+                        (*m_rejSamplePaths)[i].path[j].bsdfPdf,
+                        dtreePdf,
+                        (*m_rejSamplePaths)[i].path[j].isDelta
+                    });
+            }
+
+            (*m_rejSamplePaths)[i].path.resize(termination_iter);
+
+            //removes light contrib for rejected vertices
+            //this assumes no NEE, will need to change to account for NEE later
+            Spectrum totalL(0.f);
+
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
+                std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
+
+                if(pos >= termination_iter){
+                    continue;
+                }
+
+                Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
+                L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+
+                for(std::uint32_t k = 0; k < pos; ++k){
+                    (*m_rejSamplePaths)[i].path[k].Li += L;
+                    vertices[k].radiance += L;
+                }
+                (*m_rejSamplePaths)[i].Li += L;
+            }
+
+            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
+        }
+    }
+
     void reweightCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
@@ -2084,8 +2177,15 @@ public:
                 }
             }
             else if(m_reject){
-                rejectCurrentPaths(sampler);
-                //rejectReweightHybrid(sampler);
+                if(m_rejectReweight){
+                    rejectReweightHybrid(sampler);
+                }
+                else if(m_rejectAugment){
+                    rejectAugmentHybrid(sampler);
+                }
+                else{
+                    rejectCurrentPaths(sampler);
+                }
 
                 if(m_renderRejectIterations){
                     ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
@@ -3417,6 +3517,8 @@ private:
     bool m_reject;
     bool m_renderRejectIterations;
     bool m_augment;
+    bool m_rejectReweight;
+    bool m_rejectAugment;
     size_t sampleCount;
     bool m_renderIntermediateAugmented;
 
