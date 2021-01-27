@@ -2705,7 +2705,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment){
+        if(m_augment || m_rejectAugment){
             dTree->incSampleCount();
         }
 
@@ -2754,7 +2754,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment){
+        if(m_augment || m_rejectAugment){
             dTree->incSampleCount();
         }
 
