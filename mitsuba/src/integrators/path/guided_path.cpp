@@ -714,8 +714,6 @@ public:
             integral += m_nodes[0].sum(i);
         }
 
-        std::cout << integral << std::endl;
-
         return integral;
     }
 
@@ -930,6 +928,7 @@ public:
             }
             else if(augmentReweight){
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
+                std::cout << B << std::endl;
             }
 
             if(B < EPSILON){
