@@ -975,6 +975,7 @@ public:
                     req_augmented_samples++;
                 }
             }
+            std::cout << req_augmented_samples << std::endl;
         }
 
         current_samples = 0;
