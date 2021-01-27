@@ -683,8 +683,8 @@ public:
                 int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
                 int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
 
-                Float oldPdf = nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
-                Float newPdf = nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
+                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
+                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
 
                 //both nodes are leaves, compute difference for pdf
                 if(newNode.isLeaf(newChildIdx) && oldNode.isLeaf(oldChildIdx)){
