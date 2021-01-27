@@ -1520,7 +1520,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment, this->m_isBuilt); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment, this->m_rejectAugment, this->m_isBuilt); });
 
         // Gather statistics
         int maxDepth = 0;

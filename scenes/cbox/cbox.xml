@@ -24,8 +24,9 @@
 		<float name="budget" value="127"/>
 		<!-- <boolean name="augment" value="true"/> -->
 		<!-- <boolean name="renderIntermediateAugmented" value="true"/> -->
-		<boolean name="reweight" value="true"/>
-		<boolean name="renderReweightIterations" value="true"/>
+		<boolean name="reject" value="true"/>
+		<boolean name="rejectAugment" value="false"/>
+		<boolean name="renderRejectIterations" value="true"/>
 
 	</integrator>
 
