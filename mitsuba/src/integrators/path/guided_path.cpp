@@ -648,6 +648,43 @@ public:
         return std::max(newPdf - oldPdf, 0.f);
     }
 
+    float computeIntegral(){
+        float integral = 0.f;
+
+        struct StackNode {
+            Float nodeFactor;
+            size_t nodeIdx;
+        };
+
+        std::pair<Float, Float> pdfPair(1.f, 1.f);
+
+        std::stack<StackNode> nodeStack;
+        nodeStack.push({1.f, 0});
+
+        while (!nodeStack.empty()) {
+            StackNode curr_stacknode = nodeStack.top();
+            nodeStack.pop();
+
+            const QuadTreeNode& curr_node = oldDist.m_nodes[curr_stacknode.nodeIdx];
+            float factor = curr_stacknode.nodeFactor / 4.f;
+
+            for (int i = 0; i < 4; ++i) {
+                //both nodes are leaves, compute difference for pdf
+                if(curr_node.isLeaf(i)){
+                    integral += curr_node.sum(i) * factor;
+                }
+                //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
+                else{
+                    int childNodeIdx = curr_node.child(i);
+                    nodeStack.push({factor, childNodeIdx});
+                }
+                
+            }
+        }
+
+        return integral;
+    }
+
     float buildUnmajorizedAugmented(const DTree& oldDist, const DTree& newDist){
         m_atomic = Atomic{};
         m_nodes.clear();
@@ -709,10 +746,8 @@ public:
 
         build();
 
-        float integral = 0.f;
-        for(int i = 0; i < 4; ++i){
-            integral += m_nodes[0].sum(i);
-        }
+        float integral = computeIntegral();
+        std::cout << integral << std::endl;
 
         return integral;
     }
@@ -928,7 +963,6 @@ public:
             }
             else if(augmentReweight){
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
-                std::cout << B << std::endl;
             }
 
             if(B < EPSILON){
