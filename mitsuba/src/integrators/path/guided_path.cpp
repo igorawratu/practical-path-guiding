@@ -713,7 +713,9 @@ public:
         for(int i = 0; i < 4; ++i){
             integral += m_nodes[0].sum(i);
         }
-    
+
+        std::cout << integral << std::endl;
+
         return integral;
     }
 
