@@ -927,7 +927,7 @@ public:
                 B = augmented.buildAugmented(sampling, building);
             }
             else if(augmentReweight){
-                B = buildUnmajorizedAugmented;
+                B = augmented.buildUnmajorizedAugmented(sampling, building);
             }
 
             if(B < EPSILON){
@@ -2655,7 +2655,7 @@ public:
             return;
         }
 
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment);
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
@@ -2690,7 +2690,7 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment));
             result = bsdf->eval(bRec);
         }
 
@@ -2739,7 +2739,7 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment || m_rejectAugment));
             result = bsdf->eval(bRec);
         }
 
