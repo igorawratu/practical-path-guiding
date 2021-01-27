@@ -949,6 +949,13 @@ public:
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
 
+    void splitSpatially(){
+        req_augmented_samples /= 2;
+        previous_tree_samples /= 2;
+        total_samples /= 2;
+        current_samples /= 2;
+    }
+
     bool requiresAugmentedSamples(){
         return current_samples < req_augmented_samples;
     }
@@ -1272,6 +1279,7 @@ public:
             cur.children[i] = idx;
             nodes[idx].axis = (cur.axis + 1) % 3;
             nodes[idx].dTree = cur.dTree;
+            nodes[idx].dTree.splitSpatially();
             nodes[idx].level = cur.level + 1;
             nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding() / 2);
         }
