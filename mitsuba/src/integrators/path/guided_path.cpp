@@ -665,7 +665,7 @@ public:
             StackNode curr_stacknode = nodeStack.top();
             nodeStack.pop();
 
-            const QuadTreeNode& curr_node = oldDist.m_nodes[curr_stacknode.nodeIdx];
+            const QuadTreeNode& curr_node = m_nodes[curr_stacknode.nodeIdx];
             float factor = curr_stacknode.nodeFactor / 4.f;
 
             for (int i = 0; i < 4; ++i) {
