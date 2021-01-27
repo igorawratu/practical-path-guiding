@@ -675,7 +675,7 @@ public:
                 }
                 //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
                 else{
-                    int childNodeIdx = curr_node.child(i);
+                    size_t childNodeIdx = curr_node.child(i);
                     nodeStack.push({factor, childNodeIdx});
                 }
                 
@@ -747,7 +747,6 @@ public:
         build();
 
         float integral = computeIntegral();
-        std::cout << integral << std::endl;
 
         return integral;
     }
