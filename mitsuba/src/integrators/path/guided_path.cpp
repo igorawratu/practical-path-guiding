@@ -921,7 +921,7 @@ public:
         
         if((augment || augmentReweight) && isBuilt){
             previous_tree_samples = total_samples;
-            float B
+            float B;
 
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
