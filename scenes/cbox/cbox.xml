@@ -26,6 +26,7 @@
 		<!-- <boolean name="renderIntermediateAugmented" value="true"/> -->
 		<boolean name="reject" value="true"/>
 		<boolean name="rejectAugment" value="false"/>
+		<boolean name="rejectReweight" value="true"/>
 		<boolean name="renderRejectIterations" value="true"/>
 
 	</integrator>
