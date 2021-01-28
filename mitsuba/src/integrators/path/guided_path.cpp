@@ -1011,6 +1011,12 @@ public:
         total_samples++;
     }
 
+    void verifyEnoughSamples(){
+        if(current_samples < req_augmented_samples){
+            std::cout << "Not enough samples: " << current_samples << "-" << req_augmented_samples << std::endl;
+        }
+    }
+
     Float pdf(const Vector& dir, bool augment) const {
         if(augment){
             return current_samples > req_augmented_samples ? sampling.pdf(dirToCanonical(dir)) : augmented.pdf(dirToCanonical(dir));
@@ -1554,7 +1560,8 @@ public:
 
     void verifyAugmentedSDTree(Scene* scene) {
         m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
-            this->addRequiredAugmentedSamples(dTree, m_sdTree.get(), scene);
+            //this->addRequiredAugmentedSamples(dTree, m_sdTree.get(), scene);
+            dTree->verifyEnoughSamples();
         });
     }
 
@@ -2008,7 +2015,7 @@ public:
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float acceptProb = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
                 Float oldWo = (*m_rejSamplePaths)[i].path[j].woPdf;
-                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
 
@@ -2316,6 +2323,7 @@ public:
                 }
             }
 
+            verifyAugmentedSDTree(scene);
             buildSDTree(sampler);
 
             if (m_dumpSDTree) {
