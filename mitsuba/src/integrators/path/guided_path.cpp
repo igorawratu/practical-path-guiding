@@ -2008,7 +2008,7 @@ public:
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float acceptProb = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
                 Float oldWo = (*m_rejSamplePaths)[i].path[j].woPdf;
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
 
@@ -2697,7 +2697,7 @@ public:
             return;
         }
 
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment);
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
@@ -2732,14 +2732,14 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment));
             result = bsdf->eval(bRec);
         }
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment){
+        if(m_augment || m_rejectAugment){
             dTree->incSampleCount();
         }
 
@@ -2781,14 +2781,14 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment || m_rejectAugment));
             result = bsdf->eval(bRec);
         }
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment){
+        if(m_augment || m_rejectAugment){
             dTree->incSampleCount();
         }
 
