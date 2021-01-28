@@ -1015,6 +1015,9 @@ public:
         if(current_samples < req_augmented_samples){
             std::cout << "Not enough samples: " << current_samples << "-" << req_augmented_samples << std::endl;
         }
+        else{
+            std::cout << "Enough samples: " << current_samples << "-" << req_augmented_samples << std::endl;
+        }
     }
 
     Float pdf(const Vector& dir, bool augment) const {
