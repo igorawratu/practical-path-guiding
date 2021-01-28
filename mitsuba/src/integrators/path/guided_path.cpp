@@ -975,7 +975,6 @@ public:
                     req_augmented_samples++;
                 }
             }
-            std::cout << req_augmented_samples << std::endl;
         }
 
         current_samples = 0;
@@ -2698,7 +2697,7 @@ public:
             return;
         }
 
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment);
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
@@ -2733,14 +2732,14 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment));
             result = bsdf->eval(bRec);
         }
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment || m_rejectAugment){
+        if(m_augment){
             dTree->incSampleCount();
         }
 
@@ -2782,14 +2781,14 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment || m_rejectAugment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment));
             result = bsdf->eval(bRec);
         }
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment || m_rejectAugment){
+        if(m_augment){
             dTree->incSampleCount();
         }
 
