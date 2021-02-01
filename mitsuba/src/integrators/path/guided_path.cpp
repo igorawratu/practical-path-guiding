@@ -633,7 +633,7 @@ public:
         // Uncomment once memory becomes an issue.
         //m_nodes.shrink_to_fit();
 
-        if(!augment){
+        /*if(!augment)*/{
             for (auto& node : m_nodes) {
                 node.setSum(0);
             }
@@ -1996,6 +1996,69 @@ public:
         }
     }
 
+    void performAugmentedSamples(ref<Sampler> sampler){
+        //#pragma omp parallel for
+        for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+            (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
+            Spectrum throughput(1.0f);
+
+            std::vector<Vertex> vertices;
+
+            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, false);
+                Float bsf = dTree->bsdfSamplingFraction();
+                Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
+
+                Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
+                throughput *= bsdfWeight;
+                (*m_rejSamplePaths)[i].path[j].throughput = throughput;
+
+                vertices.push_back(     
+                    Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_rejSamplePaths)[i].path[j].ray,
+                        (*m_rejSamplePaths)[i].path[j].throughput,
+                        (*m_rejSamplePaths)[i].path[j].bsdfVal,
+                        (*m_rejSamplePaths)[i].path[j].Li,
+                        (*m_rejSamplePaths)[i].path[j].woPdf,
+                        (*m_rejSamplePaths)[i].path[j].bsdfPdf,
+                        dtreePdf,
+                        (*m_rejSamplePaths)[i].path[j].isDelta
+                    });
+            }
+
+            //removes light contrib for rejected vertices
+            //this assumes no NEE, will need to change to account for NEE later
+            Spectrum totalL(0.f);
+
+            for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
+                std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
+
+                Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
+                L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+
+                for(std::uint32_t k = 0; k < pos; ++k){
+                    (*m_rejSamplePaths)[i].path[k].Li += L;
+                    vertices[k].radiance += L;
+                }
+                (*m_rejSamplePaths)[i].Li += L;
+            }
+
+            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
+        }
+    }
+
     void rejectAugmentHybrid(ref<Sampler> sampler){
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
@@ -2287,19 +2350,29 @@ public:
                     film->put(previousSamples);
                 }
             }
+            else if(m_augment){
+                performAugmentedSamples(sampler);
+
+                if(m_isFinalIter){
+                    ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
+                    previousSamples->clear();
+
+                    #pragma omp parallel for
+                    for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+                        if((*m_rejSamplePaths)[i].path.size() > 0){
+                            Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
+                            previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
+                        }                        
+                    }
+
+                    film->put(previousSamples);
+                }
+            }
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
                 break;
-            }
-
-            if(m_renderIntermediateAugmented){
-                fs::path scene_path = scene->getDestinationFile();
-                film->setDestinationFile(scene_path.parent_path() / std::string("intermediates") / std::string("iteration_" + 
-                    std::to_string(m_iter)), 0);
-                film->develop(scene, 0.f);
-                //film->setDestinationFile(scene_path);
             }
 
             const Float lastVarAtEnd = currentVarAtEnd;
@@ -3130,9 +3203,9 @@ public:
                                         bsdfVal, L, bsdfPdf, dRec.pdf, false});
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
-                                    if(m_augment){
+                                    /*if(m_augment){
                                         dTree->addPointToCache(curr_its);
-                                    }
+                                    }*/
                                 }
                             }
 
@@ -3239,9 +3312,9 @@ public:
                                 rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value});
                             }
 
-                            if(m_augment){
+                            /*if(m_augment){
                                 dTree->addPointToCache(curr_its);
-                            }
+                            }*/
 
                             ++nVertices;
                         }
