@@ -25,8 +25,8 @@
 		<!-- <boolean name="augment" value="true"/> -->
 		<!-- <boolean name="renderIntermediateAugmented" value="true"/> -->
 		<boolean name="reject" value="true"/>
-		<boolean name="rejectAugment" value="false"/>
-		<boolean name="rejectReweight" value="true"/>
+		<boolean name="rejectAugment" value="true"/>
+		<boolean name="rejectReweight" value="false"/>
 		<boolean name="renderRejectIterations" value="true"/>
 		<boolean name="reweight" value="false"/>
 		<boolean name="renderReweightIterations" value="false"/>

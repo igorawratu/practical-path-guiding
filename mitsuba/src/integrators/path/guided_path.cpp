@@ -1021,11 +1021,11 @@ public:
     }
 
     Float pdf(const Vector& dir, bool augment) const {
-        if(augment){
+        /*if(augment){
             return current_samples > req_augmented_samples ? sampling.pdf(dirToCanonical(dir)) : augmented.pdf(dirToCanonical(dir));
             //return sampling.pdf(dirToCanonical(dir));
         }
-        else return sampling.pdf(dirToCanonical(dir));
+        else */return sampling.pdf(dirToCanonical(dir));
     }
 
     Float diff(const DTreeWrapper& other) const {
