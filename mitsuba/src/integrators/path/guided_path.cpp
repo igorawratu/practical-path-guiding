@@ -1931,7 +1931,7 @@ public:
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
                 //rescaling
-                if(/*acceptProb > 1.f*/false){
+                if(acceptProb > 1.f){
                     (*m_rejSamplePaths)[i].path[j].bsdfVal *= newWoPdf / oldWo;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
