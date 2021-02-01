@@ -2014,7 +2014,7 @@ public:
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                /*if(reweight < 1.f)*/{
+                if(reweight < 1.f){
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 }
                 (*m_samplePaths)[i].path[j].owo = nwo;
@@ -2852,7 +2852,7 @@ public:
             return;
         }
 
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment || m_reweightAugment);
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
@@ -2894,7 +2894,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment || m_rejectAugment){
+        if(m_augment || m_rejectAugment || m_reweightAugment){
             dTree->incSampleCount();
         }
 
@@ -2936,14 +2936,14 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment || m_rejectAugment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment || m_rejectAugment || m_reweightAugment));
             result = bsdf->eval(bRec);
         }
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment || m_rejectAugment){
+        if(m_augment || m_rejectAugment || m_reweightAugment){
             dTree->incSampleCount();
         }
 
