@@ -1527,6 +1527,7 @@ public:
 
         m_rejectReweight = props.getBoolean("rejectReweight", false);
         m_rejectAugment = props.getBoolean("rejectAugment", false);
+        m_reweightAugment = props.getBoolean("reweightAugment", false);
 
         m_augment = props.getBoolean("augment", false);
 
@@ -1572,7 +1573,7 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment, this->m_rejectAugment, this->m_isBuilt); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment, this->m_rejectAugment || this->m_reweightAugment, this->m_isBuilt); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -1996,6 +1997,68 @@ public:
         }
     }
 
+    void reweightAugmentHybrid(ref<Sampler> sampler){
+        #pragma omp parallel for
+        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            std::vector<Vertex> vertices;
+
+            Spectrum throughput(1.0f);
+            (*m_samplePaths)[i].Li = Spectrum(0.f);
+
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d, false);
+                Float bsf = dTree->bsdfSamplingFraction();
+
+                Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
+
+                if(reweight < 1.f){
+                    (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
+                }
+                (*m_samplePaths)[i].path[j].owo = nwo;
+
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
+                throughput *= bsdfWeight;
+
+                vertices.push_back(     
+                    Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_samplePaths)[i].path[j].ray,
+                        throughput,
+                        (*m_samplePaths)[i].path[j].bsdfVal,
+                        Spectrum{0.0f},
+                        nwo,
+                        (*m_samplePaths)[i].path[j].bsdfPdf,
+                        dtreePdf,
+                        (*m_samplePaths)[i].path[j].isDelta
+                    });
+            }
+
+            //this assumes no NEE, will need to change to account for NEE later
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
+                std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
+
+                Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
+                if(pos >= 0){
+                    L *= vertices[pos].throughput;
+                    for(std::uint32_t k = 0; k <= pos; ++k){
+                        vertices[k].radiance += L;
+                    }
+                }
+                (*m_samplePaths)[i].Li += L;
+            }
+
+            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
+        }
+    }
+
     void performAugmentedSamples(ref<Sampler> sampler){
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
@@ -2253,7 +2316,12 @@ public:
             resetSDTree(m_augment);
 
             if(m_reweight){
-                reweightCurrentPaths(sampler);
+                if(m_reweightAugment){
+                    reweightAugmentHybrid(sampler);
+                }
+                else{
+                    reweightCurrentPaths(sampler);
+                }
 
                 if(m_renderReweightIterations){
                     ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
@@ -2819,7 +2887,7 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment || m_reweightAugment));
             result = bsdf->eval(bRec);
         }
 
@@ -3648,6 +3716,7 @@ private:
     bool m_augment;
     bool m_rejectReweight;
     bool m_rejectAugment;
+    bool m_reweightAugment;
     size_t sampleCount;
     bool m_renderIntermediateAugmented;
 
