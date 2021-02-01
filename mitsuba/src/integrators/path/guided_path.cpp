@@ -1997,7 +1997,6 @@ public:
     }
 
     void performAugmentedSamples(ref<Sampler> sampler){
-        std::cout << "AUGMENTING: " << m_rejSamplePaths->size() << std::endl;
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
@@ -2654,7 +2653,7 @@ public:
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
                 }
-                else if(m_reject){
+                else if(m_reject || m_augment){
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_rejSamplePaths->push_back(std::move(rpathRecord));
                 }
