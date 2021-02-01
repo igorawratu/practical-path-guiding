@@ -1997,6 +1997,7 @@ public:
     }
 
     void performAugmentedSamples(ref<Sampler> sampler){
+        std::cout << "AUGMENTING: " << m_rejSamplePaths->size() << std::endl;
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
