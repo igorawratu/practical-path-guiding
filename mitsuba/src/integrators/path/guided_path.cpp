@@ -1933,7 +1933,7 @@ public:
 
                 //rescaling
                 if(acceptProb > 1.f){
-                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= newWoPdf / oldWo;
+                    //(*m_rejSamplePaths)[i].path[j].bsdfVal *= newWoPdf / oldWo;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
