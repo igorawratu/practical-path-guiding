@@ -1800,15 +1800,10 @@ public:
     void rejectCurrentPaths(ref<Sampler> sampler){
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-            //empty paths are ignored as they represent paths where all the vertices have been rejected
-            if((*m_rejSamplePaths)[i].path.size() == 0){
-                continue;
-            }
-
             std::vector<Vertex> vertices;
 
             //first try reject path
-            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
+            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size() - 1;
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
@@ -1847,7 +1842,7 @@ public:
                 }
             }
 
-            (*m_rejSamplePaths)[i].path.resize(termination_iter);
+            (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
 
             //removes light contrib for rejected vertices
             //this assumes no NEE, will need to change to account for NEE later
@@ -1907,18 +1902,13 @@ public:
     void rejectReweightHybrid(ref<Sampler> sampler){
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-            //empty paths are ignored as they represent paths where all the vertices have been rejected
-            if((*m_rejSamplePaths)[i].path.size() == 0){
-                continue;
-            }
-
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
 
             //first try reject path
-            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
+            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size() - 1;
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
@@ -1933,7 +1923,7 @@ public:
 
                 //rescaling
                 if(acceptProb > 1.f){
-                    //(*m_rejSamplePaths)[i].path[j].bsdfVal *= newWoPdf / oldWo;
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= newWoPdf / oldWo;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
@@ -1966,7 +1956,7 @@ public:
                     });
             }
 
-            (*m_rejSamplePaths)[i].path.resize(termination_iter);
+            (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
 
             //removes light contrib for rejected vertices
             //this assumes no NEE, will need to change to account for NEE later
