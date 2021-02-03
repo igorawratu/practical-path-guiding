@@ -2235,7 +2235,6 @@ public:
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
-                std::cout << pos << " " << vertices.size() << std::endl;
 
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
                 if(pos >= 0){
@@ -3142,10 +3141,10 @@ public:
 
                         recordRadiance(value);
 
-                        if(!value.isZero()){
+                        /*if(!value.isZero()){
                             pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value});
                             rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value});
-                        }
+                        }*/
                     }
 
                     break;
@@ -3156,10 +3155,10 @@ public:
                     && (!m_hideEmitters || scattered)){
                     Spectrum eL = throughput * its.Le(-ray.d);
                     recordRadiance(eL);
-                    if(!eL.isZero()){
+                    /*if(!eL.isZero()){
                         pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL});
                         rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL});
-                    }
+                    }*/
                 }
 
                 /* Include radiance from a subsurface integrator if requested */
