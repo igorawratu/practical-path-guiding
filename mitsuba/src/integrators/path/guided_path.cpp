@@ -2374,7 +2374,7 @@ public:
 
                         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
                             if((*m_rejSamplePaths)[i].path.size() == 0){
-                                continue;
+                                //continue;
                             }
 
                             if((*m_rejSamplePaths)[i].iter == curr_iter){
