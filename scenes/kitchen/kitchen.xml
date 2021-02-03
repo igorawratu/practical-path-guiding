@@ -18,9 +18,9 @@
 
 		<boolean name="augment" value="false"/>
 		<boolean name="renderIntermediateAugmented" value="false"/>
-		<boolean name="reject" value="true"/>
+		<boolean name="reject" value="false"/>
 		<boolean name="rejectAugment" value="false"/>
-		<boolean name="rejectReweight" value="true"/>
+		<boolean name="rejectReweight" value="false"/>
 		<boolean name="renderRejectIterations" value="false"/>
 		<boolean name="reweight" value="false"/>
 		<boolean name="reweightAugment" value="false"/>
