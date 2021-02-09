@@ -2486,13 +2486,11 @@ public:
 
             if(m_augment){
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
-                
-                if(!m_isFinalIter){
-                    m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                    m_currAugmentedPaths->clear();
-                    m_currAugmentedPaths->shrink_to_fit();
-                }
-                else{
+                m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
+                m_currAugmentedPaths->clear();
+                m_currAugmentedPaths->shrink_to_fit();
+
+                if(m_isFinalIter){
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
 
