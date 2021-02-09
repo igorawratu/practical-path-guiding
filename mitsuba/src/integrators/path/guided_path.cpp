@@ -2657,6 +2657,7 @@ public:
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<PGPath>>(new std::vector<PGPath>());
         m_rejSamplePaths = std::unique_ptr<std::vector<RPGPath>>(new std::vector<RPGPath>());
+        m_currAugmentedPaths = std::unique_ptr<std::vector<RPGPath>>(new std::vector<RPGPath>());
         m_iter = 0;
         m_isFinalIter = false;
 
