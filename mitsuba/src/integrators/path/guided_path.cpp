@@ -2129,7 +2129,7 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
 
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
-                Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / newWoPdf;
+                Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
 
@@ -2485,9 +2485,9 @@ public:
             }
 
             if(m_augment){
-                correctCurrAugmentedSamples();
+                correctCurrAugmentedSamples(sampler, m_isFinalIter);
                 
-                if(!finalIter){
+                if(!m_isFinalIter){
                     m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
                     m_currAugmentedPaths->clear();
                     m_currAugmentedPaths->shrink_to_fit();
@@ -2870,9 +2870,8 @@ public:
     struct RejVertex{
         Ray ray;
         Spectrum throughput, bsdfVal, Li;
-        Float bsdfPdf, woPdf;
+        Float bsdfPdf, woPdf, dTreePdf;
         bool isDelta;
-        DTreeWrapper* dtree;
     };
 
     struct RWVertex{
@@ -3338,7 +3337,7 @@ public:
 
                                     pathRecord.path.push_back(RWVertex{Ray(its.p, dRec.d, 0), bsdfVal, bsdfPdf, dRec.pdf, false});
                                     rpathRecord.path.push_back(RejVertex{Ray(its.p, dRec.d, 0), throughput * bsdfVal / dRec.pdf, 
-                                        bsdfVal, L, bsdfPdf, dRec.pdf, false, dTree});
+                                        bsdfVal, L, bsdfPdf, dRec.pdf, dTreePdf, false});
 
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                     /*if(m_augment){
@@ -3397,7 +3396,7 @@ public:
 
                             pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, true});
                             rpathRecord.path.push_back(RejVertex{ray, throughput, 
-                                bsdfWeight * woPdf, Spectrum(0.f), bsdfPdf, woPdf, true, dTree});
+                                bsdfWeight * woPdf, Spectrum(0.f), bsdfPdf, woPdf, dTreePdf, true});
 
                             ++nVertices;
                         }
@@ -3443,7 +3442,7 @@ public:
 
                             pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta});
                             rpathRecord.path.push_back(RejVertex{ray, throughput, 
-                                bsdfWeight * woPdf, (m_nee == EAlways) ? Spectrum{0.0f} : L, bsdfPdf, woPdf, isDelta, dTree});
+                                bsdfWeight * woPdf, (m_nee == EAlways) ? Spectrum{0.0f} : L, bsdfPdf, woPdf, dTreePdf, isDelta});
 
                             if(!L.isZero()){
                                 pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value});
