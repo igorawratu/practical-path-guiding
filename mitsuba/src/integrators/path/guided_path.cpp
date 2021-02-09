@@ -2127,7 +2127,6 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                std::cout << dTree->getAugmentedMultiplier() << std::endl;
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2790,9 +2789,13 @@ public:
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
                 }
-                else if(m_reject || m_augment){
+                else if(m_reject){
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_rejSamplePaths->push_back(std::move(rpathRecord));
+                }
+                else if(m_augment){
+                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                    m_currAugmentedPaths->push_back(std::move(rpathRecord));
                 }
             }
         }
