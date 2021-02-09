@@ -2144,7 +2144,7 @@ public:
                             (*m_currAugmentedPaths)[i].path[j].Li,
                             (*m_currAugmentedPaths)[i].path[j].woPdf,
                             (*m_currAugmentedPaths)[i].path[j].bsdfPdf,
-                            dtreePdf,
+                            (*m_currAugmentedPaths)[i].path[j].dTreePdf,
                             (*m_currAugmentedPaths)[i].path[j].isDelta
                         });
                 }
