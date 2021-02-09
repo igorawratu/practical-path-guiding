@@ -2128,7 +2128,7 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
 
-                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
+                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * 100.f;
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
