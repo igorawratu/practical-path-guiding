@@ -2073,11 +2073,11 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
-                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
                 (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
-                Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
+                Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_rejSamplePaths)[i].path[j].throughput = throughput;
 
