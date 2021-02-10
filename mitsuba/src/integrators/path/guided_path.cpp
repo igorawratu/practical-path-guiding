@@ -2075,7 +2075,10 @@ public:
 
                 //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
-                //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                if(dTree->getAugmentedNormalizer() < 0.1f){
+                    std::cout << dTree->getAugmentedNormalizer() << std::endl;
+                }
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
