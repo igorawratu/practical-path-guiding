@@ -1025,7 +1025,7 @@ public:
     }
 
     float getAugmentedNormalizer(){
-        return current_samples < req_augmented_samples ? float(previous_tree_samples + current_samples) / (previous_tree_samples + req_augmented_samples) : 1.f;
+        return current_samples < req_augmented_samples ? float(total_samples) / (previous_tree_samples + req_augmented_samples) : 1.f;
     }
 
     Float pdf(const Vector& dir, bool augment) const {
@@ -2488,7 +2488,7 @@ public:
             if(m_augment){
                 performAugmentedSamples(sampler);
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
-                
+
                 m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
                 m_currAugmentedPaths->clear();
                 m_currAugmentedPaths->shrink_to_fit();
