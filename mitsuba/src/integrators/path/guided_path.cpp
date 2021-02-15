@@ -1334,7 +1334,7 @@ public:
             cur.children[i] = idx;
             nodes[idx].axis = (cur.axis + 1) % 3;
             nodes[idx].dTree = cur.dTree;
-            //nodes[idx].dTree.splitSpatially();
+            nodes[idx].dTree.splitSpatially();
             nodes[idx].level = cur.level + 1;
             nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding() / 2);
         }
@@ -1428,7 +1428,7 @@ public:
             // Subdivide if needed and leaf
             if (m_nodes[sNode.index].isLeaf) {
                 if (shallSplit(m_nodes[sNode.index], sNode.depth, sTreeThreshold)) {
-                    //subdivide((int)sNode.index, m_nodes);
+                    subdivide((int)sNode.index, m_nodes);
                 }
             }
 
@@ -2660,7 +2660,7 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
-        m_sdTree->subdivide(15);
+        //m_sdTree->subdivide(15);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<PGPath>>(new std::vector<PGPath>());
         m_rejSamplePaths = std::unique_ptr<std::vector<RPGPath>>(new std::vector<RPGPath>());
