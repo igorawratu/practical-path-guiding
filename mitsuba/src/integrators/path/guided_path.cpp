@@ -2079,7 +2079,7 @@ public:
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
-                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
+                //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2136,7 +2136,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                //(*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
@@ -2493,7 +2493,7 @@ public:
                 performAugmentedSamples(sampler);
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                m_rejSamplePaths->clear();
+                //m_rejSamplePaths->clear();
                 m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
                 m_currAugmentedPaths->clear();
                 m_currAugmentedPaths->shrink_to_fit();
