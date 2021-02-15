@@ -1021,11 +1021,11 @@ public:
     }
 
     float getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? float(req_augmented_samples) / current_samples : 1.f;
+        return current_samples < req_augmented_samples ? float(current_samples) / req_augmented_samples : 1.f;
     }
 
     float getAugmentedNormalizer(){
-        return current_samples < req_augmented_samples ? float(total_samples) / (previous_tree_samples + req_augmented_samples) : 1.f;
+        return current_samples < req_augmented_samples ? float(previous_tree_samples + req_augmented_samples) / total_samples  : 1.f;
     }
 
     Float pdf(const Vector& dir, bool augment) const {
