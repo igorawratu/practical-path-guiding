@@ -1428,7 +1428,7 @@ public:
             // Subdivide if needed and leaf
             if (m_nodes[sNode.index].isLeaf) {
                 if (shallSplit(m_nodes[sNode.index], sNode.depth, sTreeThreshold)) {
-                    subdivide((int)sNode.index, m_nodes);
+                    //subdivide((int)sNode.index, m_nodes);
                 }
             }
 
@@ -2660,7 +2660,7 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
-        //m_sdTree->subdivide(15);
+        m_sdTree->subdivide(15);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<PGPath>>(new std::vector<PGPath>());
         m_rejSamplePaths = std::unique_ptr<std::vector<RPGPath>>(new std::vector<RPGPath>());
@@ -2793,11 +2793,8 @@ public:
                 
                 sampler->advance();
 
-                if(m_reweight && m_iter >= 4)
+                if(m_reweight && m_iter >= 0)
                 {
-                    if(!m_isFinalIter){
-                        std::cout << "hello" << std::endl;
-                    }
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
                 }
