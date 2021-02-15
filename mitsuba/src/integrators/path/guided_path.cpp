@@ -2320,11 +2320,11 @@ public:
                 (*m_samplePaths)[i].Li += L;
             }
 
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+            /*for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
+            }*/
         }
     }
 
@@ -2793,7 +2793,7 @@ public:
                 
                 sampler->advance();
 
-                if(m_reweight && m_iter >= 3)
+                if(m_reweight && m_iter >= 0)
                 {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
