@@ -2793,7 +2793,7 @@ public:
                 
                 sampler->advance();
 
-                if(m_reweight && m_iter >= 3)
+                if(m_reweight && m_iter >= 4)
                 {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
