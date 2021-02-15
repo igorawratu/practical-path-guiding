@@ -955,7 +955,7 @@ public:
         
         if((augment || augmentReweight) && isBuilt){
             previous_tree_samples = total_samples;
-            float B;
+            float B = 0.f;
 
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
@@ -1021,7 +1021,7 @@ public:
     }
 
     float getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? float(req_augmented_samples) / current_samples : 1.f;
+        return current_samples < req_augmented_samples ? current_samples / float(req_augmented_samples) : 1.f;
     }
 
     float getAugmentedNormalizer(){
@@ -2073,12 +2073,9 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
-                if(dTree->getAugmentedNormalizer() < 0.1f){
-                    std::cout << dTree->getAugmentedNormalizer() << std::endl;
-                }
-                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();// * dTree->getAugmentedNormalizer();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2135,7 +2132,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
+                //(*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
