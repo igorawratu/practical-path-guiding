@@ -2490,7 +2490,7 @@ public:
                 break;
             }
 
-            if(m_augment){
+            if(m_augment || m_rejectAugment){
                 if(m_rejectAugment){
                     rejectAugmentHybrid(sampler);
                 }
