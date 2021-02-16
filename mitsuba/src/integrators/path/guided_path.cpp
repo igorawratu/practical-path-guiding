@@ -2201,7 +2201,7 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currRWAugPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d, false);
-                
+
                 (*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currRWAugPaths)[i].path[j].bsdfVal / (*m_currRWAugPaths)[i].path[j].owo;
                 
@@ -2544,7 +2544,7 @@ public:
                 break;
             }
 
-            if(m_augment || m_rejectAugment || m_reweightAugment){
+            if(m_augment || m_rejectAugment){
                 if(m_rejectAugment){
                     rejectAugmentHybrid(sampler);
                 }
@@ -2880,7 +2880,7 @@ public:
                 
                 sampler->advance();
 
-                if(m_reweight && m_iter >= 3)
+                if(m_reweight)
                 {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
