@@ -2200,7 +2200,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currRWAugPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currRWAugPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                Float dtreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d, false);
+                Float dtreePdf = dTree->pdf((*m_currRWAugPaths)[i].path[j].ray.d, false);
 
                 (*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currRWAugPaths)[i].path[j].bsdfVal / (*m_currRWAugPaths)[i].path[j].owo;
