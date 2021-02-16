@@ -2218,6 +2218,10 @@ public:
                     break;
                 }
                 else{
+                    if(acceptProb > 1.f){
+                        (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
+                    }
+
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / oldWo;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
@@ -2430,9 +2434,6 @@ public:
                 if(m_rejectReweight){
                     rejectReweightHybrid(sampler);
                 }
-                else if(m_rejectAugment){
-                    rejectAugmentHybrid(sampler);
-                }
                 else{
                     rejectCurrentPaths(sampler);
                 }
@@ -2490,7 +2491,13 @@ public:
             }
 
             if(m_augment){
-                performAugmentedSamples(sampler);
+                if(m_rejectAugment){
+                    rejectAugmentHybrid(sampler);
+                }
+                else{
+                    performAugmentedSamples(sampler);
+                }
+
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 //m_rejSamplePaths->clear();
@@ -2758,7 +2765,7 @@ public:
         if (!sensor->getFilm()->hasAlpha()) // Don't compute an alpha channel if we don't have to
             queryType &= ~RadianceQueryRecord::EOpacity;
 
-        for (size_t i = 0; i < points.size(); ++i) {
+        for (size_t i = 0; i < points.size(); ++i) {    
             Point2i offset = Point2i(points[i]) + Vector2i(block->getOffset());
             if (stop)
                 break;
@@ -2786,7 +2793,7 @@ public:
 
                 spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
 
-                if(!m_augment){
+                if(!m_augment && !m_rejectAugment){
                     block->put(samplePos, spec, rRec.alpha);
                     squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 }
@@ -2802,7 +2809,7 @@ public:
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_rejSamplePaths->push_back(std::move(rpathRecord));
                 }
-                else if(m_augment){
+                else if(m_augment || m_rejectAugment){
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_currAugmentedPaths->push_back(std::move(rpathRecord));
                 }
@@ -3332,7 +3339,7 @@ public:
                             value *= bsdfVal;
                             Spectrum L = throughput * value * weight;
 
-                            if ((!m_isFinalIter || m_augment) && m_nee != EAlways) {
+                            if ((!m_isFinalIter || m_augment || m_rejectAugment) && m_nee != EAlways) {
                                 if (dTree) {
                                     Vertex v = Vertex{
                                         dTree,
@@ -3391,7 +3398,7 @@ public:
 
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
-                    if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && (!m_isFinalIter || m_augment)) {
+                    if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && (!m_isFinalIter || m_augment || m_rejectAugment)) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -3437,7 +3444,7 @@ public:
                         recordRadiance(L);
                     }
 
-                    if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && (!m_isFinalIter || m_augment)) {
+                    if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && (!m_isFinalIter || m_augment || m_rejectAugment)) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
