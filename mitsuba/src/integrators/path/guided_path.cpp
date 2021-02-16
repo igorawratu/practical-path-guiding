@@ -2219,7 +2219,7 @@ public:
                 }
                 else{
                     if(acceptProb > 1.f){
-                        (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
+                        //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
                     }
 
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / oldWo;
