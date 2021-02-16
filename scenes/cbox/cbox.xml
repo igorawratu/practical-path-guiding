@@ -24,7 +24,7 @@
 		<float name="budget" value="127"/>
 
 
-		<boolean name="augment" value="true"/>
+		<boolean name="augment" value="false"/>
 		<boolean name="renderIntermediateAugmented" value="false"/>
 		<boolean name="reject" value="false"/>
 		<boolean name="rejectAugment" value="true"/>
