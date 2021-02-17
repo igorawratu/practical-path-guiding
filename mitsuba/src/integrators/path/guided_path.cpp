@@ -2581,9 +2581,12 @@ public:
                 reweightAugmentHybrid(sampler);
                 correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
 
-                m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
-                m_currRWAugPaths->clear();
-                m_currRWAugPaths->shrink_to_fit();
+                if(!m_isFinalIter){
+                    m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
+                    m_currRWAugPaths->clear();
+                    m_currRWAugPaths->shrink_to_fit();
+                }
+                
 
                 if(m_isFinalIter){
                     film->clear();
