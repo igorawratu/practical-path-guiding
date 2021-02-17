@@ -2443,10 +2443,7 @@ public:
             resetSDTree(m_augment);
 
             if(m_reweight){
-                if(!m_reweightAugment){
-                    reweightCurrentPaths(sampler);
-                }
-                else reweightAugmentHybrid(sampler);
+                reweightCurrentPaths(sampler);
                 
                 if(m_renderReweightIterations){
                     ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
@@ -2578,13 +2575,13 @@ public:
                     film->put(previousSamples);
                 }
             }
-            /*else if(m_reweightAugment){
+            else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
-                correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
+                //correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
 
-                m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
+                /*m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
                 m_currRWAugPaths->clear();
-                m_currRWAugPaths->shrink_to_fit();
+                m_currRWAugPaths->shrink_to_fit();*/
 
                 if(m_isFinalIter){
                     film->clear();
@@ -2601,7 +2598,7 @@ public:
 
                     film->put(previousSamples);
                 }
-            }*/
+            }
 
             const Float lastVarAtEnd = currentVarAtEnd;
             currentVarAtEnd = passesThisIteration * variance / remainingPasses;
