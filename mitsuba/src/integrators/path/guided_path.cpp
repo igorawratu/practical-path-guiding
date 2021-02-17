@@ -2277,9 +2277,9 @@ public:
                     break;
                 }
                 else{
-                    if(acceptProb > 1.f){
+                    //if(acceptProb > 1.f){
                         (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
-                    }
+                    //}
 
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
