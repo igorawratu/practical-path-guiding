@@ -2207,20 +2207,21 @@ public:
                 
                 throughput *= bsdfWeight;
                 
-
-                vertices.push_back(     
-                    Vertex{ 
-                        dTree,
-                        dTreeVoxelSize,
-                        (*m_currRWAugPaths)[i].path[j].ray,
-                        throughput,
-                        (*m_currRWAugPaths)[i].path[j].bsdfVal,
-                        Spectrum{0.0f},
-                        (*m_currRWAugPaths)[i].path[j].owo,
-                        (*m_currRWAugPaths)[i].path[j].bsdfPdf,
-                        dtreePdf,
-                        (*m_currRWAugPaths)[i].path[j].isDelta
-                    });
+                if(!finalIter){
+                    vertices.push_back(     
+                        Vertex{ 
+                            dTree,
+                            dTreeVoxelSize,
+                            (*m_currRWAugPaths)[i].path[j].ray,
+                            throughput,
+                            (*m_currRWAugPaths)[i].path[j].bsdfVal,
+                            Spectrum{0.0f},
+                            (*m_currRWAugPaths)[i].path[j].owo,
+                            (*m_currRWAugPaths)[i].path[j].bsdfPdf,
+                            dtreePdf,
+                            (*m_currRWAugPaths)[i].path[j].isDelta
+                        });
+                }
             }
 
             //this assumes no NEE, will need to change to account for NEE later
@@ -2228,8 +2229,9 @@ public:
                 std::uint32_t pos = (*m_currRWAugPaths)[i].radiance_record[j].pos;
 
                 Spectrum L = (*m_currRWAugPaths)[i].radiance_record[j].L;
-                if(pos >= 0){
-                    L *= vertices[pos].throughput;
+                L *= vertices[pos].throughput;
+
+                if(!finalIter){
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
                     }
@@ -2237,10 +2239,12 @@ public:
                 (*m_currRWAugPaths)[i].Li += L;
             }
 
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            if(!finalIter){
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
         }
     }
