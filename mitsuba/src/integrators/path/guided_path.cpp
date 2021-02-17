@@ -2579,20 +2579,20 @@ public:
                 reweightAugmentHybrid(sampler);
                 //correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
 
-                /*m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
+                m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
                 m_currRWAugPaths->clear();
-                m_currRWAugPaths->shrink_to_fit();*/
+                m_currRWAugPaths->shrink_to_fit();
 
                 if(m_isFinalIter){
-                    film->clear();
+                    //film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
 
                     #pragma omp parallel for
-                    for(std::uint32_t i = 0; i < m_currRWAugPaths->size(); ++i){
-                        if((*m_currRWAugPaths)[i].path.size() > 0){
-                            Spectrum s = (*m_currRWAugPaths)[i].spec * (*m_currRWAugPaths)[i].Li;
-                            previousSamples->put((*m_currRWAugPaths)[i].sample_pos, s, (*m_currRWAugPaths)[i].alpha);
+                    for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+                        if((*m_samplePaths)[i].path.size() > 0){
+                            Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                            previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
                         }                        
                     }
 
