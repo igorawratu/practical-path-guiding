@@ -2587,7 +2587,7 @@ public:
                 m_currRWAugPaths->clear();
                 m_currRWAugPaths->shrink_to_fit();
 
-                if(m_isFinalIter){
+                /*if(m_isFinalIter){
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
@@ -2601,7 +2601,7 @@ public:
                     }
 
                     film->put(previousSamples);
-                }
+                }*/
             }
 
             const Float lastVarAtEnd = currentVarAtEnd;
