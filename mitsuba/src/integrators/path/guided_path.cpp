@@ -2143,6 +2143,7 @@ public:
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
+                (*m_currAugmentedPaths)[i].path[j].Li = Spectrum(0.f);
 
                 if(!finalIter){
                     vertices.push_back(     
@@ -2202,26 +2203,24 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currRWAugPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 Float dtreePdf = dTree->pdf((*m_currRWAugPaths)[i].path[j].ray.d, false);
 
-                (*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                //(*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currRWAugPaths)[i].path[j].bsdfVal / (*m_currRWAugPaths)[i].path[j].owo;
                 
                 throughput *= bsdfWeight;
-                
-                if(!finalIter){
-                    vertices.push_back(     
-                        Vertex{ 
-                            dTree,
-                            dTreeVoxelSize,
-                            (*m_currRWAugPaths)[i].path[j].ray,
-                            throughput,
-                            (*m_currRWAugPaths)[i].path[j].bsdfVal,
-                            Spectrum{0.0f},
-                            (*m_currRWAugPaths)[i].path[j].owo,
-                            (*m_currRWAugPaths)[i].path[j].bsdfPdf,
-                            dtreePdf,
-                            (*m_currRWAugPaths)[i].path[j].isDelta
-                        });
-                }
+
+                vertices.push_back(     
+                    Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_currRWAugPaths)[i].path[j].ray,
+                        throughput,
+                        (*m_currRWAugPaths)[i].path[j].bsdfVal,
+                        Spectrum{0.0f},
+                        (*m_currRWAugPaths)[i].path[j].owo,
+                        (*m_currRWAugPaths)[i].path[j].bsdfPdf,
+                        dtreePdf,
+                        (*m_currRWAugPaths)[i].path[j].isDelta
+                    });
             }
 
             //this assumes no NEE, will need to change to account for NEE later
