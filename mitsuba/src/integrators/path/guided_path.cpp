@@ -2045,7 +2045,6 @@ public:
             //this assumes no NEE, will need to change to account for NEE later
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
-
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
                 if(pos >= 0){
                     L *= vertices[pos].throughput;
@@ -2580,14 +2579,13 @@ public:
             }
             else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
-
                 correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
 
                 m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
                 m_currRWAugPaths->clear();
                 m_currRWAugPaths->shrink_to_fit();
 
-                /*if(m_isFinalIter){
+                if(m_isFinalIter){
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
@@ -2601,7 +2599,7 @@ public:
                     }
 
                     film->put(previousSamples);
-                }*/
+                }
             }
 
             const Float lastVarAtEnd = currentVarAtEnd;
@@ -3603,7 +3601,7 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter) {
+        if (nVertices > 0 && (!m_isFinalIter || m_augment || m_rejectAugment || m_reweightAugment)) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
