@@ -2020,7 +2020,7 @@ public:
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 }
 
-                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
+                //(*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
 
                 (*m_samplePaths)[i].path[j].owo = nwo;
 
@@ -2203,7 +2203,7 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currRWAugPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 Float dtreePdf = dTree->pdf((*m_currRWAugPaths)[i].path[j].ray.d, false);
 
-                //(*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currRWAugPaths)[i].path[j].bsdfVal / (*m_currRWAugPaths)[i].path[j].owo;
                 
                 throughput *= bsdfWeight;
