@@ -2281,7 +2281,7 @@ public:
                         (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
                     }
 
-                    Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / oldWo;
+                    Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
                 }
