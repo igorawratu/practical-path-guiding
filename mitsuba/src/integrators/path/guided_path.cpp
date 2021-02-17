@@ -2575,7 +2575,7 @@ public:
                     film->put(previousSamples);
                 }
             }
-            el if(m_reweightAugment
+            else if(m_reweightAugment)
                 reweightAugmentHybrid(sampler);
                 correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
 
