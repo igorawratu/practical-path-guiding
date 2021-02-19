@@ -2408,11 +2408,7 @@ public:
                         vertices[k].radiance += L;
                     }
 
-                    if(pdf < EPSILON){
-                        std::cout << pdf << std::endl;
-                    }
-
-                    if(m_nee == EKickstart){
+                    /*if(m_nee == EKickstart){
                         Vertex v = Vertex{ 
                             dTree,
                             vertices[pos].dTreeVoxelSize,
@@ -2428,7 +2424,7 @@ public:
 
                         v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-                    }
+                    }*/
                 }
             }
 
