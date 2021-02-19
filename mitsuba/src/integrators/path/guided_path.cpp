@@ -2376,9 +2376,6 @@ public:
 
                 //not directly sampling environmental light so have to multiply by throughput, also take into account MIS coeff if nee was used
                 if(pos >= 0){
-                    if(pos > (*m_samplePaths)[i].path.size()){
-                        std::cout << (*m_samplePaths)[i].path.size() << " " << pos << std::endl;
-                    }
                     L *= vertices[pos].throughput;
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
@@ -3383,8 +3380,8 @@ public:
                         recordRadiance(value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
-                            rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value, 0.f});
+                            pathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(pathRecord.path.size()) - 1, value, 0.f});
+                            rpathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(rpathRecord.path.size()) - 1, value, 0.f});
                         }
                     }
 
@@ -3397,8 +3394,8 @@ public:
                     Spectrum eL = throughput * its.Le(-ray.d);
                     recordRadiance(eL);
                     if(!eL.isZero()){
-                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
-                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL, 0.f});
+                        pathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(pathRecord.path.size()) - 1, eL, 0.f});
+                        rpathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(rpathRecord.path.size()) - 1, eL, 0.f});
                     }
                 }
 
@@ -3408,8 +3405,8 @@ public:
                     recordRadiance(sL);
 
                     if(!sL.isZero()){
-                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
-                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, sL, 0.f});
+                        pathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(pathRecord.path.size()) - 1, sL, 0.f});
+                        rpathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(rpathRecord.path.size()) - 1, sL, 0.f});
                     }
                 }
 
