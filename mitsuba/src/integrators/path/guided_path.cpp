@@ -3380,8 +3380,8 @@ public:
                         recordRadiance(value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(pathRecord.path.size()) - 1, value, 0.f});
-                            rpathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(rpathRecord.path.size()) - 1, value, 0.f});
+                            pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
+                            rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value, 0.f});
                         }
                     }
 
@@ -3394,8 +3394,8 @@ public:
                     Spectrum eL = throughput * its.Le(-ray.d);
                     recordRadiance(eL);
                     if(!eL.isZero()){
-                        pathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(pathRecord.path.size()) - 1, eL, 0.f});
-                        rpathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(rpathRecord.path.size()) - 1, eL, 0.f});
+                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
+                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL, 0.f});
                     }
                 }
 
@@ -3405,8 +3405,8 @@ public:
                     recordRadiance(sL);
 
                     if(!sL.isZero()){
-                        pathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(pathRecord.path.size()) - 1, sL, 0.f});
-                        rpathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(rpathRecord.path.size()) - 1, sL, 0.f});
+                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
+                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, sL, 0.f});
                     }
                 }
 
