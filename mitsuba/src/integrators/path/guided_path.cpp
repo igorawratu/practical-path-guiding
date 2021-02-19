@@ -3386,7 +3386,7 @@ public:
                             int pos = int(pathRecord.path.size()) - 1;
                             int rpos = int(rpathRecord.path.size()) - 1;
                             if(pos > 100 || rpos > 100){
-                                std::cout << pos << " " << rpos << std::endl;
+                                std::cout << "v:" << pos << " " << rpos << std::endl;
                             }
                             pathRecord.radiance_record.push_back({pos, value, 0.f});
                             rpathRecord.radiance_record.push_back({rpos , value, 0.f});
@@ -3405,7 +3405,7 @@ public:
                         int pos = int(pathRecord.path.size()) - 1;
                         int rpos = int(rpathRecord.path.size()) - 1;
                         if(pos > 100 || rpos > 100){
-                            std::cout << pos << " " << rpos << std::endl;
+                            std::cout << "v:" << pos << " " << rpos << std::endl;
                         }
 
                         pathRecord.radiance_record.push_back({pos, eL, 0.f});
@@ -3422,7 +3422,7 @@ public:
                         int pos = int(pathRecord.path.size()) - 1;
                         int rpos = int(rpathRecord.path.size()) - 1;
                         if(pos > 100 || rpos > 100){
-                            std::cout << pos << " " << rpos << std::endl;
+                            std::cout << "v:" << pos << " " << rpos << std::endl;
                         }
 
                         pathRecord.radiance_record.push_back({pos, sL, 0.f});
