@@ -3554,7 +3554,7 @@ public:
                 /* Handle index-matched medium transitions specially */
                 if (bRec.sampledType == BSDF::ENull) {
                     if (!(rRec.type & RadianceQueryRecord::EIndirectSurfaceRadiance)){
-                        if(addedNee){
+                        if(!addedNee){
                             pathRecord.path.pop_back();
                             rpathRecord.path.pop_back();
                         }
@@ -3686,11 +3686,6 @@ public:
 
         rpathRecord.alpha = rRec.alpha;
         rpathRecord.iter = m_iter;
-
-        if(pathRecord.radiance_record.size() == 0){
-            pathRecord.path.clear();
-            pathRecord.path.shrink_to_fit();
-        }
 
         return Li;
     }
