@@ -2382,9 +2382,7 @@ public:
                 }
 
                 for(std::uint32_t k = 0; k <= pos; ++k){
-                    if(k > vertices.size()){
-                        std::cout << k << " " << pos << " " << vertices.size() << std::endl;
-                    }
+                    std::cout << k << " " << pos << " " << vertices.size() << std::endl;
                     vertices[k].radiance += L;
                 }
 
