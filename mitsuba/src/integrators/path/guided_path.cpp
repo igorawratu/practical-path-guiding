@@ -2397,7 +2397,7 @@ public:
                     Spectrum bsdfVal = (*m_samplePaths)[i].nee_records[j].bsdfVal;
 
                     if(pos > vertices.size()){
-                        std::cout << pos << " " << vertices.size() << std::endl;
+                        std::cout << pos << " " << vertices.size() << " " << (*m_samplePaths)[i].path.size() << std::endl;
                     }
 
                     DTreeWrapper* dTree = vertices[pos].dTree;
