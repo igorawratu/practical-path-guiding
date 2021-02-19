@@ -3383,8 +3383,13 @@ public:
                         recordRadiance(value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(pathRecord.path.size()) - 1, value, 0.f});
-                            rpathRecord.radiance_record.push_back({pathRecord.path.size() == 0 ? -1 : int(rpathRecord.path.size()) - 1, value, 0.f});
+                            int pos = int(pathRecord.path.size()) - 1;
+                            int rpos = int(rpathRecord.path.size()) - 1;
+                            if(pos > 100 || rpos > 100){
+                                std::cout << pos << " " << rpos << std::endl;
+                            }
+                            pathRecord.radiance_record.push_back({pos, value, 0.f});
+                            rpathRecord.radiance_record.push_back({rpos , value, 0.f});
                         }
                     }
 
