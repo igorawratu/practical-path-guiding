@@ -2378,7 +2378,7 @@ public:
                 if(pos >= 0){
                     L *= vertices[pos].throughput;
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
-                    //L *= weight;
+                    L *= weight;
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
@@ -2389,7 +2389,7 @@ public:
             }
 
             //compute NEE if enabled
-            /*if(m_doNee){
+            if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_samplePaths)[i].nee_records.size(); ++j){
                     int pos = (*m_samplePaths)[i].nee_records[j].pos;
                     Spectrum L = (*m_samplePaths)[i].nee_records[j].L;
@@ -2426,7 +2426,7 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }*/
+            }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
