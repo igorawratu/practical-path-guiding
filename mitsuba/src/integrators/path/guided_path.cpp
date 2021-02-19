@@ -2369,18 +2369,63 @@ public:
                     });
             }
 
-            //this assumes no NEE, will need to change to account for NEE later
+            //compute indirect lighting
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_samplePaths)[i].radiance_record[j].pos;
-
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
+
+                //not directly sampling environmental light so have to multiply by throughput, also take into account MIS coeff if nee was used
                 if(pos >= 0){
                     L *= vertices[pos].throughput;
-                    for(std::uint32_t k = 0; k <= pos; ++k){
+                    Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
+                    L *= weight;
+                }
+
+                for(std::uint32_t k = 0; k <= pos; ++k){
+                    vertices[k].radiance += L;
+                }
+
+                (*m_samplePaths)[i].Li += L;
+            }
+
+            //compute NEE if enabled
+            if(m_doNee){
+                for(std::uint32_t j = 0; j < (*m_samplePaths)[i].nee_records.size(); ++j){
+                    int pos = (*m_samplePaths)[i].nee_records[j].pos;
+                    Spectrum L = (*m_samplePaths)[i].nee_records[j].L;
+                    Float pdf = (*m_samplePaths)[i].nee_records[j].pdf;
+                    Spectrum bsdfVal = (*m_samplePaths)[i].nee_records[j].bsdfVal;
+
+                    DTreeWrapper* dTree = vertices[pos].dTree;
+                    Float dtreePdf = dTree->pdf((*m_samplePaths)[i].nee_records[j].wo, false);
+                    Float bsf = dTree->bsdfSamplingFraction();
+                    Float woPdf = bsf * (*m_samplePaths)[i].nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
+
+                    L *= miWeight((*m_samplePaths)[i].nee_records[j].pdf, woPdf);
+                    L *= vertices[pos].throughput;
+
+                    for(std::uint32_t k = 0; k < pos; ++k){
                         vertices[k].radiance += L;
                     }
+
+                    if(m_nee == EKickstart){
+                        Vertex v = Vertex{ 
+                            dTree,
+                            dTreeVoxelSize,
+                            Ray(vertices[pos].ray.o, wo, 0),
+                            throughput * bsdfVal / pdf,
+                            bsdfVal,
+                            L,
+                            pdf,
+                            (*m_samplePaths)[i].nee_records[j].bsdfPdf,
+                            dtreePdf,
+                            false
+                        };
+
+                        v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
+                            m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                    }
                 }
-                (*m_samplePaths)[i].Li += L;
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2986,11 +3031,22 @@ public:
     struct RadianceRecord{
         int pos;
         Spectrum L;
+        float pdf;
     };
+
+    struct NEERecord{
+        int pos;
+        Spectrum L;
+        float pdf;
+        Vector wo;
+        Spectrum bsdfVal;
+        Float bsdfPdf;
+    }
 
     struct RPGPath{
         std::vector<RejVertex> path;
         std::vector<RadianceRecord> radiance_record;
+        std::vector<NEERecord> nee_records;
         Point2 sample_pos;
         Spectrum spec;
         Spectrum Li;
@@ -3001,6 +3057,7 @@ public:
     struct PGPath{
         std::vector<RWVertex> path;
         std::vector<RadianceRecord> radiance_record;
+        std::vector<NEERecord> nee_records;
         Point2 sample_pos;
         Spectrum spec;
         Spectrum Li;
@@ -3322,10 +3379,10 @@ public:
 
                         recordRadiance(value);
 
-                        /*if(!value.isZero()){
-                            pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value});
-                            rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value});
-                        }*/
+                        if(!value.isZero()){
+                            pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
+                            rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value, 0.f});
+                        }
                     }
 
                     break;
@@ -3336,15 +3393,22 @@ public:
                     && (!m_hideEmitters || scattered)){
                     Spectrum eL = throughput * its.Le(-ray.d);
                     recordRadiance(eL);
-                    /*if(!eL.isZero()){
-                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL});
-                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL});
-                    }*/
+                    if(!eL.isZero()){
+                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
+                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL, 0.f});
+                    }
                 }
 
                 /* Include radiance from a subsurface integrator if requested */
-                if (its.hasSubsurface() && (rRec.type & RadianceQueryRecord::ESubsurfaceRadiance))
-                    recordRadiance(throughput * its.LoSub(scene, rRec.sampler, -ray.d, rRec.depth));
+                if (its.hasSubsurface() && (rRec.type & RadianceQueryRecord::ESubsurfaceRadiance)){
+                    Spectrum sL = throughput * its.LoSub(scene, rRec.sampler, -ray.d, rRec.depth);
+                    recordRadiance(sL);
+
+                    if(!sL.isZero()){
+                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
+                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, sL, 0.f});
+                    }
+                }
 
                 if (rRec.depth >= m_maxDepth && m_maxDepth != -1)
                     break;
@@ -3383,11 +3447,20 @@ public:
                 Float woPdf, bsdfPdf, dTreePdf;
                 Spectrum bsdfWeight = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, rRec, dTree);
 
+                /* Trace a ray in this direction */
+                ray = Ray(its.p, wo, ray.time);
+
+                //add the vertices
+                pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta});
+                rpathRecord.path.push_back(RejVertex{ray, throughput, 
+                    bsdfWeight * woPdf, (m_nee == EAlways) ? Spectrum{0.0f} : L, bsdfPdf, woPdf, dTreePdf, isDelta});
+
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
                 /* ==================================================================== */
 
                 DirectSamplingRecord dRec(its);
+                bool addedNee = false;
 
                 /* Estimate the direct illumination if this is requested */
                 if (m_doNee &&
@@ -3422,7 +3495,7 @@ public:
                             value *= bsdfVal;
                             Spectrum L = throughput * value * weight;
 
-                            if ((!m_isFinalIter || m_augment || m_rejectAugment || m_reweightAugment) && m_nee != EAlways) {
+                            if (!m_isFinalIter && m_nee != EAlways) {
                                 if (dTree) {
                                     Vertex v = Vertex{
                                         dTree,
@@ -3436,36 +3509,35 @@ public:
                                         dTreePdf,
                                         false
                                     };
-
-                                    pathRecord.path.push_back(RWVertex{Ray(its.p, dRec.d, 0), bsdfVal, bsdfPdf, dRec.pdf, false});
-                                    rpathRecord.path.push_back(RejVertex{Ray(its.p, dRec.d, 0), throughput * bsdfVal / dRec.pdf, 
-                                        bsdfVal, L, bsdfPdf, dRec.pdf, dTreePdf, false});
-
+                                    
                                     v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
-                                    /*if(m_augment){
-                                        dTree->addPointToCache(curr_its);
-                                    }*/
                                 }
                             }
+
+                            pathRecord.nee_records.push_back({int(pathRecord.path.size()), value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            rpathRecord.nee_records.push_back({int(rpathRecord.path.size()), value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            
+                            addedNee = true;
 
                             recordRadiance(L);
                         }
                     }
                 }
 
-                // BSDF handling
-                if (bsdfWeight.isZero())
-                    break;
 
                 /* Prevent light leaks due to the use of shading normals */
                 const Vector wo = its.toWorld(bRec.wo);
                 Float woDotGeoN = dot(its.geoFrame.n, wo);
 
-                if (woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)
-                    break;
+                // BSDF handling
+                if (bsdfWeight.isZero() || woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals){
+                    if(!addedNee){
+                        pathRecord.path.pop_back();
+                        rpathRecord.path.pop_back();
+                    }
 
-                /* Trace a ray in this direction */
-                ray = Ray(its.p, wo, ray.time);
+                    break;
+                }
 
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
@@ -3476,8 +3548,14 @@ public:
 
                 /* Handle index-matched medium transitions specially */
                 if (bRec.sampledType == BSDF::ENull) {
-                    if (!(rRec.type & RadianceQueryRecord::EIndirectSurfaceRadiance))
+                    if (!(rRec.type & RadianceQueryRecord::EIndirectSurfaceRadiance)){
+                        if(addedNee){
+                            pathRecord.path.pop_back();
+                            rpathRecord.path.pop_back();
+                        }
+
                         break;
+                    }
 
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
@@ -3497,9 +3575,8 @@ public:
                                 true
                             };
 
-                            pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, true});
-                            rpathRecord.path.push_back(RejVertex{ray, throughput, 
-                                bsdfWeight * woPdf, Spectrum(0.f), bsdfPdf, woPdf, dTreePdf, true});
+                            pathRecord.path.back().isDelta = true;
+                            rpathRecord.path.back().isDelta = true;
 
                             ++nVertices;
                         }
@@ -3519,7 +3596,6 @@ public:
                 /* If a luminaire was hit, estimate the local illumination and
                 weight using the power heuristic */
                 if (rRec.type & RadianceQueryRecord::EDirectSurfaceRadiance) {
-                    bool isDelta = bRec.sampledType & BSDF::EDelta;
                     const Float emitterPdf = (m_doNee && !isDelta && !value.isZero()) ? scene->pdfEmitterDirect(dRec) : 0;
 
                     const Float weight = miWeight(woPdf, emitterPdf);
@@ -3544,18 +3620,12 @@ public:
                                 isDelta
                             };
 
-                            pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta});
-                            rpathRecord.path.push_back(RejVertex{ray, throughput, 
-                                bsdfWeight * woPdf, (m_nee == EAlways) ? Spectrum{0.0f} : L, bsdfPdf, woPdf, dTreePdf, isDelta});
+                            rpathRecord.path.back.Li = (m_nee == EAlways) ? Spectrum{0.0f} : L;
 
                             if(!L.isZero()){
-                                pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value});
-                                rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value});
+                                pathRecord.radiance_record.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
+                                rpathRecord.radiance_record.push_back({int(rpathRecord.path.size() - 1), value, emitterPdf});
                             }
-
-                            /*if(m_augment){
-                                dTree->addPointToCache(curr_its);
-                            }*/
 
                             ++nVertices;
                         }
