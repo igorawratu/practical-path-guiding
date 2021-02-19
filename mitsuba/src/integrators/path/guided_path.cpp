@@ -2488,7 +2488,7 @@ public:
             resetSDTree(m_augment);
 
             if(m_reweight){
-                reweightCurrentPaths(sampler);
+                //reweightCurrentPaths(sampler);
                 
                 if(m_renderReweightIterations){
                     ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
