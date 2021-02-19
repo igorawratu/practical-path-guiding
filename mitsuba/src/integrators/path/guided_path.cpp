@@ -2350,7 +2350,8 @@ public:
 
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 if(nwo < EPSILON){
-                    std::cout << nwo << std::endl;
+                    discard_iter = j;
+                    break;
                 }
 
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
@@ -2376,9 +2377,16 @@ public:
                     });
             }
 
+            if(discard_iter >= 0){
+                (*m_samplePaths)[i].path.resize(discard_iter);
+            }
+
             //compute indirect lighting
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 int pos = (*m_samplePaths)[i].radiance_record[j].pos;
+                if(pos > vertices.size()){
+                    continue;
+                }
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
 
                 //not directly sampling environmental light so have to multiply by throughput, also take into account MIS coeff if nee was used
