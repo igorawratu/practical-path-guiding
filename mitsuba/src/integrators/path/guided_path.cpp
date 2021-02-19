@@ -2340,6 +2340,8 @@ public:
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
+            int discard_iter = -1;
+
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
@@ -2347,12 +2349,12 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                if(nwo < EPSILON){
+                    std::cout << nwo << std::endl;
+                }
+
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                if((*m_samplePaths)[i].path[j].owo < EPSILON){
-                    std::cout << (*m_samplePaths)[i].path[j].owo << std::endl;
-                }
-                
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 (*m_samplePaths)[i].path[j].owo = nwo;
 
