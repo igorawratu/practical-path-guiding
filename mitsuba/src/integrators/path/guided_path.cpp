@@ -2408,12 +2408,16 @@ public:
                         vertices[k].radiance += L;
                     }
 
+                    if(pdf < EPSILON){
+                        std::cout << pdf << std::endl;
+                    }
+
                     if(m_nee == EKickstart){
                         Vertex v = Vertex{ 
                             dTree,
                             vertices[pos].dTreeVoxelSize,
                             Ray(vertices[pos].ray.o, (*m_samplePaths)[i].nee_records[j].wo, 0),
-                            throughput,
+                            throughput * bsdfVal / pdf,
                             bsdfVal,
                             L,
                             pdf,
