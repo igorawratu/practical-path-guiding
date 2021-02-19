@@ -2348,6 +2348,11 @@ public:
 
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
+
+                if((*m_samplePaths)[i].path[j].owo < EPSILON){
+                    std::cout << (*m_samplePaths)[i].path[j].owo << std::endl;
+                }
+                
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 (*m_samplePaths)[i].path[j].owo = nwo;
 
@@ -2488,7 +2493,7 @@ public:
             resetSDTree(m_augment);
 
             if(m_reweight){
-                //reweightCurrentPaths(sampler);
+                reweightCurrentPaths(sampler);
                 
                 if(m_renderReweightIterations){
                     ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
