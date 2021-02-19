@@ -2376,6 +2376,9 @@ public:
 
                 //not directly sampling environmental light so have to multiply by throughput, also take into account MIS coeff if nee was used
                 if(pos >= 0){
+                    if(pos > (*m_samplePaths)[i].path.size()){
+                        std::cout << pos << " " << (*m_samplePaths)[i].path.size() << std::endl;
+                    }
                     L *= vertices[pos].throughput;
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
