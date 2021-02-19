@@ -2379,11 +2379,10 @@ public:
                     L *= vertices[pos].throughput;
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
-                }
 
-                for(std::uint32_t k = 0; k <= pos; ++k){
-                    std::cout << k << " " << pos << " " << vertices.size() << std::endl;
-                    vertices[k].radiance += L;
+                    for(std::uint32_t k = 0; k <= pos; ++k){
+                        vertices[k].radiance += L;
+                    }
                 }
 
                 (*m_samplePaths)[i].Li += L;
