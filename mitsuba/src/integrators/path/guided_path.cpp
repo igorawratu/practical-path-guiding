@@ -2396,10 +2396,6 @@ public:
                     Float pdf = (*m_samplePaths)[i].nee_records[j].pdf;
                     Spectrum bsdfVal = (*m_samplePaths)[i].nee_records[j].bsdfVal;
 
-                    if(pos > vertices.size()){
-                        std::cout << pos << " " << vertices.size() << " " << (*m_samplePaths)[i].path.size() << std::endl;
-                    }
-
                     DTreeWrapper* dTree = vertices[pos].dTree;
                     Float dtreePdf = dTree->pdf((*m_samplePaths)[i].nee_records[j].wo, false);
                     Float bsf = dTree->bsdfSamplingFraction();
@@ -2417,7 +2413,7 @@ public:
                             dTree,
                             vertices[pos].dTreeVoxelSize,
                             Ray(vertices[pos].ray.o, (*m_samplePaths)[i].nee_records[j].wo, 0),
-                            throughput * bsdfVal / pdf,
+                            throughput,
                             bsdfVal,
                             L,
                             pdf,
