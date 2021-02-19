@@ -3388,8 +3388,8 @@ public:
                             if(pos > 100 || rpos > 100){
                                 std::cout << "v:" << pos << " " << rpos << std::endl;
                             }
-                            pathRecord.radiance_record.push_back({pos, value, 0.f});
-                            rpathRecord.radiance_record.push_back({rpos , value, 0.f});
+                            /*pathRecord.radiance_record.push_back({pos, value, 0.f});
+                            rpathRecord.radiance_record.push_back({rpos , value, 0.f});*/
                         }
                     }
 
@@ -3408,8 +3408,8 @@ public:
                             std::cout << "v:" << pos << " " << rpos << std::endl;
                         }
 
-                        pathRecord.radiance_record.push_back({pos, eL, 0.f});
-                        rpathRecord.radiance_record.push_back({rpos, eL, 0.f});
+                        /*pathRecord.radiance_record.push_back({pos, eL, 0.f});
+                        rpathRecord.radiance_record.push_back({rpos, eL, 0.f});*/
                     }
                 }
 
@@ -3425,8 +3425,8 @@ public:
                             std::cout << "v:" << pos << " " << rpos << std::endl;
                         }
 
-                        pathRecord.radiance_record.push_back({pos, sL, 0.f});
-                        rpathRecord.radiance_record.push_back({rpos, sL, 0.f});
+                        /*pathRecord.radiance_record.push_back({pos, sL, 0.f});
+                        rpathRecord.radiance_record.push_back({rpos, sL, 0.f});*/
                     }
                 }
 
