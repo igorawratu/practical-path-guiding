@@ -2389,7 +2389,7 @@ public:
             }
 
             //compute NEE if enabled
-            if(m_doNee){
+            /*if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_samplePaths)[i].nee_records.size(); ++j){
                     int pos = (*m_samplePaths)[i].nee_records[j].pos;
                     Spectrum L = (*m_samplePaths)[i].nee_records[j].L;
@@ -2408,7 +2408,7 @@ public:
                         vertices[k].radiance += L;
                     }
 
-                    /*if(m_nee == EKickstart){
+                    if(m_nee == EKickstart){
                         Vertex v = Vertex{ 
                             dTree,
                             vertices[pos].dTreeVoxelSize,
@@ -2424,9 +2424,9 @@ public:
 
                         v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-                    }*/
+                    }
                 }
-            }
+            }*/
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
