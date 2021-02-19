@@ -2384,7 +2384,7 @@ public:
             //compute indirect lighting
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 int pos = (*m_samplePaths)[i].radiance_record[j].pos;
-                if(pos > vertices.size()){
+                if(pos >= vertices.size()){
                     continue;
                 }
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
@@ -2407,10 +2407,10 @@ public:
             if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_samplePaths)[i].nee_records.size(); ++j){
                     int pos = (*m_samplePaths)[i].nee_records[j].pos;
-                    if(pos > vertices.size()){
+                    if(pos >= vertices.size()){
                         continue;
                     }
-                
+
                     Spectrum L = (*m_samplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_samplePaths)[i].nee_records[j].pdf;
                     Spectrum bsdfVal = (*m_samplePaths)[i].nee_records[j].bsdfVal;
