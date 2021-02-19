@@ -2411,8 +2411,8 @@ public:
                     if(m_nee == EKickstart){
                         Vertex v = Vertex{ 
                             dTree,
-                            dTreeVoxelSize,
-                            Ray(vertices[pos].ray.o, wo, 0),
+                            vertices[pos].dTreeVoxelSize,
+                            Ray(vertices[pos].ray.o, (*m_samplePaths)[i].nee_records[j].wo, 0),
                             throughput * bsdfVal / pdf,
                             bsdfVal,
                             L,
@@ -3041,7 +3041,7 @@ public:
         Vector wo;
         Spectrum bsdfVal;
         Float bsdfPdf;
-    }
+    };
 
     struct RPGPath{
         std::vector<RejVertex> path;
@@ -3448,12 +3448,14 @@ public:
                 Spectrum bsdfWeight = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, rRec, dTree);
 
                 /* Trace a ray in this direction */
+                const Vector wo = its.toWorld(bRec.wo);
                 ray = Ray(its.p, wo, ray.time);
+
+                bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
                 pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta});
-                rpathRecord.path.push_back(RejVertex{ray, throughput, 
-                    bsdfWeight * woPdf, (m_nee == EAlways) ? Spectrum{0.0f} : L, bsdfPdf, woPdf, dTreePdf, isDelta});
+                rpathRecord.path.push_back(RejVertex{ray, throughput, bsdfWeight * woPdf, Spectrum(0.0f), bsdfPdf, woPdf, dTreePdf, isDelta});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
@@ -3526,11 +3528,10 @@ public:
 
 
                 /* Prevent light leaks due to the use of shading normals */
-                const Vector wo = its.toWorld(bRec.wo);
                 Float woDotGeoN = dot(its.geoFrame.n, wo);
 
                 // BSDF handling
-                if (bsdfWeight.isZero() || woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals){
+                if (bsdfWeight.isZero() || (woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
                     if(!addedNee){
                         pathRecord.path.pop_back();
                         rpathRecord.path.pop_back();
@@ -3620,7 +3621,7 @@ public:
                                 isDelta
                             };
 
-                            rpathRecord.path.back.Li = (m_nee == EAlways) ? Spectrum{0.0f} : L;
+                            rpathRecord.path.back().Li = (m_nee == EAlways) ? Spectrum{0.0f} : L;
 
                             if(!L.isZero()){
                                 pathRecord.radiance_record.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
