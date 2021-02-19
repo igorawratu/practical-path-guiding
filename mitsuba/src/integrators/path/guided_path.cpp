@@ -3516,8 +3516,8 @@ public:
                                 }
                             }
 
-                            pathRecord.nee_records.push_back({int(pathRecord.path.size()), value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
-                            rpathRecord.nee_records.push_back({int(rpathRecord.path.size()), value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            rpathRecord.nee_records.push_back({int(rpathRecord.path.size()) - 1, value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
                             
                             addedNee = true;
 
