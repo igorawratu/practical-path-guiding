@@ -2356,7 +2356,7 @@ public:
 
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
+                //(*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 (*m_samplePaths)[i].path[j].owo = nwo;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
