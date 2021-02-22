@@ -2426,6 +2426,7 @@ public:
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
                     }
+                    (*m_samplePaths)[i].Li += L;
 
                     if(m_nee == EKickstart){
                         Vertex v = Vertex{ 
