@@ -2384,9 +2384,6 @@ public:
             //compute indirect lighting
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 int pos = (*m_samplePaths)[i].radiance_record[j].pos;
-                if(pos >= vertices.size()){
-                    continue;
-                }
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
 
                 //not directly sampling environmental light so have to multiply by throughput, also take into account MIS coeff if nee was used
