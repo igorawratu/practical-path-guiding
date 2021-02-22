@@ -3337,7 +3337,7 @@ public:
 
                             /* Weight using the power heuristic */
                             const Float weight = miWeight(dRec.pdf, phasePdf);
-                            recordRadiance(throughput * value * phaseVal * weight);
+                            //recordRadiance(throughput * value * phaseVal * weight);
                         }
                     }
                 }
@@ -3365,7 +3365,7 @@ public:
                 weight using the power heuristic */
                 if (!value.isZero() && (rRec.type & RadianceQueryRecord::EDirectMediumRadiance)) {
                     const Float emitterPdf = scene->pdfEmitterDirect(dRec);
-                    recordRadiance(throughput * value * miWeight(phasePdf, emitterPdf));
+                    //recordRadiance(throughput * value * miWeight(phasePdf, emitterPdf));
                 }
 
                 /* ==================================================================== */
