@@ -2423,7 +2423,7 @@ public:
                     L *= miWeight((*m_samplePaths)[i].nee_records[j].pdf, woPdf);
                     L *= vertices[pos].throughput;
 
-                    for(std::uint32_t k = 0; k < pos; ++k){
+                    for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
                     }
 
@@ -2432,7 +2432,7 @@ public:
                             dTree,
                             vertices[pos].dTreeVoxelSize,
                             Ray(vertices[pos].ray.o, (*m_samplePaths)[i].nee_records[j].wo, 0),
-                            throughput * bsdfVal / pdf,
+                            vertices[pos].throughput * bsdfVal / pdf,
                             bsdfVal,
                             L,
                             pdf,
