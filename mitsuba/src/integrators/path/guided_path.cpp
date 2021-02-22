@@ -2425,8 +2425,11 @@ public:
                     Float woPdf = bsf * (*m_samplePaths)[i].nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
                     L *= miWeight((*m_samplePaths)[i].nee_records[j].pdf, woPdf);
-                    L *= vertices[pos].throughput;
 
+                    if(pos > 0){
+                        L *= vertices[pos - 1].throughput;
+                    }
+                    
                     if(!L.isValid()){
                         continue;
                     }
@@ -3337,7 +3340,7 @@ public:
 
                             /* Weight using the power heuristic */
                             const Float weight = miWeight(dRec.pdf, phasePdf);
-                            //recordRadiance(throughput * value * phaseVal * weight);
+                            recordRadiance(throughput * value * phaseVal * weight);
                         }
                     }
                 }
@@ -3365,7 +3368,7 @@ public:
                 weight using the power heuristic */
                 if (!value.isZero() && (rRec.type & RadianceQueryRecord::EDirectMediumRadiance)) {
                     const Float emitterPdf = scene->pdfEmitterDirect(dRec);
-                    //recordRadiance(throughput * value * miWeight(phasePdf, emitterPdf));
+                    recordRadiance(throughput * value * miWeight(phasePdf, emitterPdf));
                 }
 
                 /* ==================================================================== */
@@ -3405,12 +3408,12 @@ public:
                         if (rRec.medium)
                             value *= rRec.medium->evalTransmittance(ray, rRec.sampler);
 
-                        /*recordRadiance(throughput * value);
+                        recordRadiance(throughput * value);
 
                         if(!value.isZero()){
                             pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
                             rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value, 0.f});
-                        }*/
+                        }
                     }
 
                     break;
@@ -3420,22 +3423,22 @@ public:
                 if (its.isEmitter() && (rRec.type & RadianceQueryRecord::EEmittedRadiance)
                     && (!m_hideEmitters || scattered)){
                     Spectrum eL = its.Le(-ray.d);
-                    /*recordRadiance(throughput * eL);
+                    recordRadiance(throughput * eL);
                     if(!eL.isZero()){
                         pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
                         rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL, 0.f});
-                    }*/
+                    }
                 }
 
                 /* Include radiance from a subsurface integrator if requested */
                 if (its.hasSubsurface() && (rRec.type & RadianceQueryRecord::ESubsurfaceRadiance)){
                     Spectrum sL = its.LoSub(scene, rRec.sampler, -ray.d, rRec.depth);
-                    /*recordRadiance(throughput * sL);
+                    recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
                         pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
                         rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, sL, 0.f});
-                    }*/
+                    }
                 }
 
                 if (rRec.depth >= m_maxDepth && m_maxDepth != -1)
