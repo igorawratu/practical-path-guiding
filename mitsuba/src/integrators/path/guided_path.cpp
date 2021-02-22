@@ -2395,6 +2395,10 @@ public:
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
 
+                    if(!L.isValid()){
+                        continue;
+                    }
+
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
                     }
@@ -2422,6 +2426,10 @@ public:
 
                     L *= miWeight((*m_samplePaths)[i].nee_records[j].pdf, woPdf);
                     L *= vertices[pos].throughput;
+
+                    if(!L.isValid()){
+                        continue;
+                    }
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
@@ -2944,7 +2952,7 @@ public:
                 
                 sampler->advance();
 
-                if(m_reweight)
+                if(m_reweight && m_iter >= 3)
                 {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     m_samplePaths->push_back(std::move(pathRecord));
