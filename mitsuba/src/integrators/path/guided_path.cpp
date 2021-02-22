@@ -3401,11 +3401,11 @@ public:
                     attenuated radiance from a background luminaire */
                     if ((rRec.type & RadianceQueryRecord::EEmittedRadiance)
                         && (!m_hideEmitters || scattered)) {
-                        Spectrum value = throughput * scene->evalEnvironment(ray);
+                        Spectrum value = scene->evalEnvironment(ray);
                         if (rRec.medium)
                             value *= rRec.medium->evalTransmittance(ray, rRec.sampler);
 
-                        recordRadiance(value);
+                        recordRadiance(throughput * value);
 
                         if(!value.isZero()){
                             pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
@@ -3419,8 +3419,8 @@ public:
                 /* Possibly include emitted radiance if requested */
                 if (its.isEmitter() && (rRec.type & RadianceQueryRecord::EEmittedRadiance)
                     && (!m_hideEmitters || scattered)){
-                    Spectrum eL = throughput * its.Le(-ray.d);
-                    recordRadiance(eL);
+                    Spectrum eL = its.Le(-ray.d);
+                    recordRadiance(throughput * eL);
                     if(!eL.isZero()){
                         pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
                         rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL, 0.f});
@@ -3429,8 +3429,8 @@ public:
 
                 /* Include radiance from a subsurface integrator if requested */
                 if (its.hasSubsurface() && (rRec.type & RadianceQueryRecord::ESubsurfaceRadiance)){
-                    Spectrum sL = throughput * its.LoSub(scene, rRec.sampler, -ray.d, rRec.depth);
-                    recordRadiance(sL);
+                    Spectrum sL = its.LoSub(scene, rRec.sampler, -ray.d, rRec.depth);
+                    recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
                         pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
