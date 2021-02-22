@@ -2427,7 +2427,7 @@ public:
                     L *= miWeight((*m_samplePaths)[i].nee_records[j].pdf, woPdf);
 
                     Spectrum prevThroughput = pos > 0 ? vertices[pos - 1].throughput : Spectrum(1.f);
-                    //L *= prevThroughput;
+                    L *= prevThroughput;
                     
                     if(!L.isValid()){
                         continue;
