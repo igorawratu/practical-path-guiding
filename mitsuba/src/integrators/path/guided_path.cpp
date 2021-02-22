@@ -2384,6 +2384,9 @@ public:
             //compute indirect lighting
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].radiance_record.size(); ++j){
                 int pos = (*m_samplePaths)[i].radiance_record[j].pos;
+                if(pos >= vertices.size()){
+                    continue;
+                }
                 Spectrum L = (*m_samplePaths)[i].radiance_record[j].L;
 
                 //not directly sampling environmental light so have to multiply by throughput, also take into account MIS coeff if nee was used
@@ -3283,6 +3286,10 @@ public:
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].record(radiance);
             }
+
+            for (std::uint32_t i = 0; i < rpathRecord.path.size(); ++i) {
+                rpathRecord.path[i].Li += radiance;
+            }
         };
 
         while (rRec.depth <= m_maxDepth || m_maxDepth < 0) {
@@ -3330,7 +3337,7 @@ public:
 
                             /* Weight using the power heuristic */
                             const Float weight = miWeight(dRec.pdf, phasePdf);
-                            //recordRadiance(throughput * value * phaseVal * weight);
+                            recordRadiance(throughput * value * phaseVal * weight);
                         }
                     }
                 }
@@ -3358,7 +3365,7 @@ public:
                 weight using the power heuristic */
                 if (!value.isZero() && (rRec.type & RadianceQueryRecord::EDirectMediumRadiance)) {
                     const Float emitterPdf = scene->pdfEmitterDirect(dRec);
-                    //recordRadiance(throughput * value * miWeight(phasePdf, emitterPdf));
+                    recordRadiance(throughput * value * miWeight(phasePdf, emitterPdf));
                 }
 
                 /* ==================================================================== */
