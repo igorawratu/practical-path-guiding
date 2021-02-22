@@ -2426,9 +2426,8 @@ public:
 
                     L *= miWeight((*m_samplePaths)[i].nee_records[j].pdf, woPdf);
 
-                    if(pos > 0){
-                        L *= vertices[pos - 1].throughput;
-                    }
+                    Spectrum prevThroughput = pos > 0 ? vertices[pos - 1].throughput : Spectrum(1.f);
+                    //L *= prevThroughput;
                     
                     if(!L.isValid()){
                         continue;
@@ -2444,7 +2443,7 @@ public:
                             dTree,
                             vertices[pos].dTreeVoxelSize,
                             Ray(vertices[pos].ray.o, (*m_samplePaths)[i].nee_records[j].wo, 0),
-                            vertices[pos].throughput * bsdfVal / pdf,
+                            prevThroughput * bsdfVal / pdf,
                             bsdfVal,
                             L,
                             pdf,
