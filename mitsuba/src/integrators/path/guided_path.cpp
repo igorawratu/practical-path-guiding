@@ -3689,10 +3689,12 @@ public:
 
         if(pathRecord.radiance_record.size() == 0 && pathRecord.nee_records.size() == 0){
             pathRecord.path.clear();
+            pathRecord.Li = Spectrum(0.f);
         }
 
         if(rpathRecord.radiance_record.size() == 0 && rpathRecord.nee_records.size() == 0){
             rpathRecord.path.clear();
+            rpathRecord.Li = Spectrum(0.f);
         }
 
         avgPathLength.incrementBase();
