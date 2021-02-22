@@ -2356,7 +2356,7 @@ public:
 
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                //(*m_samplePaths)[i].path[j].bsdfVal *= reweight;
+                (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 (*m_samplePaths)[i].path[j].owo = nwo;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
@@ -3686,10 +3686,19 @@ public:
 
             scattered = true;
         }
+
+        if(pathRecord.radiance_record.size() == 0 && pathRecord.nee_records.size() == 0){
+            pathRecord.path.clear();
+        }
+
+        if(rpathRecord.radiance_record.size() == 0 && rpathRecord.nee_records.size() == 0){
+            rpathRecord.path.clear();
+        }
+
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+        if (nVertices > 0 && !(m_isFinalIter || m_augment || m_rejectAugment || m_reweightAugment)) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
