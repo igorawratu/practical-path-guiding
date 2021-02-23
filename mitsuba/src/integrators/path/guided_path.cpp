@@ -1864,19 +1864,23 @@ public:
                 }
 
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
-                L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
-                L *= weight;
+                if(pos >= 0){
+                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                if(!L.isValid()){
-                    continue;
+                    Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
+                    L *= weight;
+
+                    if(!L.isValid()){
+                        continue;
+                    }
+
+                    for(std::uint32_t k = 0; k < pos; ++k){
+                        (*m_rejSamplePaths)[i].path[k].Li += L;
+                        vertices[k].radiance += L;
+                    }
                 }
-
-                for(std::uint32_t k = 0; k < pos; ++k){
-                    (*m_rejSamplePaths)[i].path[k].Li += L;
-                    vertices[k].radiance += L;
-                }
+                
                 (*m_rejSamplePaths)[i].Li += L;
             }
 
@@ -2009,19 +2013,23 @@ public:
                 }
 
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
-                L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
-                L *= weight;
+                if(pos >= 0){
+                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                if(!L.isValid()){
-                    continue;
+                    Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
+                    L *= weight;
+
+                    if(!L.isValid()){
+                        continue;
+                    }
+
+                    for(std::uint32_t k = 0; k < pos; ++k){
+                        (*m_rejSamplePaths)[i].path[k].Li += L;
+                        vertices[k].radiance += L;
+                    }
                 }
-
-                for(std::uint32_t k = 0; k < pos; ++k){
-                    (*m_rejSamplePaths)[i].path[k].Li += L;
-                    vertices[k].radiance += L;
-                }
+                
                 (*m_rejSamplePaths)[i].Li += L;
             }
 
@@ -2251,19 +2259,23 @@ public:
                 std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
 
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
-                L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
-                L *= weight;
+                if(pos >= 0){
+                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                if(!L.isValid()){
-                    continue;
+                    Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
+                    L *= weight;
+
+                    if(!L.isValid()){
+                        continue;
+                    }
+
+                    for(std::uint32_t k = 0; k < pos; ++k){
+                        (*m_rejSamplePaths)[i].path[k].Li += L;
+                        vertices[k].radiance += L;
+                    }
                 }
-
-                for(std::uint32_t k = 0; k < pos; ++k){
-                    (*m_rejSamplePaths)[i].path[k].Li += L;
-                    vertices[k].radiance += L;
-                }
+                
                 (*m_rejSamplePaths)[i].Li += L;
             }
 
@@ -2366,15 +2378,76 @@ public:
                 std::uint32_t pos = (*m_currAugmentedPaths)[i].radiance_record[j].pos;
 
                 Spectrum L = (*m_currAugmentedPaths)[i].radiance_record[j].L;
-                L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
 
-                for(std::uint32_t k = 0; k < pos; ++k){
-                    (*m_currAugmentedPaths)[i].path[k].Li += L;
-                    if(!finalIter){
-                        vertices[k].radiance += L;
+                if(pos >= 0){
+                    L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
+
+                    Spectrum prevThroughput = pos > 0 ? vertices[pos - 1].throughput : Spectrum(1.f);
+                    L *= prevThroughput;
+                    
+                    if(!L.isValid()){
+                        continue;
+                    }
+
+                    for(std::uint32_t k = 0; k < pos; ++k){
+                        (*m_currAugmentedPaths)[i].path[k].Li += L;
+                        if(!finalIter){
+                            vertices[k].radiance += L;
+                        }
                     }
                 }
+                
                 (*m_currAugmentedPaths)[i].Li += L;
+            }
+
+            if(m_doNee){
+                for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].nee_records.size(); ++j){
+                    int pos = (*m_currAugmentedPaths)[i].nee_records[j].pos;
+                    if(pos >= vertices.size()){
+                        continue;
+                    }
+
+                    Spectrum L = (*m_currAugmentedPaths)[i].nee_records[j].L;
+                    Float pdf = (*m_currAugmentedPaths)[i].nee_records[j].pdf;
+                    Spectrum bsdfVal = (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal;
+
+                    DTreeWrapper* dTree = vertices[pos].dTree;
+                    Float dtreePdf = dTree->pdf((*m_currAugmentedPaths)[i].nee_records[j].wo, false);
+                    Float bsf = dTree->bsdfSamplingFraction();
+                    Float woPdf = bsf * (*m_currAugmentedPaths)[i].nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
+
+                    L *= miWeight((*m_currAugmentedPaths)[i].nee_records[j].pdf, woPdf);
+
+                    Spectrum prevThroughput = pos > 0 ? vertices[pos - 1].throughput : Spectrum(1.f);
+                    L *= prevThroughput;
+                    
+                    if(!L.isValid()){
+                        continue;
+                    }
+
+                    for(std::uint32_t k = 0; k <= pos; ++k){
+                        vertices[k].radiance += L;
+                    }
+                    (*m_currAugmentedPaths)[i].Li += L;
+
+                    if(m_nee == EKickstart){
+                        Vertex v = Vertex{ 
+                            dTree,
+                            vertices[pos].dTreeVoxelSize,
+                            Ray(vertices[pos].ray.o, (*m_currAugmentedPaths)[i].nee_records[j].wo, 0),
+                            prevThroughput * bsdfVal / pdf,
+                            bsdfVal,
+                            L,
+                            pdf,
+                            (*m_currAugmentedPaths)[i].nee_records[j].bsdfPdf,
+                            dtreePdf,
+                            false
+                        };
+
+                        v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
+                            m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                    }
+                }
             }
 
             if(!finalIter){
@@ -2425,14 +2498,75 @@ public:
                 std::uint32_t pos = (*m_currRWAugPaths)[i].radiance_record[j].pos;
 
                 Spectrum L = (*m_currRWAugPaths)[i].radiance_record[j].L;
-                L *= vertices[pos].throughput;
 
-                if(!finalIter){
+                if(pos >= 0){
+                    L *= vertices[pos].throughput;
+
+                    Float weight = miWeight((*m_currRWAugPaths)[i].path[pos].owo, (*m_currRWAugPaths)[i].radiance_record[j].pdf);
+                    L *= weight;
+
+                    if(!L.isValid()){
+                        continue;
+                    }
+
+                    if(!finalIter){
+                        for(std::uint32_t k = 0; k <= pos; ++k){
+                            vertices[k].radiance += L;
+                        }
+                    }
+                }
+
+                (*m_currRWAugPaths)[i].Li += L;
+            }
+
+            if(m_doNee){
+                for(std::uint32_t j = 0; j < (*m_currRWAugPaths)[i].nee_records.size(); ++j){
+                    int pos = (*m_currRWAugPaths)[i].nee_records[j].pos;
+                    if(pos >= vertices.size()){
+                        continue;
+                    }
+
+                    Spectrum L = (*m_currRWAugPaths)[i].nee_records[j].L;
+                    Float pdf = (*m_currRWAugPaths)[i].nee_records[j].pdf;
+                    Spectrum bsdfVal = (*m_currRWAugPaths)[i].nee_records[j].bsdfVal;
+
+                    DTreeWrapper* dTree = vertices[pos].dTree;
+                    Float dtreePdf = dTree->pdf((*m_currRWAugPaths)[i].nee_records[j].wo, false);
+                    Float bsf = dTree->bsdfSamplingFraction();
+                    Float woPdf = bsf * (*m_currRWAugPaths)[i].nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
+
+                    L *= miWeight((*m_currRWAugPaths)[i].nee_records[j].pdf, woPdf);
+
+                    Spectrum prevThroughput = pos > 0 ? vertices[pos - 1].throughput : Spectrum(1.f);
+                    L *= prevThroughput;
+                    
+                    if(!L.isValid()){
+                        continue;
+                    }
+
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
                     }
+                    (*m_currRWAugPaths)[i].Li += L;
+
+                    if(m_nee == EKickstart){
+                        Vertex v = Vertex{ 
+                            dTree,
+                            vertices[pos].dTreeVoxelSize,
+                            Ray(vertices[pos].ray.o, (*m_currRWAugPaths)[i].nee_records[j].wo, 0),
+                            prevThroughput * bsdfVal / pdf,
+                            bsdfVal,
+                            L,
+                            pdf,
+                            (*m_currRWAugPaths)[i].nee_records[j].bsdfPdf,
+                            dtreePdf,
+                            false
+                        };
+
+                        v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
+                            m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                    }
                 }
-                (*m_currRWAugPaths)[i].Li += L;
             }
 
             if(!finalIter){
@@ -2515,18 +2649,21 @@ public:
                 }
 
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
-                L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
-                L *= weight;
+                if(pos >= 0){
+                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
-                if(!L.isValid()){
-                    continue;
-                }
+                    Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
+                    L *= weight;
 
-                for(std::uint32_t k = 0; k < pos; ++k){
-                    (*m_rejSamplePaths)[i].path[k].Li += L;
-                    vertices[k].radiance += L;
+                    if(!L.isValid()){
+                        continue;
+                    }
+
+                    for(std::uint32_t k = 0; k < pos; ++k){
+                        (*m_rejSamplePaths)[i].path[k].Li += L;
+                        vertices[k].radiance += L;
+                    }
                 }
 
                 (*m_rejSamplePaths)[i].Li += L;
