@@ -3691,7 +3691,7 @@ public:
 
                     if (rRec.nextSample1D() >= successProb)
                         break;
-                    //throughput /= successProb;
+                    throughput /= successProb;
                 }
             }
 
