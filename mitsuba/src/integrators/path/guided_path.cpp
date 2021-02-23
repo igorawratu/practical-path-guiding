@@ -1827,7 +1827,7 @@ public:
                 Float newPdfBound = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / oldPdfBound;
 
-                Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                /*Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float acceptProb = newWoPdf / (c * (*m_rejSamplePaths)[i].path[j].woPdf);
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
@@ -1850,7 +1850,7 @@ public:
                             dtreePdf,
                             (*m_rejSamplePaths)[i].path[j].isDelta
                         });
-                }
+                }*/
             }
 
             (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
@@ -3678,13 +3678,8 @@ public:
 
         auto recordRadiance = [&](Spectrum radiance) {
             Li += radiance;
-            rpathRecord.Li += radiance;
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].record(radiance);
-            }
-
-            for (std::uint32_t i = 0; i < rpathRecord.path.size(); ++i) {
-                rpathRecord.path[i].Li += radiance;
             }
         };
 
