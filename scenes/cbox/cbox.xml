@@ -23,7 +23,7 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
 
-		<string name="nee" value="false"/>
+		<string name="nee" value="never"/>
 
 		<boolean name="augment" value="false"/>
 		<boolean name="renderIntermediateAugmented" value="false"/>
