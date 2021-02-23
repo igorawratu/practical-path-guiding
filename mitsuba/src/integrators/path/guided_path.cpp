@@ -2395,9 +2395,9 @@ public:
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
 
-                    /*if(!L.isValid()){
+                    if(!L.isValid()){
                         continue;
-                    }*/
+                    }
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
@@ -3407,12 +3407,12 @@ public:
                         if (rRec.medium)
                             value *= rRec.medium->evalTransmittance(ray, rRec.sampler);
 
-                        recordRadiance(throughput * value);
+                        /*recordRadiance(throughput * value);
 
                         if(!value.isZero()){
                             pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
                             rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, value, 0.f});
-                        }
+                        }*/
                     }
 
                     break;
@@ -3422,22 +3422,22 @@ public:
                 if (its.isEmitter() && (rRec.type & RadianceQueryRecord::EEmittedRadiance)
                     && (!m_hideEmitters || scattered)){
                     Spectrum eL = its.Le(-ray.d);
-                    recordRadiance(throughput * eL);
+                    /*recordRadiance(throughput * eL);
                     if(!eL.isZero()){
                         pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
                         rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, eL, 0.f});
-                    }
+                    }*/
                 }
 
                 /* Include radiance from a subsurface integrator if requested */
                 if (its.hasSubsurface() && (rRec.type & RadianceQueryRecord::ESubsurfaceRadiance)){
                     Spectrum sL = its.LoSub(scene, rRec.sampler, -ray.d, rRec.depth);
-                    recordRadiance(throughput * sL);
+                    /*recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
                         pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
                         rpathRecord.radiance_record.push_back({int(rpathRecord.path.size()) - 1, sL, 0.f});
-                    }
+                    }*/
                 }
 
                 if (rRec.depth >= m_maxDepth && m_maxDepth != -1)
