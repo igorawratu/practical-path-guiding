@@ -1811,6 +1811,7 @@ public:
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             std::vector<Vertex> vertices;
+            (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
 
             //first try reject path
             std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size() - 1;
@@ -1853,8 +1854,6 @@ public:
             }
 
             (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
-
-            Spectrum totalL(0.f);
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
