@@ -2356,8 +2356,8 @@ public:
 
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                /*(*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                (*m_samplePaths)[i].path[j].owo = nwo;*/
+                (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
+                (*m_samplePaths)[i].path[j].owo = nwo;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].owo;
                 throughput *= bsdfWeight;
@@ -3633,6 +3633,8 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
+                        pathRecord.radiance_record.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
+                        rpathRecord.radiance_record.push_back({int(rpathRecord.path.size() - 1), value, emitterPdf});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
@@ -3650,13 +3652,6 @@ public:
                                 dTreePdf,
                                 isDelta
                             };
-
-                            rpathRecord.path.back().Li = (m_nee == EAlways) ? Spectrum{0.0f} : L;
-
-                            if(!L.isZero()){
-                                pathRecord.radiance_record.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
-                                rpathRecord.radiance_record.push_back({int(rpathRecord.path.size() - 1), value, emitterPdf});
-                            }
 
                             ++nVertices;
                         }
