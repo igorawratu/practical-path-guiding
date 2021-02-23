@@ -2393,7 +2393,7 @@ public:
                 if(pos >= 0){
                     L *= vertices[pos].throughput;
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
-                    L *= weight;
+                    //L *= weight;
 
                     if(!L.isValid()){
                         continue;
