@@ -2393,11 +2393,11 @@ public:
                 if(pos >= 0){
                     L *= vertices[pos].throughput;
                     Float weight = miWeight((*m_samplePaths)[i].path[pos].owo, (*m_samplePaths)[i].radiance_record[j].pdf);
-                    //L *= weight;
+                    L *= weight;
 
-                    if(!L.isValid()){
+                    /*if(!L.isValid()){
                         continue;
-                    }
+                    }*/
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         vertices[k].radiance += L;
