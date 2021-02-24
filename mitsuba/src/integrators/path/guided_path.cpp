@@ -2392,7 +2392,7 @@ public:
                 Spectrum L = (*m_currAugmentedPaths)[i].radiance_record[j].L;
 
                 if(pos >= 0){
-                    L *= (*m_currAugmentedPaths)[i].path[pos > 0 ? pos - 1 : pos].throughput;
+                    L *= (*m_currAugmentedPaths)[i].path[std::min(pos + 1, vertices.size() - 1)].throughput;
                     
                     Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
                     L *= weight;
@@ -3885,7 +3885,7 @@ public:
 
                 //add the vertices
                 pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta});
-                rpathRecord.path.push_back(RejVertex{ray, throughput, bsdfWeight * woPdf, Spectrum(0.0f), bsdfPdf, woPdf, dTreePdf, isDelta});
+                rpathRecord.path.push_back(RejVertex{ray, Spectrum(0.0f), bsdfWeight * woPdf, Spectrum(0.0f), bsdfPdf, woPdf, dTreePdf, isDelta});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
@@ -3973,7 +3973,7 @@ public:
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
                 throughput *= bsdfWeight;
-                rpathRecord.path.back().throughput = throughput;
+
                 eta *= bRec.eta;
                 if (its.isMediumTransition())
                     rRec.medium = its.getTargetMedium(ray.d);
