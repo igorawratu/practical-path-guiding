@@ -1827,16 +1827,16 @@ public:
                 Float newPdfBound = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / oldPdfBound;
 
-                /*Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float acceptProb = newWoPdf / (c * (*m_rejSamplePaths)[i].path[j].woPdf);
-                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                if(sampler->next1D() > acceptProb){
+                /*if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
-                else{
+                else{*/
                     vertices.push_back(     
                         Vertex{ 
                             dTree,
@@ -1850,7 +1850,7 @@ public:
                             dtreePdf,
                             (*m_rejSamplePaths)[i].path[j].isDelta
                         });
-                }*/
+                //}
             }
 
             (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
