@@ -1838,10 +1838,11 @@ public:
                     break;
                 }
                 else{
-                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
+                    //(*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
+
                     vertices.push_back(     
                         Vertex{ 
                             dTree,
