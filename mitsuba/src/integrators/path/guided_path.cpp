@@ -2408,7 +2408,7 @@ public:
                 (*m_currAugmentedPaths)[i].Li += L;
             }
 
-            if(m_doNee){
+            /*if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].nee_records.size(); ++j){
                     int pos = (*m_currAugmentedPaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -2456,15 +2456,15 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }
+            }*/
 
-            /*if(!finalIter){
+            if(!finalIter){
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
-            }*/
+            }
         }
     }
 
@@ -3032,11 +3032,9 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                if(m_isFinalIter){
+                /*if(m_isFinalIter){
                     m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                }
-                m_currAugmentedPaths->clear();
-                m_currAugmentedPaths->shrink_to_fit();
+                }*/
 
                 if(m_isFinalIter){
                     film->clear();
@@ -3044,15 +3042,18 @@ public:
                     previousSamples->clear();
 
                     #pragma omp parallel for
-                    for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                        if((*m_rejSamplePaths)[i].path.size() > 0){
-                            Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
-                            previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
+                    for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
+                        if((*m_currAugmentedPaths)[i].path.size() > 0){
+                            Spectrum s = (*m_currAugmentedPaths)[i].spec * (*m_currAugmentedPaths)[i].Li;
+                            previousSamples->put((*m_currAugmentedPaths)[i].sample_pos, s, (*m_currAugmentedPaths)[i].alpha);
                         }                        
                     }
 
                     film->put(previousSamples);
                 }
+
+                m_currAugmentedPaths->clear();
+                m_currAugmentedPaths->shrink_to_fit();
             }
             else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
