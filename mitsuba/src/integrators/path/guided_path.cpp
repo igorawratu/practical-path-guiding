@@ -1838,7 +1838,7 @@ public:
                     break;
                 }
                 else{
-                    //(*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
@@ -2240,7 +2240,6 @@ public:
                 }
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-                (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
@@ -2254,7 +2253,7 @@ public:
                         (*m_rejSamplePaths)[i].path[j].ray,
                         (*m_rejSamplePaths)[i].path[j].throughput,
                         (*m_rejSamplePaths)[i].path[j].bsdfVal,
-                        (*m_rejSamplePaths)[i].path[j].Li,
+                        Spectrum(0.f),
                         (*m_rejSamplePaths)[i].path[j].woPdf,
                         (*m_rejSamplePaths)[i].path[j].bsdfPdf,
                         dtreePdf,
