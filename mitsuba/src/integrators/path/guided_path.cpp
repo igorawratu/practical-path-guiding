@@ -1868,7 +1868,7 @@ public:
                     L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
-                    L *= weight;
+                    //L *= weight;
 
                     if(!L.isValid()){
                         continue;
