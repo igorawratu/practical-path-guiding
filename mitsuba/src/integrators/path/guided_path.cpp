@@ -1868,7 +1868,7 @@ public:
                     L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
-                    //L *= weight;
+                    L *= weight;
 
                     if(!L.isValid()){
                         continue;
@@ -3664,7 +3664,7 @@ public:
         MediumSamplingRecord mRec;
         RayDifferential ray(r);
         Spectrum Li(0.0f);
-        rpathRecord.Li = Li;
+        rpathRecord.Li = Spectrum(0.f);
         Float eta = 1.0f;
 
         /* Perform the first ray intersection (or ignore if the
@@ -3962,6 +3962,7 @@ public:
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
                 throughput *= bsdfWeight;
+                rpathRecord.throughput = throughput;
                 eta *= bRec.eta;
                 if (its.isMediumTransition())
                     rRec.medium = its.getTargetMedium(ray.d);
