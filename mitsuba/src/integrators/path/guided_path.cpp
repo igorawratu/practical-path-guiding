@@ -2458,13 +2458,13 @@ public:
                 }
             }
 
-            if(!finalIter){
+            /*if(!finalIter){
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
-            }
+            }*/
         }
     }
 
@@ -3030,7 +3030,7 @@ public:
                     //performAugmentedSamples(sampler);
                 }
 
-                /*correctCurrAugmentedSamples(sampler, m_isFinalIter);
+                correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 if(m_isFinalIter){
                     m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
@@ -3052,7 +3052,7 @@ public:
                     }
 
                     film->put(previousSamples);
-                }*/
+                }
             }
             else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
@@ -3351,7 +3351,7 @@ public:
 
                 spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
 
-                if(/*!m_augment && */!m_rejectAugment && !m_reweightAugment){
+                if(!m_augment && !m_rejectAugment && !m_reweightAugment){
                     block->put(samplePos, spec, rRec.alpha);
                     squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 }
@@ -3926,7 +3926,7 @@ public:
                             value *= bsdfVal;
                             Spectrum L = throughput * value * weight;
 
-                            if (!m_isFinalIter && /*!m_augment && */!m_rejectAugment && !m_reweightAugment && m_nee != EAlways) {
+                            if (!m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment && m_nee != EAlways) {
                                 if (dTree) {
                                     Vertex v = Vertex{
                                         dTree,
@@ -3991,7 +3991,7 @@ public:
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
                     if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter  && /*!m_augment && */!m_rejectAugment && !m_reweightAugment) {
+                        !m_isFinalIter  && !m_augment && !m_rejectAugment && !m_reweightAugment) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -4038,7 +4038,7 @@ public:
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && /*!m_augment && */!m_rejectAugment && !m_reweightAugment) {
+                        !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -4106,7 +4106,7 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter  && /*!m_augment && */!m_rejectAugment && !m_reweightAugment) {
+        if (nVertices > 0 && !m_isFinalIter  && !m_augment && !m_rejectAugment && !m_reweightAugment) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
