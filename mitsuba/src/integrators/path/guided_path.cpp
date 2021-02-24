@@ -2219,13 +2219,19 @@ public:
 
             std::vector<Vertex> vertices;
 
-            std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
+            int discard_iter = -1;
+            
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
                 Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, false);
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+
+                if(newWoPdf < EPSILON){
+                    discard_iter = j;
+                    break;
+                }
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
@@ -2250,10 +2256,18 @@ public:
                     });
             }
 
+            if(discard_iter >= 0){
+                (*m_samplePaths)[i].path.resize(discard_iter);
+            }
+
             Spectrum totalL(0.f);
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
+
+                if(pos >= vertices.size()){
+                    continue;
+                }
 
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
 
