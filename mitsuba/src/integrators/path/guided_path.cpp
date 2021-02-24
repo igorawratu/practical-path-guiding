@@ -2392,7 +2392,7 @@ public:
                 Spectrum L = (*m_currAugmentedPaths)[i].radiance_record[j].L;
 
                 if(pos >= 0){
-                    L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
+                    L *= (*m_currAugmentedPaths)[i].path[pos > 0 ? pos - 1 : pos].throughput;
                     
                     Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
                     L *= weight;
