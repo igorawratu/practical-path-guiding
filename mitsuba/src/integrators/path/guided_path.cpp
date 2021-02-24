@@ -2387,6 +2387,9 @@ public:
 
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_currAugmentedPaths)[i].radiance_record[j].pos;
+                if(pos >= vertices.size()){
+                    continue;
+                }
 
                 Spectrum L = (*m_currAugmentedPaths)[i].radiance_record[j].L;
 
