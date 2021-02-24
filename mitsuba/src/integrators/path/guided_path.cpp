@@ -1836,7 +1836,7 @@ public:
                     termination_iter = j;
                     break;
                 }
-                else{*/
+                else{
                     vertices.push_back(     
                         Vertex{ 
                             dTree,
@@ -1850,7 +1850,7 @@ public:
                             dtreePdf,
                             (*m_rejSamplePaths)[i].path[j].isDelta
                         });
-                //}
+                }*/
             }
 
             (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
@@ -1876,7 +1876,7 @@ public:
 
                     for(std::uint32_t k = 0; k < pos; ++k){
                         (*m_rejSamplePaths)[i].path[k].Li += L;
-                        vertices[k].radiance += L;
+                        //vertices[k].radiance += L;
                     }
                 }
                 
@@ -1931,13 +1931,13 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }*/
+            }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
+            }*/
         }
     }
 
