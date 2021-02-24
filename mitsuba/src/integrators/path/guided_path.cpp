@@ -2250,8 +2250,6 @@ public:
                     });
             }
 
-            //removes light contrib for rejected vertices
-            //this assumes no NEE, will need to change to account for NEE later
             Spectrum totalL(0.f);
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
