@@ -998,8 +998,8 @@ public:
 
     Vector sample(Sampler* sampler, bool augment) const{
         if(augment){
-            return current_samples > req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
-            //return canonicalToDir(sampling.sample(sampler));
+            //return current_samples > req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
+            return canonicalToDir(sampling.sample(sampler));
         }
         else return canonicalToDir(sampling.sample(sampler));
     }
@@ -3558,7 +3558,7 @@ public:
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
         if(m_augment || m_rejectAugment || m_reweightAugment){
-            //dTree->incSampleCount();
+            dTree->incSampleCount();
         }
 
         if (woPdf == 0) {
@@ -3607,7 +3607,7 @@ public:
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
         if(m_augment || m_rejectAugment || m_reweightAugment){
-            //dTree->incSampleCount();
+            dTree->incSampleCount();
         }
 
         if (woPdf == 0) {
