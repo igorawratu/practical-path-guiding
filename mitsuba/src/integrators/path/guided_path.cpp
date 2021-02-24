@@ -3048,6 +3048,7 @@ public:
                 m_currAugmentedPaths->shrink_to_fit();
 
                 if(m_isFinalIter){
+                    std::cout << m_rejSamplePaths->size() << std::endl;
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
