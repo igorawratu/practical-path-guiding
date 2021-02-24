@@ -2385,9 +2385,6 @@ public:
                 }
             }
 
-            //this assumes no NEE, will need to change to account for NEE later
-            Spectrum totalL(0.f);
-
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_currAugmentedPaths)[i].radiance_record[j].pos;
                 if(pos >= vertices.size()){
@@ -2398,19 +2395,16 @@ public:
 
                 if(pos >= 0){
                     L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
-
-                    Spectrum prevThroughput = pos > 0 ? vertices[pos - 1].throughput : Spectrum(1.f);
-                    L *= prevThroughput;
                     
+                    Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
+                    L *= weight;
+
                     if(!L.isValid()){
                         continue;
                     }
 
                     for(std::uint32_t k = 0; k < pos; ++k){
-                        (*m_currAugmentedPaths)[i].path[k].Li += L;
-                        if(!finalIter){
-                            vertices[k].radiance += L;
-                        }
+                        vertices[k].radiance += L;
                     }
                 }
                 
@@ -3048,7 +3042,6 @@ public:
                 m_currAugmentedPaths->shrink_to_fit();
 
                 if(m_isFinalIter){
-                    std::cout << m_rejSamplePaths->size() << std::endl;
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
