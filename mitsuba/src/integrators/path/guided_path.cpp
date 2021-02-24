@@ -1837,6 +1837,7 @@ public:
                     break;
                 }
                 else{
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
                     vertices.push_back(     
                         Vertex{ 
                             dTree,
