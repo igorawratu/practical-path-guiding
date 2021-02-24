@@ -2384,9 +2384,6 @@ public:
 
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_currAugmentedPaths)[i].radiance_record[j].pos;
-                if(pos >= vertices.size()){
-                    continue;
-                }
 
                 Spectrum L = (*m_currAugmentedPaths)[i].radiance_record[j].L;
 
@@ -2394,7 +2391,7 @@ public:
                     L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
                     
                     Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
-                    L *= weight;
+                    //L *= weight;
 
                     if(!L.isValid()){
                         continue;
