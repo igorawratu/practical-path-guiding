@@ -3040,9 +3040,8 @@ public:
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
-                m_rejSamplePaths->clear();
 
-                /*if(!m_isFinalIter)*/{
+                if(m_isFinalIter){
                     m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
                 }
                 m_currAugmentedPaths->clear();
