@@ -1812,6 +1812,7 @@ public:
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             std::vector<Vertex> vertices;
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
+            Spectrum throughput(1.0f);
 
             //first try reject path
             std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size() - 1;
@@ -1838,6 +1839,9 @@ public:
                 }
                 else{
                     (*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
+                    Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
+                    throughput *= bsdfWeight;
+                    (*m_rejSamplePaths)[i].path[j].throughput = throughput;
                     vertices.push_back(     
                         Vertex{ 
                             dTree,
@@ -2234,7 +2238,7 @@ public:
                     break;
                 }
 
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
