@@ -3962,7 +3962,7 @@ public:
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
                 throughput *= bsdfWeight;
-                rpathRecord.throughput = throughput;
+                rpathRecord.path.back().throughput = throughput;
                 eta *= bRec.eta;
                 if (its.isMediumTransition())
                     rRec.medium = its.getTargetMedium(ray.d);
