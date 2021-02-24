@@ -3037,7 +3037,7 @@ public:
                     performAugmentedSamples(sampler);
                 }
 
-                //correctCurrAugmentedSamples(sampler, m_isFinalIter);
+                correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 //m_rejSamplePaths->clear();
                 m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
