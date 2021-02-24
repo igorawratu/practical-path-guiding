@@ -2365,7 +2365,7 @@ public:
                 //(*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-                (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
+                //(*m_currAugmentedPaths)[i].path[j].throughput = throughput;
 
                 vertices.push_back(     
                     Vertex{ 
@@ -3973,7 +3973,7 @@ public:
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
                 throughput *= bsdfWeight;
-
+                rpathRecord.path.back().throughput = throughput;
                 eta *= bRec.eta;
                 if (its.isMediumTransition())
                     rRec.medium = its.getTargetMedium(ray.d);
