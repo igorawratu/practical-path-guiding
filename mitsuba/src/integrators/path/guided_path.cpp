@@ -1829,10 +1829,10 @@ public:
 
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float acceptProb = newWoPdf / (c * (*m_rejSamplePaths)[i].path[j].woPdf);
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                /*if(sampler->next1D() > acceptProb){
+                if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
@@ -1850,7 +1850,7 @@ public:
                             dtreePdf,
                             (*m_rejSamplePaths)[i].path[j].isDelta
                         });
-                }*/
+                }
             }
 
             (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
@@ -1876,14 +1876,14 @@ public:
 
                     for(std::uint32_t k = 0; k < pos; ++k){
                         (*m_rejSamplePaths)[i].path[k].Li += L;
-                        //vertices[k].radiance += L;
+                        vertices[k].radiance += L;
                     }
                 }
                 
                 (*m_rejSamplePaths)[i].Li += L;
             }
 
-            /*if(m_doNee){
+            if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].nee_records.size(); ++j){
                     int pos = (*m_rejSamplePaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -1937,7 +1937,7 @@ public:
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }*/
+            }
         }
     }
 
