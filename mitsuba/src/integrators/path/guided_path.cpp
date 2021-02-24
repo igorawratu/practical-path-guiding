@@ -2368,21 +2368,19 @@ public:
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
                 (*m_currAugmentedPaths)[i].path[j].Li = Spectrum(0.f);
 
-                if(!finalIter){
-                    vertices.push_back(     
-                        Vertex{ 
-                            dTree,
-                            dTreeVoxelSize,
-                            (*m_currAugmentedPaths)[i].path[j].ray,
-                            (*m_currAugmentedPaths)[i].path[j].throughput,
-                            (*m_currAugmentedPaths)[i].path[j].bsdfVal,
-                            (*m_currAugmentedPaths)[i].path[j].Li,
-                            (*m_currAugmentedPaths)[i].path[j].woPdf,
-                            (*m_currAugmentedPaths)[i].path[j].bsdfPdf,
-                            (*m_currAugmentedPaths)[i].path[j].dTreePdf,
-                            (*m_currAugmentedPaths)[i].path[j].isDelta
-                        });
-                }
+                vertices.push_back(     
+                    Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_currAugmentedPaths)[i].path[j].ray,
+                        (*m_currAugmentedPaths)[i].path[j].throughput,
+                        (*m_currAugmentedPaths)[i].path[j].bsdfVal,
+                        (*m_currAugmentedPaths)[i].path[j].Li,
+                        (*m_currAugmentedPaths)[i].path[j].woPdf,
+                        (*m_currAugmentedPaths)[i].path[j].bsdfPdf,
+                        (*m_currAugmentedPaths)[i].path[j].dTreePdf,
+                        (*m_currAugmentedPaths)[i].path[j].isDelta
+                    });
             }
 
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].radiance_record.size(); ++j){
