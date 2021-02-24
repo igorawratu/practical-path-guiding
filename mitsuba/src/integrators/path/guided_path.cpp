@@ -3033,7 +3033,7 @@ public:
                 if(m_rejectAugment){
                     rejectAugmentHybrid(sampler);
                 }
-                else if(m_rejectAugment){
+                else if(m_augment){
                     performAugmentedSamples(sampler);
                 }
 
