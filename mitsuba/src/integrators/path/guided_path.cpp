@@ -3159,7 +3159,7 @@ public:
             const auto startIter = std::chrono::steady_clock::now();
 
             film->clear();
-            resetSDTree/*(m_augment);
+            resetSDTree(m_augment);
 
             if(m_reweight){
                 reweightCurrentPaths(sampler);
