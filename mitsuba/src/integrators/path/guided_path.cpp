@@ -3558,7 +3558,7 @@ public:
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
         if(m_augment || m_rejectAugment || m_reweightAugment){
-            dTree->incSampleCount();
+            //dTree->incSampleCount();
         }
 
         if (woPdf == 0) {
@@ -3607,7 +3607,7 @@ public:
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
         if(m_augment || m_rejectAugment || m_reweightAugment){
-            dTree->incSampleCount();
+            //dTree->incSampleCount();
         }
 
         if (woPdf == 0) {
