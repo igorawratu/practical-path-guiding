@@ -3041,7 +3041,6 @@ public:
 
                 //m_rejSamplePaths->clear();
                 m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                std::cout << m_rejSamplePaths->size() << std::endl;
                 m_currAugmentedPaths->clear();
                 m_currAugmentedPaths->shrink_to_fit();
 
