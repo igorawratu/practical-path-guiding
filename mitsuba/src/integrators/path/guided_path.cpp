@@ -3349,7 +3349,7 @@ public:
 
                 spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
 
-                if(!m_augment && !m_rejectAugment && !m_reweightAugment){
+                if(/*!m_augment && */!m_rejectAugment && !m_reweightAugment){
                     block->put(samplePos, spec, rRec.alpha);
                     squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 }
