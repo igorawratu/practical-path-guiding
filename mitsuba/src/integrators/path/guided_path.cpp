@@ -3875,7 +3875,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 if(woPdf < EPSILON){
-                    std::cout << bsdfPdf << " " << dTreePdf << " " << woPdf << std::endl;
+                    std::cout << bsdfPdf << " " << dTreePdf << " " << woPdf << " " << bsdfWeight.getLuminance() << std::endl;
                 }
 
                 //add the vertices
