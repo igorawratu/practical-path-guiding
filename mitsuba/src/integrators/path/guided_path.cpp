@@ -3502,11 +3502,14 @@ public:
 
         bsdfPdf = bsdf->pdf(bRec);
         if (!std::isfinite(bsdfPdf)) {
+            std::cout << "infinite" << std::endl;
             woPdf = 0;
             return;
         }
 
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment || m_reweightAugment);
+
+        std::cout << "Dtreepdf " << dtreePdf << std::endl;
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
@@ -3526,6 +3529,7 @@ public:
             sample.x /= bsdfSamplingFraction;
             result = bsdf->sample(bRec, bsdfPdf, sample);
             if (result.isZero()) {
+                std::cout << "zero result" << std::endl;
                 woPdf = bsdfPdf = dTreePdf = 0;
                 return Spectrum{0.0f};
             }
@@ -3873,10 +3877,6 @@ public:
                 ray = Ray(its.p, wo, ray.time);
 
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
-
-                if(woPdf < EPSILON){
-                    std::cout << bsdfPdf << " " << dTreePdf << " " << woPdf << " " << bsdfWeight.getLuminance() << std::endl;
-                }
 
                 //add the vertices
                 pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta});
