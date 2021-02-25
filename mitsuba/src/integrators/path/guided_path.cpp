@@ -2363,9 +2363,6 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
-                if((*m_currAugmentedPaths)[i].path[j].woPdf < EPSILON){
-                    std::cout << (*m_currAugmentedPaths)[i].path[j].woPdf << " " << (*m_currAugmentedPaths)[i].path[j].bsdfPdf << std::endl;
-                }
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
@@ -3876,6 +3873,10 @@ public:
                 ray = Ray(its.p, wo, ray.time);
 
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
+
+                if(woPdf < EPSILON){
+                    std::cout << bsdfPdf << " " << dTreePdf << " " << woPdf << std::endl;
+                }
 
                 //add the vertices
                 pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta});
