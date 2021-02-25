@@ -3551,12 +3551,12 @@ public:
             bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment || m_reweightAugment));
             result = bsdf->eval(bRec);
         }
-        dTreePdf = 1.f;
+
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         if(dTreePdf < EPSILON && m_isBuilt){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << sbsdf << " " << zero << " " << pdf << std::endl;
+            std::cout << sbsdf << " " << zero << " " << pdf << " " << bsdfPdf << " " << woPdf << std::endl;
         }
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
