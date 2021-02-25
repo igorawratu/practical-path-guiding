@@ -3033,6 +3033,8 @@ public:
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
+                    ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
+                    currentIterationFilm->clear();
 
                     //#pragma omp parallel for
                     for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
@@ -3042,7 +3044,12 @@ public:
                         }                        
                     }
 
-                    film->put(previousSamples);
+                    currentIterationFilm->put(previousSamples);
+
+                    fs::path scene_path = scene->getDestinationFile();
+                    currentIterationFilm->setDestinationFile(scene_path.parent_path() / std::string("cboxtest"), 0);
+
+                    currentIterationFilm->develop(scene, 0.f);
                 }
 
                 m_currAugmentedPaths->clear();
