@@ -3556,7 +3556,7 @@ public:
 
         if(woPdf < EPSILON && m_isBuilt){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << sbsdf << " " << zero << " " << pdf << " " << bsdfPdf << " " << woPdf << std::endl;
+            std::cout << bRec.wo.x << " " << bRec.wo.y << " " << bRec.wo.z << std::endl;
         }
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
