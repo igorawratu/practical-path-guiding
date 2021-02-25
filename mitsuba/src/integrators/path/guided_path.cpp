@@ -2390,8 +2390,8 @@ public:
                 if(pos >= 0){
                     L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
                     
-                    Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
-                    L *= weight;
+                    //Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
+                    //L *= weight;
 
                     if(!L.isValid()){
                         continue;
