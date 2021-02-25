@@ -3372,8 +3372,8 @@ public:
             }
         }
 
-        m_squaredImage->put(squaredBlock);
-        m_image->put(block);
+        /*m_squaredImage->put(squaredBlock);
+        m_image->put(block);*/
     }
 
     void cancel() {
