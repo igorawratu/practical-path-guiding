@@ -3525,7 +3525,7 @@ public:
         Spectrum result;
         bool sbsdf = false;
         bool zero = false;
-        float pdf;
+        float pdf = 0.f;
         if (sample.x < bsdfSamplingFraction) {
             sbsdf = true;
             sample.x /= bsdfSamplingFraction;
