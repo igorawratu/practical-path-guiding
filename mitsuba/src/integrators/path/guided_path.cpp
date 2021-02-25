@@ -2239,8 +2239,8 @@ public:
                     break;
                 }
 
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-                //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2362,10 +2362,10 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                //(*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-                //(*m_currAugmentedPaths)[i].path[j].throughput = throughput;
+                (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
 
                 vertices.push_back(     
                     Vertex{ 
@@ -3020,14 +3020,14 @@ public:
                     rejectAugmentHybrid(sampler);
                 }
                 else if(m_augment){
-                    //performAugmentedSamples(sampler);
+                    performAugmentedSamples(sampler);
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                /*if(m_isFinalIter){
-                    m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                }*/
+                m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
+                m_currAugmentedPaths->clear();
+                m_currAugmentedPaths->shrink_to_fit();
 
                 if(m_isFinalIter){
                     film->clear();
@@ -3035,16 +3035,15 @@ public:
                     previousSamples->clear();
 
                     //#pragma omp parallel for
-                    for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
-                        Spectrum s = (*m_currAugmentedPaths)[i].spec * (*m_currAugmentedPaths)[i].Li;
-                        previousSamples->put((*m_currAugmentedPaths)[i].sample_pos, s, (*m_currAugmentedPaths)[i].alpha);                      
+                    for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+                        Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
+                        previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);                      
                     }
 
                     film->put(previousSamples);
                 }
 
-                m_currAugmentedPaths->clear();
-                m_currAugmentedPaths->shrink_to_fit();
+                
             }
             else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
