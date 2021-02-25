@@ -3524,12 +3524,16 @@ public:
 
         Spectrum result;
         bool sbsdf = false;
+        bool zero = false;
+        float pdf;
         if (sample.x < bsdfSamplingFraction) {
             sbsdf = true;
             sample.x /= bsdfSamplingFraction;
             result = bsdf->sample(bRec, bsdfPdf, sample);
+            pdf = bsdfPdf;
             if (result.isZero()) {
                 woPdf = bsdfPdf = dTreePdf = 0;
+                zero = true;
                 return Spectrum{0.0f};
             }
 
@@ -3551,7 +3555,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         if(dTreePdf < EPSILON && m_isBuilt){
-            std::cout << sbsdf << std::endl;
+            std::cout << sbsdf << " " << zero << " " << pdf << std::endl;
         }
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
