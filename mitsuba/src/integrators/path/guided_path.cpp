@@ -2363,7 +2363,7 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
-                Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
+                Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal;// / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
 
@@ -2390,8 +2390,8 @@ public:
                 if(pos >= 0){
                     L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
                     
-                    //Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
-                    //L *= weight;
+                    Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
+                    L *= weight;
 
                     if(!L.isValid()){
                         continue;
