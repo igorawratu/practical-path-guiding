@@ -3034,7 +3034,7 @@ public:
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
 
-                    #pragma omp parallel for
+                    //#pragma omp parallel for
                     for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
                         if((*m_currAugmentedPaths)[i].path.size() > 0){
                             Spectrum s = (*m_currAugmentedPaths)[i].spec * (*m_currAugmentedPaths)[i].Li;
