@@ -2293,7 +2293,7 @@ public:
                 (*m_rejSamplePaths)[i].Li += L;
             }
 
-            if(m_doNee){
+            /*if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].nee_records.size(); ++j){
                     int pos = (*m_rejSamplePaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -2341,7 +2341,7 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }
+            }*/
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
@@ -2405,7 +2405,7 @@ public:
                 (*m_currAugmentedPaths)[i].Li += L;
             }
 
-            if(m_doNee){
+            /*if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].nee_records.size(); ++j){
                     int pos = (*m_currAugmentedPaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -2453,7 +2453,7 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }
+            }*/
 
             if(!finalIter){
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
