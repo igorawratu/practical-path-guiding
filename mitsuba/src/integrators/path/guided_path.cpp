@@ -3509,7 +3509,10 @@ public:
 
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment || m_reweightAugment);
 
-        std::cout << "Dtreepdf " << dTreePdf << std::endl;
+        if(dTreePdf < EPSILON){
+            std::cout << "Dtreepdf " << dTreePdf << std::endl;
+        }
+        
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
