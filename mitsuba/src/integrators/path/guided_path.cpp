@@ -3020,12 +3020,12 @@ public:
                     rejectAugmentHybrid(sampler);
                 }
                 else if(m_augment){
-                    //performAugmentedSamples(sampler);
+                    performAugmentedSamples(sampler);
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                //m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
+                m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
 
                 if(m_isFinalIter){
                     film->clear();
@@ -3033,9 +3033,9 @@ public:
                     previousSamples->clear();
 
                     //#pragma omp parallel for
-                    for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
-                        Spectrum s = (*m_currAugmentedPaths)[i].spec * (*m_currAugmentedPaths)[i].Li;
-                        previousSamples->put((*m_currAugmentedPaths)[i].sample_pos, s, (*m_currAugmentedPaths)[i].alpha);                      
+                    for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
+                        Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
+                        previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);                      
                     }
 
                     film->put(previousSamples);
