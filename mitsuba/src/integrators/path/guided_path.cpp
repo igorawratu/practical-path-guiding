@@ -4112,7 +4112,7 @@ public:
 
         rpathRecord.alpha = rRec.alpha;
         rpathRecord.iter = m_iter;
-        rPathRecord.Li = Li;
+        rpathRecord.Li = Li;
 
         return Li;
     }
