@@ -3550,7 +3550,7 @@ public:
         dTreePdf = 1.f;
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
-        if(dTreePdf < EPSILON){
+        if(dTreePdf < EPSILON && m_isBuilt){
             std::cout << sbsdf << std::endl;
         }
 
