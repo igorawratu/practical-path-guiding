@@ -2363,7 +2363,10 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
-                Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal;// / (*m_currAugmentedPaths)[i].path[j].woPdf;
+                if((*m_currAugmentedPaths)[i].path[j].woPdf < EPSILON){
+                    std::cout << (*m_currAugmentedPaths)[i].path[j].woPdf << " " << (*m_currAugmentedPaths)[i].path[j].bsdfPdf << std::endl;
+                }
+                Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
 
