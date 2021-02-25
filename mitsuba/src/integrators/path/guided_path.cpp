@@ -3502,17 +3502,12 @@ public:
 
         bsdfPdf = bsdf->pdf(bRec);
         if (!std::isfinite(bsdfPdf)) {
-            std::cout << "infinite" << std::endl;
             woPdf = 0;
             return;
         }
 
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment || m_reweightAugment);
 
-        if(dTreePdf < EPSILON){
-            std::cout << "Dtreepdf " << dTreePdf << std::endl;
-        }
-        
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
@@ -3528,11 +3523,12 @@ public:
         }
 
         Spectrum result;
+        bool sbsdf = false;
         if (sample.x < bsdfSamplingFraction) {
+            sbsdf = true;
             sample.x /= bsdfSamplingFraction;
             result = bsdf->sample(bRec, bsdfPdf, sample);
             if (result.isZero()) {
-                std::cout << "zero result" << std::endl;
                 woPdf = bsdfPdf = dTreePdf = 0;
                 return Spectrum{0.0f};
             }
@@ -3551,8 +3547,12 @@ public:
             bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment || m_reweightAugment));
             result = bsdf->eval(bRec);
         }
-
+        dTreePdf = 1.f;
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
+
+        if(dTreePdf < EPSILON){
+            std::cout << sbsdf << std::endl;
+        }
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
         if(m_augment || m_rejectAugment || m_reweightAugment){
