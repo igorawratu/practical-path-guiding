@@ -3924,7 +3924,7 @@ public:
                             value *= bsdfVal;
                             Spectrum L = throughput * value * weight;
 
-                            if (!m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment && m_nee != EAlways) {
+                            if (!m_isFinalIter && /*!m_augment && */!m_rejectAugment && !m_reweightAugment && m_nee != EAlways) {
                                 if (dTree) {
                                     Vertex v = Vertex{
                                         dTree,
@@ -3992,7 +3992,7 @@ public:
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
                     if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+                        !m_isFinalIter && /*!m_augment && */!m_rejectAugment && !m_reweightAugment) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -4036,7 +4036,7 @@ public:
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+                        !m_isFinalIter && /*!m_augment && */!m_rejectAugment && !m_reweightAugment) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
