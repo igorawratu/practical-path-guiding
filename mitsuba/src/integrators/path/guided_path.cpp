@@ -3020,7 +3020,7 @@ public:
                     rejectAugmentHybrid(sampler);
                 }
                 else if(m_augment){
-                    //performAugmentedSamples(sampler);
+                    performAugmentedSamples(sampler);
                 }
 
                 //correctCurrAugmentedSamples(sampler, m_isFinalIter);
