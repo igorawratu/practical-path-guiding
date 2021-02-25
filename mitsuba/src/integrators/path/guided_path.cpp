@@ -3555,6 +3555,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
         if(dTreePdf < EPSILON && m_isBuilt){
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             std::cout << sbsdf << " " << zero << " " << pdf << std::endl;
         }
 
