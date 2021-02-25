@@ -1833,12 +1833,12 @@ public:
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                if(sampler->next1D() > acceptProb){
+                /*if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
-                else{
-                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
+                else*/{
+                    //(*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
@@ -1859,7 +1859,7 @@ public:
                 }
             }
 
-            (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
+            //(*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
                 int pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
