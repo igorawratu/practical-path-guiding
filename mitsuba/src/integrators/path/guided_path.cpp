@@ -3033,7 +3033,7 @@ public:
                     m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
                 }*/
 
-                if(m_isFinalIter){
+                /*if(m_isFinalIter){
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
                     previousSamples->clear();
@@ -3047,7 +3047,7 @@ public:
                     }
 
                     film->put(previousSamples);
-                }
+                }*/
 
                 m_currAugmentedPaths->clear();
                 m_currAugmentedPaths->shrink_to_fit();
@@ -3349,7 +3349,7 @@ public:
 
                 spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
 
-                if(/*!m_augment && */!m_rejectAugment && !m_reweightAugment){
+                if(!m_augment && !m_rejectAugment && !m_reweightAugment){
                     block->put(samplePos, spec, rRec.alpha);
                     squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 }
