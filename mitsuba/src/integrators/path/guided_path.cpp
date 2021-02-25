@@ -1833,12 +1833,12 @@ public:
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                /*if(sampler->next1D() > acceptProb){
+                if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
-                else*/{
-                    //(*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
+                else{
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= c;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
@@ -1859,7 +1859,7 @@ public:
                 }
             }
 
-            //(*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
+            (*m_rejSamplePaths)[i].path.resize(termination_iter + 1);
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
                 int pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
@@ -2455,13 +2455,13 @@ public:
                 }
             }*/
 
-            if(!finalIter){
+            /*if(!finalIter){
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
-            }
+            }*/
         }
     }
 
@@ -3027,11 +3027,7 @@ public:
                     //performAugmentedSamples(sampler);
                 }
 
-                //correctCurrAugmentedSamples(sampler, m_isFinalIter);
-
-                m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                m_currAugmentedPaths->clear();
-                rejectCurrentPaths(sampler);
+                correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 /*if(m_isFinalIter){
                     m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
@@ -3043,18 +3039,18 @@ public:
                     previousSamples->clear();
 
                     #pragma omp parallel for
-                    for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                        if((*m_rejSamplePaths)[i].path.size() > 0){
-                            Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
-                            previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
+                    for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
+                        if((*m_currAugmentedPaths)[i].path.size() > 0){
+                            Spectrum s = (*m_currAugmentedPaths)[i].spec * (*m_currAugmentedPaths)[i].Li;
+                            previousSamples->put((*m_currAugmentedPaths)[i].sample_pos, s, (*m_currAugmentedPaths)[i].alpha);
                         }                        
                     }
 
                     film->put(previousSamples);
                 }
 
-                m_rejSamplePaths->clear();
-                m_rejSamplePaths->shrink_to_fit();
+                m_currAugmentedPaths->clear();
+                m_currAugmentedPaths->shrink_to_fit();
             }
             else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
@@ -3990,10 +3986,13 @@ public:
                         break;
                     }
 
+                    pathRecord.path.back().isDelta = true;
+                    rpathRecord.path.back().isDelta = true;
+
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
                     if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter  && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+                        !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -4007,9 +4006,6 @@ public:
                                 dTreePdf,
                                 true
                             };
-
-                            pathRecord.path.back().isDelta = true;
-                            rpathRecord.path.back().isDelta = true;
 
                             ++nVertices;
                         }
@@ -4108,7 +4104,7 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter  && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+        if (nVertices > 0 && !m_isFinalIter /*&& !m_augment */&& !m_rejectAugment && !m_reweightAugment) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
