@@ -2889,8 +2889,6 @@ public:
         sampler->configure();
         sampler->generate(Point2i(0));
 
-        film->clear();
-
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
@@ -2911,9 +2909,7 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
-            if(!m_augment){
-                film->clear();
-            }
+            film->clear();
             
             resetSDTree(m_augment);
 
@@ -3349,7 +3345,7 @@ public:
 
                 spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
 
-                if(!m_augment && !m_rejectAugment && !m_reweightAugment){
+                if(/*!m_augment && */!m_rejectAugment && !m_reweightAugment){
                     block->put(samplePos, spec, rRec.alpha);
                     squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 }
