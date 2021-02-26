@@ -1031,6 +1031,9 @@ public:
     }
 
     Float pdf(const Vector& dir, bool augment) const {
+        if(augment){
+            return augmented.pdf(dirToCanonical(dir));
+        }
         return sampling.pdf(dirToCanonical(dir));
     }
 
@@ -3502,14 +3505,15 @@ public:
             return;
         }
 
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment || m_reweightAugment);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), false);
 
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
 
         if(woPdf < EPSILON)
         {
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << bsdfPdf << " " << dTreePdf << " " << dot(bRec.its.toWorld(bRec.wo), bRec.its.shFrame.n) << std::endl;
+            float augpdf = dTree->pdf(bRec.its.toWorld(bRec.wo), true);
+            std::cout << bsdfPdf << " " << dTreePdf << " " << dot(bRec.its.toWorld(bRec.wo), bRec.its.shFrame.n) << " " << augpdf << std::endl;
             dTree->verifyEnoughSamples();
         }
     }
