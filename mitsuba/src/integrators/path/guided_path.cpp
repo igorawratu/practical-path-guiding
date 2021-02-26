@@ -3548,11 +3548,6 @@ public:
 
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree);
 
-        if(woPdf < EPSILON && m_isBuilt){
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << bRec.wo.x << " " << bRec.wo.y << " " << bRec.wo.z << std::endl;
-        }
-
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
         if(m_augment || m_rejectAugment || m_reweightAugment){
             dTree->incSampleCount();
