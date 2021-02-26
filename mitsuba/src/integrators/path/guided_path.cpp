@@ -3509,7 +3509,7 @@ public:
         if(woPdf < EPSILON)
         {
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << bsdfPdf << " " << dTreePdf << std::endl;
+            std::cout << bsdfPdf << " " << dTreePdf << " " << dot(bRec.its.toWorld(bRec.wo), bRec.its.shFrame.n) << std::endl;
             dTree->verifyEnoughSamples();
         }
     }
