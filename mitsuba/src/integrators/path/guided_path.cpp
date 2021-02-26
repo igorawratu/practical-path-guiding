@@ -798,11 +798,11 @@ public:
                 newNode.sum(nodePair.newNodeIndex.second) * 4.f;
 
             if(oldDenom < EPSILON){
-                std::cout << "olddenom " << newDenom << std::endl;
+                std::cout << "olddenom " << oldDenom << ":" << newDenom << std::endl;
             }
 
             if(newDenom < EPSILON){
-                std::cout << "newdenom " << newDenom << std::endl;
+                std::cout << "newdenom " << newDenom << ":" << newDenom << std::endl;
             }
 
             for (int i = 0; i < 4; ++i) {
