@@ -1032,6 +1032,7 @@ public:
 
     Float pdf(const Vector& dir, bool augment) const {
         if(augment){
+            std::cout << augmented.mean() << std::endl;
             return augmented.pdf(dirToCanonical(dir));
         }
         return sampling.pdf(dirToCanonical(dir));
@@ -3513,7 +3514,7 @@ public:
         {
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             float augpdf = dTree->pdf(bRec.its.toWorld(bRec.wo), true);
-            std::cout << bsdfPdf << " " << dTreePdf << " " << dot(bRec.its.toWorld(bRec.wo), bRec.its.shFrame.n) << " " << augpdf << std::endl;
+            std::cout << bsdfPdf << " " << dTreePdf << " " << dot(bRec.its.toWorld(bRec.wo), bRec.its.shFrame.n) << " " << augpdf <<std::endl;
             dTree->verifyEnoughSamples();
         }
     }
