@@ -485,6 +485,10 @@ public:
                 Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
                 Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
 
+                if(pdf < EPSILON){
+                    std::cout << denom << " " << node.sum(childIdx) << std::endl;
+                }
+
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
@@ -760,9 +764,6 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        if(std::isinf(A)){
-            std::cout << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
-        }
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
