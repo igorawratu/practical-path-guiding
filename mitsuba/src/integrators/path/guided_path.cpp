@@ -797,6 +797,14 @@ public:
             Float newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
                 newNode.sum(nodePair.newNodeIndex.second) * 4.f;
 
+            if(oldDenom < EPSILON){
+                std::cout << "olddenom " << newDenom << std::endl;
+            }
+
+            if(newDenom < EPSILON){
+                std::cout << "newdenom " << newDenom << std::endl;
+            }
+
             for (int i = 0; i < 4; ++i) {
                 int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
                 int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
@@ -823,9 +831,6 @@ public:
                 m_nodes[nodePair.nodeIdx].setSum(i, pdf);
             }
         }
-
-        build();
-        
         return A - 1.f;
     }
 
