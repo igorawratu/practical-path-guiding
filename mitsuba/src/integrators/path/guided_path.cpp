@@ -3496,11 +3496,19 @@ public:
 
         bsdfPdf = bsdf->pdf(bRec);
         if (!std::isfinite(bsdfPdf)) {
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+            std::cout << "infinitebsdf" << std::endl;
             woPdf = 0;
             return;
         }
 
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment || m_reweightAugment);
+        
+        if(woPdf < EPSILON)
+        {
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+            std::cout << bsdfPdf << " " << dTreePdf << std::endl;
+        }
 
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
@@ -3554,9 +3562,6 @@ public:
         }
 
         if (woPdf == 0) {
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << sbsdf << " " << zero << " " << bsdfPdf << " " << dTreePdf << " " << pdf << " " << std::endl;
-            dTree->verifyEnoughSamples();
             return Spectrum{0.0f};
         }
 
