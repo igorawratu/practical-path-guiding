@@ -823,6 +823,9 @@ public:
                 m_nodes[nodePair.nodeIdx].setSum(i, pdf);
             }
         }
+
+        build();
+        
         return A - 1.f;
     }
 
