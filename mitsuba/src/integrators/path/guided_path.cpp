@@ -762,7 +762,6 @@ public:
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
         if(std::isinf(A)){
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             std::cout << "INF: " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
             oldDist.pinfo();
             newDist.pinfo();
