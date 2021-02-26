@@ -982,7 +982,7 @@ public:
                 }
 
                 if(req_augmented_samples <= 1){
-                    std::cout << "Req: " << req << " " << B << " " << std::endl;
+                    std::cout << "Req: " << req << " " << B << " " << total_samples << std::endl;
                 }
             }
         }
