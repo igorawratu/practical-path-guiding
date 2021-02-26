@@ -3554,6 +3554,8 @@ public:
         }
 
         if (woPdf == 0) {
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+            dTree->verifyEnoughSamples();
             return Spectrum{0.0f};
         }
 
