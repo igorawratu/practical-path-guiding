@@ -515,6 +515,10 @@ public:
         return factor * m_atomic.sum;
     }
 
+    void pinfo() const {
+        std::cout << m_atomic.statisticalWeight << " " << m_atomic.sum << std::endl;
+    }
+
     void recordIrradiance(Point2 p, Float irradiance, Float statisticalWeight, EDirectionalFilter directionalFilter) {
         if (std::isfinite(statisticalWeight) && statisticalWeight > 0) {
             addToAtomicFloat(m_atomic.statisticalWeight, statisticalWeight);
@@ -1032,7 +1036,7 @@ public:
 
     Float pdf(const Vector& dir, bool augment) const {
         if(augment){
-            std::cout << augmented.mean() << std::endl;
+            augmented.pinfo();
             return augmented.pdf(dirToCanonical(dir));
         }
         return sampling.pdf(dirToCanonical(dir));
@@ -3500,8 +3504,6 @@ public:
 
         bsdfPdf = bsdf->pdf(bRec);
         if (!std::isfinite(bsdfPdf)) {
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << "infinitebsdf" << std::endl;
             woPdf = 0;
             return;
         }
