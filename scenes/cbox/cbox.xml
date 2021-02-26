@@ -25,7 +25,7 @@
 
 		<string name="nee" value="never"/>
 
-		<boolean name="augment" value="true"/>
+		<boolean name="augment" value="false"/>
 		<boolean name="renderIntermediateAugmented" value="false"/>
 		<boolean name="reject" value="true"/>
 		<boolean name="rejectAugment" value="false"/>
