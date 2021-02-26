@@ -975,13 +975,14 @@ public:
             }
             else{
                 float req = B * total_samples;
-                if(req < 1.f){
-                    std::cout << "Req: " << req << " " << B << " " << std::endl;
-                }
                 float frac = req - int(req);
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
                     req_augmented_samples++;
+                }
+
+                if(req_augmented_samples <= 1){
+                    std::cout << "Req: " << req << " " << B << " " << std::endl;
                 }
             }
         }
