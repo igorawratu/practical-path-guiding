@@ -485,10 +485,6 @@ public:
                 Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
                 Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
 
-                if(pdf < EPSILON && otherPdf > EPSILON){
-                    std::cout << pdf << " " << otherPdf << " " << denom << " " << node.sum(childIdx) << std::endl;
-                }
-
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
@@ -2230,7 +2226,7 @@ public:
         }
     }
 
-    void performAugmentedSamples(ref<Sampler> sampler){
+    voiperformAugmentedSamples(ref<Sampler> sampler){
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
@@ -3031,7 +3027,7 @@ public:
                     rejectAugmentHybrid(sampler);
                 }
                 else if(m_augment){
-                    //performAugmentedSamples(sampler);
+                    performAugmentedSamples(sampler);
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
