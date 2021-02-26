@@ -31,6 +31,7 @@
 #include <sstream>
 #include <mutex>
 #include <limits>
+#include <cmath>
 
 MTS_NAMESPACE_BEGIN
 
@@ -759,6 +760,9 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
+        if(std::isinf(A)){
+            std::cout << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
+        }
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -979,10 +983,6 @@ public:
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
                     req_augmented_samples++;
-                }
-
-                if(req_augmented_samples <= 1){
-                    std::cout << "Req: " << req << " " << B << " " << total_samples << " " << req_augmented_samples << std::endl;
                 }
             }
         }
