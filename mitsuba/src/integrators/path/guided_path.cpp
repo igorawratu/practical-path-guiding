@@ -825,6 +825,8 @@ public:
         }
 
         build();
+
+        m_atomic.statisticalWeight = newDist.m_atomic.statisticalWeight;
         return A - 1.f;
     }
 
