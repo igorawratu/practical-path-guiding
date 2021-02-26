@@ -23,11 +23,11 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
 
-		<string name="nee" value="kickstart"/>
+		<string name="nee" value="never"/>
 
 		<boolean name="augment" value="true"/>
 		<boolean name="renderIntermediateAugmented" value="false"/>
-		<boolean name="reject" value="false"/>
+		<boolean name="reject" value="true"/>
 		<boolean name="rejectAugment" value="false"/>
 		<boolean name="rejectReweight" value="false"/>
 		<boolean name="renderRejectIterations" value="false"/>

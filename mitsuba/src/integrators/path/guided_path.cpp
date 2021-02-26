@@ -1031,11 +1031,7 @@ public:
     }
 
     Float pdf(const Vector& dir, bool augment) const {
-        /*if(augment){
-            return current_samples > req_augmented_samples ? sampling.pdf(dirToCanonical(dir)) : augmented.pdf(dirToCanonical(dir));
-            //return sampling.pdf(dirToCanonical(dir));
-        }
-        else */return sampling.pdf(dirToCanonical(dir));
+        return sampling.pdf(dirToCanonical(dir));
     }
 
     Float diff(const DTreeWrapper& other) const {
@@ -2999,10 +2995,8 @@ public:
 
                     #pragma omp parallel for
                     for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
-                        if((*m_rejSamplePaths)[i].path.size() > 0){
-                            Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
-                            previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);
-                        }                        
+                        Spectrum s = (*m_rejSamplePaths)[i].spec * (*m_rejSamplePaths)[i].Li;
+                        previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);                      
                     }
 
                     film->put(previousSamples);
