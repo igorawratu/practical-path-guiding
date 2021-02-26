@@ -2226,7 +2226,7 @@ public:
         }
     }
 
-    voiperformAugmentedSamples(ref<Sampler> sampler){
+    void performAugmentedSamples(ref<Sampler> sampler){
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
@@ -3027,7 +3027,7 @@ public:
                     rejectAugmentHybrid(sampler);
                 }
                 else if(m_augment){
-                    performAugmentedSamples(sampler);
+                    //performAugmentedSamples(sampler);
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
