@@ -826,7 +826,7 @@ public:
 
         build();
 
-        m_atomic.statisticalWeight = newDist.m_atomic.statisticalWeight;
+        m_atomic.statisticalWeight.store(newDist.m_atomic.statisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
         return A - 1.f;
     }
 
