@@ -3503,14 +3503,14 @@ public:
         }
 
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), m_augment || m_rejectAugment || m_reweightAugment);
-        
+
+        woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
+
         if(woPdf < EPSILON)
         {
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             std::cout << bsdfPdf << " " << dTreePdf << std::endl;
         }
-
-        woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
     Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree) const {
