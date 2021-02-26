@@ -1009,7 +1009,7 @@ public:
         total_samples++;
     }
 
-    void verifyEnoughSamples(){
+    void verifyEnoughSamples() const{
         if(current_samples < req_augmented_samples){
             std::cout << "Not enough samples: " << current_samples << "-" << req_augmented_samples << std::endl;
         }
