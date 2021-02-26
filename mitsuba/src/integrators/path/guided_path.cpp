@@ -3510,6 +3510,7 @@ public:
         {
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             std::cout << bsdfPdf << " " << dTreePdf << std::endl;
+            dTree->verifyEnoughSamples();
         }
     }
 
