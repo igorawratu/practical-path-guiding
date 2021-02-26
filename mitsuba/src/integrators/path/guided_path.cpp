@@ -795,22 +795,14 @@ public:
             Float oldDenom = nodePair.oldNodeIndex.second < 0 ? oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3) :
                 oldNode.sum(nodePair.oldNodeIndex.second) * 4.f;
             Float newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
-                newNode.sum(nodePair.newNodeIndex.second) * 4.f;
-
-            if(oldDenom < EPSILON){
-                std::cout << "olddenom " << oldDenom << ":" << newDenom << " " << nodePair.oldNodeIndex.second << std::endl;
-            }
-
-            if(newDenom < EPSILON){
-                std::cout << "newdenom " << oldDenom << ":" << newDenom << " " << nodePair.newNodeIndex.second << std::endl;
-            }
+                newNode.sum(nodePair.newNodeIndex.second) * 4.f; 
 
             for (int i = 0; i < 4; ++i) {
                 int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
                 int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
 
-                Float oldPdf = nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
-                Float newPdf = nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
+                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
+                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
 
                 Float pdf = computeAugmentedPdf(oldPdf, newPdf, A);
 
@@ -831,6 +823,8 @@ public:
                 m_nodes[nodePair.nodeIdx].setSum(i, pdf);
             }
         }
+
+        build();
         return A - 1.f;
     }
 
