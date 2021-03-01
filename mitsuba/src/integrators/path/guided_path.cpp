@@ -491,9 +491,9 @@ public:
                 if(node.isLeaf(childIdx) || otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
 
-                    if(pdf < EPSILON && otherPdf > EPSILON){
+                    //if(pdf < EPSILON && otherPdf > EPSILON){
                         std::cout << otherPdf << " " << nodePair.nodeLevel << " " << nodePair.otherNodeLevel << std::endl;
-                    }
+                    //}
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
@@ -623,7 +623,7 @@ public:
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
-                if ((sNode.depth < newMaxDepth && fraction > subdivisionThreshold) || !otherNode.isLeaf(i)) {
+                if (sNode.depth < newMaxDepth && fraction > subdivisionThreshold) {
                     if (!otherNode.isLeaf(i)) {
                         SAssert(sNode.otherDTree == &previousDTree);
                         nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
@@ -766,6 +766,12 @@ public:
     float buildAugmented(const DTree& oldDist, const DTree& newDist){
         m_atomic = Atomic{};
         m_maxDepth = 0;
+
+        std::cout << "TESTING MAJORIZING FACTORS:" << std::endl;
+        auto mpair = newDist.getMajorizingFactor(newDist);
+        std::cout << "DONE" << std::endl << std::endl << std::endl;
+        int x;
+        std::cin >> x;
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
