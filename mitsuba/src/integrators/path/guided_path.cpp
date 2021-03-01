@@ -507,8 +507,8 @@ public:
                     std::pair<size_t, int> otheridx = otherNode.isLeaf(otherChildIdx) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), otherChildIdx) : 
                         std::make_pair(size_t(other.m_nodes[nodePair.otherNodeIndex.first].child(otherChildIdx)), -1);
 
-                    int nl = node.isLeaf(childIdx) ? nodePair.nodeLevel : nodePair.nodeLevel + 1;
-                    int onl = otherNode.isLeaf(childIdx) ? nodePair.otherNodeLevel : nodePair.otherNodeLevel + 1;
+                    int nl = nodePair.nodeLevel + 1;
+                    int onl = nodePair.otherNodeLevel + 1;
 
                     pairStack.push({idx, otheridx, pdf, otherPdf, nl, onl});
                 }
