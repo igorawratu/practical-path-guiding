@@ -614,7 +614,7 @@ public:
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
-                if (sNode.depth < newMaxDepth && fraction > subdivisionThreshold) {
+                if ((sNode.depth < newMaxDepth && fraction > subdivisionThreshold) || !otherNode.isLeaf(i)) {
                     if (!otherNode.isLeaf(i)) {
                         SAssert(sNode.otherDTree == &previousDTree);
                         nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
