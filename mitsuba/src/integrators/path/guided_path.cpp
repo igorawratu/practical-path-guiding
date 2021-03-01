@@ -772,6 +772,8 @@ public:
         std::cout << "DONE" << std::endl << std::endl << std::endl;
         int x;
         std::cin >> x;
+        mpair = oldDist.getMajorizingFactor(oldDist);
+        std::cin >> x;
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
