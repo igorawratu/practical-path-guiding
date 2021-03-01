@@ -2293,9 +2293,9 @@ public:
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
 
-                if(pos >= vertices.size()){
+                /*if(pos >= vertices.size()){
                     continue;
-                }
+                }*/
 
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
 
@@ -2305,9 +2305,9 @@ public:
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
 
-                    if(!L.isValid()){
+                    /*if(!L.isValid()){
                         continue;
-                    }
+                    }*/
 
                     for(std::uint32_t k = 0; k < pos; ++k){
                         (*m_rejSamplePaths)[i].path[k].Li += L;
