@@ -1002,7 +1002,7 @@ public:
         current_samples = 0;
 
         sampling = building;
-        m_rejPdfPair = previous.getMajorizingFactor(sampling);
+        //m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
 
     void splitSpatially(){
