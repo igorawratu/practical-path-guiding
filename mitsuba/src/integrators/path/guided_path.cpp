@@ -492,7 +492,7 @@ public:
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
 
                     //if(pdf < EPSILON && otherPdf > EPSILON){
-                        std::cout << otherPdf << " " << nodePair.nodeLevel << " " << nodePair.otherNodeLevel << std::endl;
+                        std::cout << pdf << " " << otherPdf << " " << nodePair.nodeLevel << " " << nodePair.otherNodeLevel << std::endl;
                     //}
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
