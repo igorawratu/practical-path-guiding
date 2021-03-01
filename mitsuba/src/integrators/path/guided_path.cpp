@@ -772,8 +772,10 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist, false);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
+        oldDist.pinfo();
+        newDist.pinfo();
 
-        if(std::isinf(A)){
+        /*if(std::isinf(A)){
             std::cout << "INF: " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
             oldDist.pinfo();
             newDist.pinfo();
@@ -785,7 +787,7 @@ public:
             std::cin >> x;
             mpair = oldDist.getMajorizingFactor(oldDist, true);
             std::cin >> x;
-        }
+        }*/
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
