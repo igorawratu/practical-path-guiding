@@ -458,13 +458,15 @@ public:
             std::pair<size_t, int> otherNodeIndex;
             Float nodeFactor;
             Float otherNodeFactor;
+            int nodeLevel;
+            int otherNodeLevel;
         };
 
         std::pair<Float, Float> pdfPair(1.f, 1.f);
         Float largestScalingFactor = 0.f;
 
         std::stack<NodePair> pairStack;
-        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f});
+        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0, 0});
 
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
@@ -488,6 +490,10 @@ public:
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
+
+                    if(pdf < EPSILON && otherPdf > EPSILON){
+                        std::cout << otherPdf << " " << nodePair.nodeLevel << " " << nodePair.otherNodeLevel << std::endl;
+                    }
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
@@ -500,7 +506,10 @@ public:
                     std::pair<size_t, int> otheridx = otherNode.isLeaf(otherChildIdx) ? std::make_pair(size_t(nodePair.otherNodeIndex.first), otherChildIdx) : 
                         std::make_pair(size_t(other.m_nodes[nodePair.otherNodeIndex.first].child(otherChildIdx)), -1);
 
-                    pairStack.push({idx, otheridx, pdf, otherPdf});
+                    int nl = node.isLeaf(childIdx) ? nodePair.nodeLevel : nodePair.nodeLevel + 1;
+                    int onl = otherNode.isLeaf(childIdx) ? nodePair.otherNodeLevel : nodePair.otherNodeLevel + 1;
+
+                    pairStack.push({idx, otheridx, pdf, otherPdf, nl, onl});
                 }
             }
         }
