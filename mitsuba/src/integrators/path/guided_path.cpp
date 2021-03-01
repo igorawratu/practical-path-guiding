@@ -452,7 +452,7 @@ public:
         return true;
     }
 
-    std::pair<Float, Float> getMajorizingFactor(const DTree& other) const{
+    std::pair<Float, Float> getMajorizingFactor(const DTree& other, bool testinfo) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
             std::pair<size_t, int> otherNodeIndex;
@@ -492,6 +492,7 @@ public:
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
 
                     //if(pdf < EPSILON && otherPdf > EPSILON){
+                    if(testinfo)
                         std::cout << pdf << " " << otherPdf << " " << nodePair.nodeLevel << " " << nodePair.otherNodeLevel << std::endl;
                     //}
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
@@ -767,21 +768,23 @@ public:
         m_atomic = Atomic{};
         m_maxDepth = 0;
 
-        std::cout << "TESTING MAJORIZING FACTORS:" << std::endl;
-        auto mpair = newDist.getMajorizingFactor(newDist);
-        std::cout << "DONE" << std::endl << std::endl << std::endl;
-        int x;
-        std::cin >> x;
-        mpair = oldDist.getMajorizingFactor(oldDist);
-        std::cin >> x;
 
-        auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
+
+        auto majorizing_pair = newDist.getMajorizingFactor(oldDist, false);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
         if(std::isinf(A)){
             std::cout << "INF: " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
             oldDist.pinfo();
             newDist.pinfo();
+
+            std::cout << "TESTING MAJORIZING FACTORS:" << std::endl;
+            auto mpair = newDist.getMajorizingFactor(newDist, true);
+            std::cout << "DONE" << std::endl << std::endl << std::endl;
+            int x;
+            std::cin >> x;
+            mpair = oldDist.getMajorizingFactor(oldDist, true);
+            std::cin >> x;
         }
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
