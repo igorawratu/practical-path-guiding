@@ -2274,15 +2274,17 @@ public:
                     break;*/
                     newWoPdf = EPSILON;
                 }
-                else if(newWoPdf > 100.f){
-                    std::cout << newWoPdf << std::endl;
-                }
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
+
+                if(throughput.getLuminance() < EPSILON){
+                    std::cout << throughput.getLuminance() << " " << (*m_rejSamplePaths)[i].path[j].bsdfVal.getLuminance() << " " <<
+                        newWoPdf << " " << bsdfWeight << std::endl;
+                }
                 (*m_rejSamplePaths)[i].path[j].throughput = throughput;
 
                 vertices.push_back(     
