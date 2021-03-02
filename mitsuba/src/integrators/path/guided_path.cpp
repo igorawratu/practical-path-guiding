@@ -2295,7 +2295,7 @@ public:
             }
 
             if(discard_iter >= 0){
-                (*m_samplePaths)[i].path.resize(discard_iter);
+                (*m_rejSamplePaths)[i].path.resize(discard_iter);
             }
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
