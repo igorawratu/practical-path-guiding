@@ -2275,7 +2275,7 @@ public:
                     newWoPdf = EPSILON;
                 }
 
-                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf < (*m_rejSamplePaths)[i].path[j].woPdf ? newWoPdf : (*m_rejSamplePaths)[i].path[j].woPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf > (*m_rejSamplePaths)[i].path[j].woPdf ? newWoPdf : (*m_rejSamplePaths)[i].path[j].woPdf;
                 //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
