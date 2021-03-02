@@ -1053,15 +1053,15 @@ public:
     }
 
     float getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? float(current_samples) / req_augmented_samples : 1.f;
+        return current_samples < req_augmented_samples ? float(req_augmented_samples) / current_samples  : 1.f;
     }
 
     float getAugmentedNormalizer(){
-        //return current_samples < req_augmented_samples ? float(total_samples) / float(previous_tree_samples + req_augmented_samples) : 1.f;
-        return current_samples < req_augmented_samples ? 
+        return current_samples < req_augmented_samples ? float(total_samples) / float(previous_tree_samples + req_augmented_samples) : 1.f;
+        /*return current_samples < req_augmented_samples ? 
             float(total_samples) / 
             (float(current_samples) + previous_tree_samples * getAugmentedMultiplier())
-            : 1.f;
+            : 1.f;*/
     }
 
     Float pdf(const Vector& dir, bool augment) const {
@@ -2269,7 +2269,7 @@ public:
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();// * dTree->getAugmentedMultiplier();
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2393,7 +2393,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
