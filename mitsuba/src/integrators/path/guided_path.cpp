@@ -493,7 +493,7 @@ public:
 
                     if(pdf < EPSILON && otherPdf > EPSILON){
                         std::cout << pdf << " " << otherPdf << " " << denom << " " << otherDenom << " " <<
-                            nodePair.nodeLevel << " " << nodePair.otherNodeLevel << std::endl;
+                            nodePair.nodeFactor << " " << nodePair.otherNodeFactor << std::endl;
                     }
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
