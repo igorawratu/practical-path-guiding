@@ -2268,13 +2268,6 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
-                if(newWoPdf < EPSILON){
-                    /*discard_iter = j;
-                    std::cout << "discarding sample at iter " << discard_iter << " at new prob " << newWoPdf << std::endl;
-                    break;*/
-                    newWoPdf = EPSILON;
-                }
-
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
