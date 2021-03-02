@@ -2281,7 +2281,7 @@ public:
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                if(throughput.getLuminance() < EPSILON){
+                if(newWoPdf > 100.f){
                     std::cout << throughput.getLuminance() << " " << (*m_rejSamplePaths)[i].path[j].bsdfVal.getLuminance() << " " <<
                         newWoPdf << " " << bsdfWeight.getLuminance() << std::endl;
                 }
