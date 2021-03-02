@@ -3056,8 +3056,6 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-
                 if(m_isFinalIter){
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
@@ -3069,13 +3067,18 @@ public:
                         previousSamples->put((*m_rejSamplePaths)[i].sample_pos, s, (*m_rejSamplePaths)[i].alpha);                      
                     }
 
+                    for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
+                        Spectrum s = (*m_currAugmentedPaths)[i].spec * (*m_currAugmentedPaths)[i].Li;
+                        previousSamples->put((*m_currAugmentedPaths)[i].sample_pos, s, (*m_currAugmentedPaths)[i].alpha);                      
+                    }
+
                     film->put(previousSamples);
                 }
-
-                m_currAugmentedPaths->clear();
-                m_currAugmentedPaths->shrink_to_fit();
-
-                
+                else{
+                    m_rejSamplePaths->insert(m_rejSamplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
+                    m_currAugmentedPaths->clear();
+                    m_currAugmentedPaths->shrink_to_fit();
+                }
             }
             else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
