@@ -2267,9 +2267,10 @@ public:
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
                 if(newWoPdf < EPSILON){
-                    discard_iter = j;
+                    /*discard_iter = j;
                     std::cout << "discarding sample at iter " << discard_iter << " at new prob " << newWoPdf << std::endl;
-                    break;
+                    break;*/
+                    newWoPdf = EPSILON;
                 }
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
