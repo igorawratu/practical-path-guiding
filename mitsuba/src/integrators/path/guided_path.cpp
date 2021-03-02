@@ -2313,12 +2313,10 @@ public:
 
                 if(pos >= 0){
                     L *= (*m_rejSamplePaths)[i].path[pos].throughput;
-                    if(L.getLuminance() < EPSILON){
-                        L *= EPSILON / L.getLuminance();
-                    }
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
+                    std::cout << weight << std::endl;
 
                     if(!L.isValid()){
                         std::cout << "L Invalid" << std::endl;
