@@ -2272,7 +2272,7 @@ public:
                     break;
                 }
 
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
@@ -2314,6 +2314,7 @@ public:
                     L *= weight;
 
                     if(!L.isValid()){
+                        std::cout << "L Invalid" << std::endl;
                         continue;
                     }
 
