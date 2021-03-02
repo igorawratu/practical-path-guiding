@@ -2275,8 +2275,7 @@ public:
                     newWoPdf = EPSILON;
                 }
 
-                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf > (*m_rejSamplePaths)[i].path[j].woPdf ? newWoPdf : (*m_rejSamplePaths)[i].path[j].woPdf;
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
@@ -2314,6 +2313,9 @@ public:
 
                 if(pos >= 0){
                     L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+                    if(L.getLuminance() < EPSILON){
+                        L *= EPSILON / L.getLuminance();
+                    }
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
