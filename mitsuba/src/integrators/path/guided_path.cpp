@@ -2383,10 +2383,6 @@ public:
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                if(vertices[j].radiance.getLuminance() < EPSILON * 10.f){
-                    vertices[j].radiance *= EPSILON / vertices[j].radiance.getLuminance() * 10.f;
-                }
-
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
@@ -3447,9 +3443,9 @@ public:
             }
 
             Spectrum localRadiance = Spectrum{0.0f};
-            if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
-            if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
-            if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
+            /*if (throughput[0] * woPdf > Epsilon) */localRadiance[0] = radiance[0] / throughput[0];
+            /*if (throughput[1] * woPdf > Epsilon) */localRadiance[1] = radiance[1] / throughput[1];
+            /*if (throughput[2] * woPdf > Epsilon) */localRadiance[2] = radiance[2] / throughput[2];
             Spectrum product = localRadiance * bsdfVal;
 
             DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
