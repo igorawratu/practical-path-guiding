@@ -491,11 +491,6 @@ public:
                 if(node.isLeaf(childIdx) || otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
 
-                    if(pdf < EPSILON && otherPdf > EPSILON){
-                        std::cout << pdf << " " << otherPdf << " " << denom << " " << otherDenom << " " <<
-                            nodePair.nodeFactor << " " << nodePair.otherNodeFactor << 
-                            nodePair.nodeIndex.second << " " << nodePair.otherNodeIndex.second << std::endl;
-                    }
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
@@ -2393,7 +2388,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();// * dTree->getAugmentedMultiplier();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
