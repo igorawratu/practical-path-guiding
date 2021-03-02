@@ -2281,10 +2281,6 @@ public:
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                if(newWoPdf > 100.f){
-                    std::cout << throughput.getLuminance() << " " << (*m_rejSamplePaths)[i].path[j].bsdfVal.getLuminance() << " " <<
-                        newWoPdf << " " << bsdfWeight.getLuminance() << std::endl;
-                }
                 (*m_rejSamplePaths)[i].path[j].throughput = throughput;
 
                 vertices.push_back(     
@@ -2317,6 +2313,10 @@ public:
 
                 if(pos >= 0){
                     L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+
+                    if(L.getLuminance() < EPSILON){
+                        std::cout << L.getLuminance() << " " << (*m_rejSamplePaths)[i].path[pos].throughput << std::endl;
+                    }
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
