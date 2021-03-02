@@ -768,14 +768,12 @@ public:
         m_atomic = Atomic{};
         m_maxDepth = 0;
 
-
-
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist, false);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
         if(std::isinf(A)){
             std::cout << "INF: " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
-            oldDist.pinfo();
+            /*oldDist.pinfo();
             newDist.pinfo();
 
             std::cout << "TESTING MAJORIZING FACTORS:" << std::endl;
@@ -784,10 +782,7 @@ public:
             int x;
             std::cin >> x;
             mpair = oldDist.getMajorizingFactor(oldDist, true);
-            std::cin >> x;
-        }
-        else{
-            std::cout << "NONINF: " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
+            std::cin >> x;*/
         }
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
@@ -990,6 +985,7 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
+            std::cout << "building augmented..." << std::endl;
             previous_tree_samples = total_samples;
             float B = 0.f;
 
@@ -1012,6 +1008,7 @@ public:
                 }
             }
         }
+        else std::cout << "not building augmented..." << std::endl;
 
         current_samples = 0;
 
