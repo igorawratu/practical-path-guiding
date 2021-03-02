@@ -2274,7 +2274,7 @@ public:
                     break;*/
                     newWoPdf = EPSILON;
                 }
-                else if(newWoPdf > 10.f){
+                else if(newWoPdf > 100.f){
                     std::cout << newWoPdf << std::endl;
                 }
 
