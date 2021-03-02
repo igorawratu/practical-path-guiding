@@ -2383,10 +2383,10 @@ public:
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                if(vertices[j].radiance.getLuminance() < EPSILON){
-                    vertices[j].radiance *= EPSILON / vertices[j].radiance.getLuminance();
+                if(vertices[j].radiance.getLuminance() < EPSILON * 10.f){
+                    vertices[j].radiance *= EPSILON / vertices[j].radiance.getLuminance() * 10.f;
                 }
-                
+
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
