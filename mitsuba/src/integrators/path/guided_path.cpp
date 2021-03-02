@@ -2315,7 +2315,7 @@ public:
                     L *= (*m_rejSamplePaths)[i].path[pos].throughput;
 
                     if(L.getLuminance() < EPSILON){
-                        std::cout << L.getLuminance() << " " << (*m_rejSamplePaths)[i].path[pos].throughput << std::endl;
+                        std::cout << L.getLuminance() << " " << (*m_rejSamplePaths)[i].path[pos].throughput.getLuminance() << std::endl;
                     }
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
