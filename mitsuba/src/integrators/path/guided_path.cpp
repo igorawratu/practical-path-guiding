@@ -491,10 +491,9 @@ public:
                 if(node.isLeaf(childIdx) || otherNode.isLeaf(otherChildIdx)){
                     Float scalingFactor = pdf < EPSILON && otherPdf < EPSILON ? 1.f : otherPdf / pdf;
 
-                    //if(pdf < EPSILON && otherPdf > EPSILON){
-                    if(testinfo)
+                    if(pdf < EPSILON && otherPdf > EPSILON){
                         std::cout << pdf << " " << otherPdf << " " << nodePair.nodeLevel << " " << nodePair.otherNodeLevel << std::endl;
-                    //}
+                    }
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
