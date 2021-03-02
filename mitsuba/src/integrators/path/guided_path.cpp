@@ -2283,7 +2283,7 @@ public:
 
                 if(throughput.getLuminance() < EPSILON){
                     std::cout << throughput.getLuminance() << " " << (*m_rejSamplePaths)[i].path[j].bsdfVal.getLuminance() << " " <<
-                        newWoPdf << " " << bsdfWeight << std::endl;
+                        newWoPdf << " " << bsdfWeight.getLuminance() << std::endl;
                 }
                 (*m_rejSamplePaths)[i].path[j].throughput = throughput;
 
