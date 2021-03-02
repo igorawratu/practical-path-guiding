@@ -2266,11 +2266,11 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
-                /*if(newWoPdf < EPSILON){
+                if(newWoPdf < EPSILON){
                     std::cout << "discarding sample" << std::endl;
                     discard_iter = j;
                     break;
-                }*/
+                }
 
                 //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
@@ -2313,9 +2313,9 @@ public:
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
 
-                    /*if(!L.isValid()){
+                    if(!L.isValid()){
                         continue;
-                    }*/
+                    }
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
                         (*m_rejSamplePaths)[i].path[k].Li += L;
