@@ -773,10 +773,10 @@ public:
 
         if(std::isinf(A)){
             std::cout << "INF: " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
-            /*oldDist.pinfo();
+            oldDist.pinfo();
             newDist.pinfo();
 
-            std::cout << "TESTING MAJORIZING FACTORS:" << std::endl;
+            /*std::cout << "TESTING MAJORIZING FACTORS:" << std::endl;
             auto mpair = newDist.getMajorizingFactor(newDist, true);
             std::cout << "DONE" << std::endl << std::endl << std::endl;
             int x;
@@ -985,7 +985,6 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
-            std::cout << "building augmented..." << std::endl;
             previous_tree_samples = total_samples;
             float B = 0.f;
 
@@ -1008,7 +1007,6 @@ public:
                 }
             }
         }
-        else std::cout << "not building augmented..." << std::endl;
 
         current_samples = 0;
 
@@ -3543,14 +3541,6 @@ public:
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), false);
 
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
-
-        if(woPdf < EPSILON)
-        {
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            float augpdf = dTree->pdf(bRec.its.toWorld(bRec.wo), true);
-            std::cout << bsdfPdf << " " << dTreePdf << " " << dot(bRec.its.toWorld(bRec.wo), bRec.its.shFrame.n) << " " << augpdf <<std::endl;
-            dTree->verifyEnoughSamples();
-        }
     }
 
     Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree) const {
