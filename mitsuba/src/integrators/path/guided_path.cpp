@@ -2268,7 +2268,7 @@ public:
 
                 if(newWoPdf < EPSILON){
                     discard_iter = j;
-                    std::cout << "discarding sample at iter " << discard_iter << std::endl;
+                    std::cout << "discarding sample at iter " << discard_iter << " at new prob " << newWoPdf << std::endl;
                     break;
                 }
 
