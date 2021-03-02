@@ -780,6 +780,9 @@ public:
             mpair = oldDist.getMajorizingFactor(oldDist, true);
             std::cin >> x;*/
         }
+        else if(A > 1e6f){
+            std::cout << "VERY LARGE: " << A << " " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
+        }
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -2306,7 +2309,6 @@ public:
                     L *= weight;
 
                     if(!L.isValid()){
-                        std::cout << "L Invalid" << std::endl;
                         continue;
                     }
 
