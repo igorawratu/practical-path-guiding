@@ -2294,9 +2294,9 @@ public:
                     });
             }
 
-            /*if(discard_iter >= 0){
+            if(discard_iter >= 0){
                 (*m_samplePaths)[i].path.resize(discard_iter);
-            }*/
+            }
 
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].radiance_record.size(); ++j){
                 std::uint32_t pos = (*m_rejSamplePaths)[i].radiance_record[j].pos;
@@ -2313,11 +2313,11 @@ public:
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
 
-                    if(!L.isValid()){
+                    /*if(!L.isValid()){
                         continue;
-                    }
+                    }*/
 
-                    for(std::uint32_t k = 0; k < pos; ++k){
+                    for(std::uint32_t k = 0; k <= pos; ++k){
                         (*m_rejSamplePaths)[i].path[k].Li += L;
                         vertices[k].radiance += L;
                     }
