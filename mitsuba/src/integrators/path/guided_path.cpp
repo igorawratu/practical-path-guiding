@@ -495,6 +495,11 @@ public:
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
                         pdfPair = std::make_pair(pdf, otherPdf);
+
+                        if(scalingFactor > 1e6f){
+                            std::cout << "VERY LARGE SF: " << scalingFactor << " " << pdf << " " << otherPdf << " " << nodePair.nodeFactor << " " <<
+                               nodePair.otherNodeFactor << " " << node.sum(childIdx) << " " << otherNode.sum(otherChildIdx) << std::endl;
+                        }
                     }
                 }
                 else{
@@ -779,9 +784,6 @@ public:
             std::cin >> x;
             mpair = oldDist.getMajorizingFactor(oldDist, true);
             std::cin >> x;*/
-        }
-        else if(A > 1e6f){
-            std::cout << "VERY LARGE: " << A << " " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
         }
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
@@ -2391,9 +2393,6 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= /*dTree->getAugmentedNormalizer() * */dTree->getAugmentedMultiplier();
-                if(dTree->getAugmentedMultiplier() > 100.f || dTree->getAugmentedMultiplier() < 1.f){
-                    std::cout << dTree->getAugmentedMultiplier() << std::endl;
-                }
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
