@@ -257,7 +257,7 @@ public:
         if (isLeaf(index)) {
             return factor;
         } else {
-            return factor * nodes[child(index)].pdf(p, nodes) / 4;
+            return factor * nodes[child(index)].pdf(p, nodes);
         }
     }
 
