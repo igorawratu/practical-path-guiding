@@ -496,7 +496,7 @@ public:
                         largestScalingFactor = scalingFactor;
                         pdfPair = std::make_pair(pdf, otherPdf);
 
-                        if(scalingFactor > 1e3f){
+                        if(scalingFactor > 1e2f){
                             std::cout << "VERY LARGE SF: " << scalingFactor << " " << pdf << " " << otherPdf << " " << nodePair.nodeFactor << " " <<
                                nodePair.otherNodeFactor << " " << node.sum(childIdx) << " " << otherNode.sum(otherChildIdx) << std::endl;
                         }
