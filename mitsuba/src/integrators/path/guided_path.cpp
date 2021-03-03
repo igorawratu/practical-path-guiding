@@ -257,7 +257,7 @@ public:
         if (isLeaf(index)) {
             return factor;
         } else {
-            return factor * nodes[child(index)].pdf(p, nodes);
+            return factor * nodes[child(index)].pdf(p, nodes) / 4;
         }
     }
 
@@ -2262,10 +2262,6 @@ public:
                 Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, false);
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
-
-                if(newWoPdf > 10.f){
-                    std::cout << "WOPDF: " << newWoPdf << std::endl;
-                }
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
