@@ -495,11 +495,6 @@ public:
                     if(scalingFactor > largestScalingFactor){
                         largestScalingFactor = scalingFactor;
                         pdfPair = std::make_pair(pdf, otherPdf);
-
-                        if(scalingFactor > 1e2f){
-                            std::cout << "VERY LARGE SF: " << scalingFactor << " " << pdf << " " << otherPdf << " " << nodePair.nodeFactor << " " <<
-                               nodePair.otherNodeFactor << " " << node.sum(childIdx) << " " << otherNode.sum(otherChildIdx) << std::endl;
-                        }
                     }
                 }
                 else{
@@ -2268,7 +2263,11 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                if(newWoPdf > 10.f){
+                    std::cout << "WOPDF: " << newWoPdf << std::endl;
+                }
+
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
