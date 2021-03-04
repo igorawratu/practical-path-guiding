@@ -2325,7 +2325,7 @@ public:
                 (*m_rejSamplePaths)[i].Li += L;
             }
 
-            /*if(m_doNee){
+            if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].nee_records.size(); ++j){
                     int pos = (*m_rejSamplePaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -2374,7 +2374,7 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }*/
+            }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 std::lock_guard<std::mutex> lg(*m_samplePathMutex);
@@ -2438,7 +2438,7 @@ public:
                 (*m_currAugmentedPaths)[i].Li += L;
             }
 
-            /*if(m_doNee){
+            if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].nee_records.size(); ++j){
                     int pos = (*m_currAugmentedPaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -2487,7 +2487,7 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }*/
+            }
 
             if(!finalIter){
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -3445,9 +3445,9 @@ public:
             }
 
             Spectrum localRadiance = Spectrum{0.0f};
-            /*if (throughput[0] * woPdf > Epsilon) */localRadiance[0] = radiance[0] / throughput[0];
-            /*if (throughput[1] * woPdf > Epsilon) */localRadiance[1] = radiance[1] / throughput[1];
-            /*if (throughput[2] * woPdf > Epsilon) */localRadiance[2] = radiance[2] / throughput[2];
+            if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
+            if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
+            if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
             Spectrum product = localRadiance * bsdfVal;
 
             DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
