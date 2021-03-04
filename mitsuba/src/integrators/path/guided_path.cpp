@@ -3483,6 +3483,7 @@ public:
         Spectrum throughput, bsdfVal, Li;
         Float bsdfPdf, woPdf, dTreePdf;
         bool isDelta;
+        int level;
     };
 
     struct RWVertex{
@@ -3490,6 +3491,7 @@ public:
         Spectrum bsdfVal;
         Float bsdfPdf, owo;
         bool isDelta;
+        int level;
     };
 
     struct RadianceRecord{
@@ -3516,7 +3518,6 @@ public:
         Spectrum Li;
         Float alpha;
         int iter;
-        int level;
     };
 
     struct PGPath{
@@ -3528,7 +3529,6 @@ public:
         Spectrum Li;
         Float alpha;
         int iter;
-        int level;
     };
 
     void pdfMat(Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree, int& curr_level) const {
