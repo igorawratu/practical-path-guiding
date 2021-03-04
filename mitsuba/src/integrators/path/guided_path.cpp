@@ -3058,7 +3058,7 @@ public:
                     performAugmentedSamples(sampler);
                 }
 
-                 (sampler, m_isFinalIter);
+                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 if(m_isFinalIter){
                     film->clear();
