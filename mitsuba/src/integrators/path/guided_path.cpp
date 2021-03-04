@@ -2267,6 +2267,10 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
+                if((*m_rejSamplePaths)[i].path[j].level != current_level){
+                    std::cout << (*m_rejSamplePaths)[i].path[j].level << " " << current_level << std::endl;
+                }
+
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
  
