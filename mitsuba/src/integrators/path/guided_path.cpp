@@ -4005,7 +4005,7 @@ public:
                     pathRecord.path.pop_back();
                     rpathRecord.path.pop_back();
                     
-                    if(!addedNee){
+                    if(addedNee){
                         pathRecord.nee_records.pop_back();
                         rpathRecord.nee_records.pop_back();
                     }
@@ -4026,7 +4026,7 @@ public:
                     if (!(rRec.type & RadianceQueryRecord::EIndirectSurfaceRadiance)){
                         pathRecord.path.pop_back();
                         rpathRecord.path.pop_back();
-                        if(!addedNee){
+                        if(addedNee){
                             pathRecord.nee_records.pop_back();
                             rpathRecord.nee_records.pop_back();
                         }
