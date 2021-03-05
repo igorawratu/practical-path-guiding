@@ -491,7 +491,7 @@ public:
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) || otherNode.isLeaf(otherChildIdx)){
                     pdf = std::max(pdf, EPSILON);
-                    otherPdf = std::max(pdf, EPSILON);
+                    otherPdf = std::max(otherPdf, EPSILON);
                     Float scalingFactor = otherPdf / pdf;
 
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
@@ -769,7 +769,6 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist, false);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        std::cout << A << std::endl;
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
