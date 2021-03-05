@@ -3573,7 +3573,6 @@ public:
             if (result.isZero()) {
                 woPdf = bsdfPdf = dTreePdf = 0;
                 zero = true;
-                std::cout << "zero bsdf" << std::endl;
                 return Spectrum{0.0f};
             }
 
@@ -3600,7 +3599,6 @@ public:
         }
 
         if (woPdf == 0) {
-            std::cout << "Zero wopdf: " << zero << " " << sbsdf << std::endl;
             return Spectrum{0.0f};
         }
 
@@ -4004,9 +4002,12 @@ public:
 
                 // BSDF handling
                 if (bsdfWeight.isZero() || (woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
+                    pathRecord.path.pop_back();
+                    rpathRecord.path.pop_back();
+                    
                     if(!addedNee){
-                        pathRecord.path.pop_back();
-                        rpathRecord.path.pop_back();
+                        pathRecord.nee_records.pop_back();
+                        rpathRecord.nee_records.pop_back();
                     }
 
                     break;
@@ -4023,9 +4024,11 @@ public:
                 /* Handle index-matched medium transitions specially */
                 if (bRec.sampledType == BSDF::ENull) {
                     if (!(rRec.type & RadianceQueryRecord::EIndirectSurfaceRadiance)){
+                        pathRecord.path.pop_back();
+                        rpathRecord.path.pop_back();
                         if(!addedNee){
-                            pathRecord.path.pop_back();
-                            rpathRecord.path.pop_back();
+                            pathRecord.nee_records.pop_back();
+                            rpathRecord.nee_records.pop_back();
                         }
 
                         break;
