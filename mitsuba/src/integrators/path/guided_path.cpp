@@ -3079,8 +3079,6 @@ public:
                 reweightAugmentHybrid(sampler);
                 correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
 
-                
-
                 if(m_isFinalIter){
                     film->clear();
                     ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
