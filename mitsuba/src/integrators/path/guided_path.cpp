@@ -817,7 +817,7 @@ public:
                 Float pdf = computeAugmentedPdf(oldPdf, newPdf, A);
 
                 //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
-                if(!(newNode.isLeaf(newChildIdx) && oldNode.isLeaf(oldChildIdx))){
+                if(!(newNode.isLeaf(newChildIdx) || oldNode.isLeaf(oldChildIdx))){
                     m_nodes[nodePair.nodeIdx].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
                     m_nodes.back().setSum(pdf / 4.f);
@@ -3090,10 +3090,8 @@ public:
 
                     #pragma omp parallel for
                     for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-                        if((*m_samplePaths)[i].path.size() > 0){
-                            Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
-                            previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);
-                        }                        
+                        Spectrum s = (*m_samplePaths)[i].spec * (*m_samplePaths)[i].Li;
+                        previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);                      
                     }
 
                     film->put(previousSamples);
