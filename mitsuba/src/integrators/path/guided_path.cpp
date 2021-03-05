@@ -254,7 +254,7 @@ public:
         }
 
         const Float factor = 4 * sum(index) / (sum(0) + sum(1) + sum(2) + sum(3));
-        if (isLeaf(index)/* || level == curr_level*/) {
+        if (isLeaf(index) || level == curr_level) {
             return factor;
         } else {
             curr_level += 1;
