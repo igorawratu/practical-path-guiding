@@ -3446,9 +3446,9 @@ public:
             }
 
             Spectrum localRadiance = Spectrum{0.0f};
-            if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
-            if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
-            if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
+            /*if (throughput[0] * woPdf > Epsilon) */localRadiance[0] = radiance[0] / throughput[0];
+            /*if (throughput[1] * woPdf > Epsilon) */localRadiance[1] = radiance[1] / throughput[1];
+            /*if (throughput[2] * woPdf > Epsilon) */localRadiance[2] = radiance[2] / throughput[2];
             Spectrum product = localRadiance * bsdfVal;
 
             DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
