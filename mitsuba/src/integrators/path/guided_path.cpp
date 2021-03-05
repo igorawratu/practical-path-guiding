@@ -3535,6 +3535,7 @@ public:
 
         bsdfPdf = bsdf->pdf(bRec);
         if (!std::isfinite(bsdfPdf)) {
+            std::cout << "infinite bsdf pdf" << std::endl;
             woPdf = 0;
             return;
         }
@@ -3572,6 +3573,7 @@ public:
             if (result.isZero()) {
                 woPdf = bsdfPdf = dTreePdf = 0;
                 zero = true;
+                std::cout << "zero bsdf" << std::endl;
                 return Spectrum{0.0f};
             }
 
@@ -3598,6 +3600,7 @@ public:
         }
 
         if (woPdf == 0) {
+            std::cout << "Zero wopdf: " << zero << " " << sbsdf << std::endl;
             return Spectrum{0.0f};
         }
 
