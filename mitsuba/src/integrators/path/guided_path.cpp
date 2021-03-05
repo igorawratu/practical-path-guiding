@@ -2310,7 +2310,7 @@ public:
                 (*m_rejSamplePaths)[i].Li += L;
             }
 
-            /*if(m_doNee){
+            if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].nee_records.size(); ++j){
                     int pos = (*m_rejSamplePaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -2359,7 +2359,7 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }*/
+            }
 
             if(!finalIter){
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2427,7 +2427,7 @@ public:
                 (*m_currAugmentedPaths)[i].Li += L;
             }
 
-            /*if(m_doNee){
+            if(m_doNee){
                 for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].nee_records.size(); ++j){
                     int pos = (*m_currAugmentedPaths)[i].nee_records[j].pos;
                     if(pos >= vertices.size()){
@@ -2476,7 +2476,7 @@ public:
                             m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                     }
                 }
-            }*/
+            }
 
             if(!finalIter){
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -3535,17 +3535,12 @@ public:
 
         bsdfPdf = bsdf->pdf(bRec);
         if (!std::isfinite(bsdfPdf)) {
-            std::cout << "infinite bsdf pdf" << std::endl;
             woPdf = 0;
             return;
         }
 
         curr_level = 0;
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), -1, curr_level);
-
-        if(bsdfPdf < EPSILON && dTreePdf < EPSILON){
-            std::cout << "pdfmat: " << bsdfPdf << " " << dTreePdf << std::endl;
-        }
 
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
