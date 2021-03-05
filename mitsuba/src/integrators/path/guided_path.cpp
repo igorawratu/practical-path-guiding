@@ -254,7 +254,7 @@ public:
         }
 
         const Float factor = 4 * sum(index) / (sum(0) + sum(1) + sum(2) + sum(3));
-        if (isLeaf(index) || level == curr_level) {
+        if (isLeaf(index)/* || level == curr_level*/) {
             return factor;
         } else {
             curr_level += 1;
@@ -621,7 +621,7 @@ public:
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
-                if ((sNode.depth < newMaxDepth && fraction > subdivisionThreshold) || !otherNode.isLeaf(i)) {
+                if ((sNode.depth < newMaxDepth && fraction > subdivisionThreshold)/* || !otherNode.isLeaf(i)*/) {
                     if (!otherNode.isLeaf(i)) {
                         SAssert(sNode.otherDTree == &previousDTree);
                         nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
@@ -2266,11 +2266,6 @@ public:
                 Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, (*m_rejSamplePaths)[i].path[j].level, current_level);
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
-
-                float ratio = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
-                if(ratio > 10.f){
-                    std::cout << newWoPdf << " " << (*m_rejSamplePaths)[i].path[j].woPdf << std::endl;
-                }
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
