@@ -2257,6 +2257,10 @@ public:
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+
+                if((*m_rejSamplePaths)[i].path[j].woPdf < EPSILON){
+                    std::cout << "wopdf: " << (*m_rejSamplePaths)[i].path[j].woPdf << std::endl;
+                }
  
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
