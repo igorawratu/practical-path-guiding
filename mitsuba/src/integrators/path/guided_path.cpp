@@ -621,7 +621,7 @@ public:
                 const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
-                if ((sNode.depth < newMaxDepth && fraction > subdivisionThreshold)/* || !otherNode.isLeaf(i)*/) {
+                if ((sNode.depth < newMaxDepth && fraction > subdivisionThreshold) || !otherNode.isLeaf(i)) {
                     if (!otherNode.isLeaf(i)) {
                         SAssert(sNode.otherDTree == &previousDTree);
                         nodeIndices.push({m_nodes.size(), otherNode.child(i), &previousDTree, sNode.depth + 1});
@@ -2249,7 +2249,7 @@ public:
         }
     }
 
-    void performAugmentedSamples(ref<Sampler> sampler){
+    void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
@@ -2266,10 +2266,6 @@ public:
                 Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, (*m_rejSamplePaths)[i].path[j].level, current_level);
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
-
-                /*if((*m_rejSamplePaths)[i].path[j].level != current_level){
-                    std::cout << (*m_rejSamplePaths)[i].path[j].level << " " << current_level << std::endl;
-                }*/
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
@@ -2377,11 +2373,14 @@ public:
                 }
             }*/
 
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            if(!finalIter){
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
+            
         }
     }
 
@@ -3059,10 +3058,10 @@ public:
                     rejectAugmentHybrid(sampler);
                 }
                 else if(m_augment){
-                    performAugmentedSamples(sampler);
+                    performAugmentedSamples(sampler, m_isFinalIter);
                 }
 
-                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
+                correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 if(m_isFinalIter){
                     film->clear();
@@ -3140,8 +3139,9 @@ public:
                 }
             }
 
-            //verifyAugmentedSDTree(scene);
-            buildSDTree(sampler);
+            if(!m_isFinalIter){
+                buildSDTree(sampler);
+            }
 
             if (m_dumpSDTree) {
                 dumpSDTree(scene, sensor);
@@ -3446,9 +3446,9 @@ public:
             }
 
             Spectrum localRadiance = Spectrum{0.0f};
-            /*if (throughput[0] * woPdf > Epsilon) */localRadiance[0] = radiance[0] / throughput[0];
-            /*if (throughput[1] * woPdf > Epsilon) */localRadiance[1] = radiance[1] / throughput[1];
-            /*if (throughput[2] * woPdf > Epsilon) */localRadiance[2] = radiance[2] / throughput[2];
+            if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
+            if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
+            if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
             Spectrum product = localRadiance * bsdfVal;
 
             DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
