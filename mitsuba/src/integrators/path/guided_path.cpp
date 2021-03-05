@@ -769,20 +769,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist, false);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-
-        if(std::isinf(A)){
-            std::cout << "INF: " << majorizing_pair.first << " " << majorizing_pair.second << std::endl;
-            oldDist.pinfo();
-            newDist.pinfo();
-
-            /*std::cout << "TESTING MAJORIZING FACTORS:" << std::endl;
-            auto mpair = newDist.getMajorizingFactor(newDist, true);
-            std::cout << "DONE" << std::endl << std::endl << std::endl;
-            int x;
-            std::cin >> x;
-            mpair = oldDist.getMajorizingFactor(oldDist, true);
-            std::cin >> x;*/
-        }
+        std::cout << A << std::endl;
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -2270,8 +2257,7 @@ public:
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-
-                //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
  
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2398,7 +2384,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                //(*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
