@@ -2257,10 +2257,6 @@ public:
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
-
-                if((*m_rejSamplePaths)[i].path[j].woPdf < EPSILON){
-                    std::cout << "augmented wopdf: " << (*m_rejSamplePaths)[i].path[j].woPdf << std::endl;
-                }
  
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2389,10 +2385,6 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
-                if((*m_currAugmentedPaths)[i].path[j].woPdf < EPSILON){
-                    std::cout << "corrected wopdf: " << (*m_currAugmentedPaths)[i].path[j].woPdf << std::endl;
-                }
-                
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
                 (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
@@ -3549,6 +3541,10 @@ public:
 
         curr_level = 0;
         dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), -1, curr_level);
+
+        if(bsdfPdf < EPSILON && dTreePdf < EPSILON){
+            std::cout << "pdfmat: " << bsdfPdf << " " << dTreePdf << std::endl;
+        }
 
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
