@@ -2267,7 +2267,13 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
-                //(*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+                float ratio = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
+                if(ratio > 10.f){
+                    std::cout << newWoPdf << " " << (*m_rejSamplePaths)[i].path[j].woPdf << std::endl;
+                }
+
+                (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
+
                 //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
  
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
