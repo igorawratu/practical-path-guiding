@@ -2135,7 +2135,7 @@ public:
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 }
 
-                //(*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier() * dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
                 (*m_samplePaths)[i].path[j].owo = nwo;
 
@@ -2382,7 +2382,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                //(*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2501,7 +2501,7 @@ public:
                 int current_level = 0;
                 Float dtreePdf = dTree->pdf((*m_currRWAugPaths)[i].path[j].ray.d, (*m_currRWAugPaths)[i].path[j].level, current_level);
 
-                //(*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                 Spectrum bsdfWeight = (*m_currRWAugPaths)[i].path[j].bsdfVal / (*m_currRWAugPaths)[i].path[j].owo;
                 
                 throughput *= bsdfWeight;
@@ -2642,7 +2642,7 @@ public:
                 }
                 else{
                     //if(acceptProb > 1.f){
-                        (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                        //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                     //}
 
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
