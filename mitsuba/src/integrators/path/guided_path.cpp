@@ -254,7 +254,7 @@ public:
         }
 
         const Float factor = 4 * sum(index) / (sum(0) + sum(1) + sum(2) + sum(3));
-        if (isLeaf(index)/* || level == curr_level*/) {
+        if (isLeaf(index) || level == curr_level) {
             return factor;
         } else {
             curr_level += 1;
@@ -3079,9 +3079,7 @@ public:
                 reweightAugmentHybrid(sampler);
                 correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
 
-                m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
-                m_currRWAugPaths->clear();
-                m_currRWAugPaths->shrink_to_fit();
+                
 
                 if(m_isFinalIter){
                     film->clear();
@@ -3094,7 +3092,18 @@ public:
                         previousSamples->put((*m_samplePaths)[i].sample_pos, s, (*m_samplePaths)[i].alpha);                      
                     }
 
+                    #pragma omp parallel for
+                    for(std::uint32_t i = 0; i < m_currRWAugPaths->size(); ++i){
+                        Spectrum s = (*m_currRWAugPaths)[i].spec * (*m_currRWAugPaths)[i].Li;
+                        previousSamples->put((*m_currRWAugPaths)[i].sample_pos, s, (*m_currRWAugPaths)[i].alpha);                      
+                    }
+
                     film->put(previousSamples);
+                }
+                else{
+                    m_samplePaths->insert(m_samplePaths->end(), m_currRWAugPaths->begin(), m_currRWAugPaths->end());
+                    m_currRWAugPaths->clear();
+                    m_currRWAugPaths->shrink_to_fit();
                 }
             }
 
