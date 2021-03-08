@@ -2643,7 +2643,7 @@ public:
                     break;
                 }
                 else{
-                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
