@@ -2638,11 +2638,11 @@ public:
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
 
-                /*if(sampler->next1D() > acceptProb){
+                if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
-                else*/{
+                else{
                     (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
