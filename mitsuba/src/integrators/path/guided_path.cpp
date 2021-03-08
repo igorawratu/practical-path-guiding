@@ -2628,7 +2628,7 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_rejSamplePaths)[i].path[j].ray.o, dTreeVoxelSize);
                 int current_level = 0;
-                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, /*(*m_rejSamplePaths)[i].path[j].level*/-1, current_level);
+                Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].path[j].ray.d, (*m_rejSamplePaths)[i].path[j].level, current_level);
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
@@ -2637,13 +2637,13 @@ public:
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
-
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     break;
                 }
                 else{
-                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                    
 
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
