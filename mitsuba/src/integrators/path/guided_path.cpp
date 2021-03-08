@@ -2643,7 +2643,7 @@ public:
                     break;
                 }
                 else{
-                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
@@ -2690,7 +2690,7 @@ public:
                         continue;
                     }
 
-                    for(std::uint32_t k = 0; k < pos; ++k){
+                    for(std::uint32_t k = 0; k <= pos; ++k){
                         (*m_rejSamplePaths)[i].path[k].Li += L;
                         vertices[k].radiance += L;
                     }
