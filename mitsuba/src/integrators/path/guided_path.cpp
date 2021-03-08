@@ -2435,6 +2435,7 @@ public:
 
                     Spectrum L = (*m_currAugmentedPaths)[i].nee_records[j].L;
                     Float pdf = (*m_currAugmentedPaths)[i].nee_records[j].pdf;
+                    (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                     Spectrum bsdfVal = (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal;
 
                     DTreeWrapper* dTree = vertices[pos].dTree;
@@ -2706,6 +2707,7 @@ public:
 
                     Spectrum L = (*m_rejSamplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_rejSamplePaths)[i].nee_records[j].pdf;
+                    (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer();
                     Spectrum bsdfVal = (*m_rejSamplePaths)[i].nee_records[j].bsdfVal;
 
                     DTreeWrapper* dTree = vertices[pos].dTree;
