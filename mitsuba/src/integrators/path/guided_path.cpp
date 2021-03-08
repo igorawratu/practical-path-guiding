@@ -1855,16 +1855,15 @@ public:
                 else{
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
-                    (*m_rejSamplePaths)[i].path[j].throughput = throughput;
 
                     vertices.push_back(     
                         Vertex{ 
                             dTree,
                             dTreeVoxelSize,
                             (*m_rejSamplePaths)[i].path[j].ray,
-                            (*m_rejSamplePaths)[i].path[j].throughput,
+                            throughput,
                             (*m_rejSamplePaths)[i].path[j].bsdfVal,
-                            (*m_rejSamplePaths)[i].path[j].Li,
+                            Spectrum(0.f),
                             (*m_rejSamplePaths)[i].path[j].woPdf,
                             (*m_rejSamplePaths)[i].path[j].bsdfPdf,
                             dtreePdf,
@@ -1885,7 +1884,7 @@ public:
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
 
                 if(pos >= 0){
-                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+                    L *= vertices[pos].throughput;
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
@@ -1895,7 +1894,6 @@ public:
                     }
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
-                        (*m_rejSamplePaths)[i].path[k].Li += L;
                         vertices[k].radiance += L;
                     }
                 }
@@ -3465,7 +3463,7 @@ public:
 
     struct RejVertex{
         Ray ray;
-        Spectrum throughput, bsdfVal, Li;
+        Spectrum bsdfVal;
         Float bsdfPdf, woPdf, dTreePdf;
         bool isDelta;
         int level;
@@ -3911,7 +3909,7 @@ public:
 
                 //add the vertices
                 pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel});
-                rpathRecord.path.push_back(RejVertex{ray, Spectrum(0.0f), bsdfWeight * woPdf, Spectrum(0.0f), bsdfPdf, woPdf, dTreePdf, isDelta, dTreeLevel});
+                rpathRecord.path.push_back(RejVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, dTreePdf, isDelta, dTreeLevel});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
