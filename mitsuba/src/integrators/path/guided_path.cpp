@@ -2242,7 +2242,7 @@ public:
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-                //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
  
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2420,7 +2420,6 @@ public:
 
                     Spectrum L = (*m_currAugmentedPaths)[i].nee_records[j].L;
                     Float pdf = (*m_currAugmentedPaths)[i].nee_records[j].pdf;
-                    (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                     Spectrum bsdfVal = (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal;
                     
                     int current_level = 0;
@@ -2688,7 +2687,6 @@ public:
 
                     Spectrum L = (*m_rejSamplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_rejSamplePaths)[i].nee_records[j].pdf;
-                    (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer();
                     Spectrum bsdfVal = (*m_rejSamplePaths)[i].nee_records[j].bsdfVal;
 
                     int current_level = 0;
