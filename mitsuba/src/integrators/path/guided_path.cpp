@@ -1985,25 +1985,16 @@ public:
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
-                //rescaling
-                if(acceptProb > 1.f){
+                if(sampler->next1D() > acceptProb){
+                    termination_iter = j;
+                    break;
+                }
+                else{
                     (*m_rejSamplePaths)[i].path[j].bsdfVal *= newWoPdf / oldWo;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                     (*m_rejSamplePaths)[i].path[j].throughput = throughput;
                 }
-                //rejection
-                else{
-                    if(sampler->next1D() > acceptProb){
-                        termination_iter = j;
-                        break;
-                    }
-                    else{
-                        Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
-                        throughput *= bsdfWeight;
-                        (*m_rejSamplePaths)[i].path[j].throughput = throughput;
-                    }
-                } 
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2131,7 +2122,7 @@ public:
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                /*if(reweight < 1.f)*/{
+                if(reweight < 1.f){
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 }
 
