@@ -1981,7 +1981,6 @@ public:
                 Float acceptProb = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
                 Float oldWo = (*m_rejSamplePaths)[i].path[j].woPdf;
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-                (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
@@ -1992,7 +1991,6 @@ public:
                     (*m_rejSamplePaths)[i].path[j].bsdfVal *= scale;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
-                    (*m_rejSamplePaths)[i].path[j].throughput = throughput;
                 }
 
                 vertices.push_back(     
@@ -2000,9 +1998,9 @@ public:
                         dTree,
                         dTreeVoxelSize,
                         (*m_rejSamplePaths)[i].path[j].ray,
-                        (*m_rejSamplePaths)[i].path[j].throughput,
+                        throughput,
                         (*m_rejSamplePaths)[i].path[j].bsdfVal,
-                        (*m_rejSamplePaths)[i].path[j].Li,
+                        Spectrum(0.f),
                         (*m_rejSamplePaths)[i].path[j].woPdf,
                         (*m_rejSamplePaths)[i].path[j].bsdfPdf,
                         dtreePdf,
@@ -2026,7 +2024,7 @@ public:
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
 
                 if(pos >= 0){
-                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+                    L *= vertices[pos].throughput;
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
@@ -2036,7 +2034,6 @@ public:
                     }
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
-                        (*m_rejSamplePaths)[i].path[k].Li += L;
                         vertices[k].radiance += L;
                     }
                 }
@@ -2250,14 +2247,12 @@ public:
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                (*m_rejSamplePaths)[i].path[j].throughput = throughput;
-
                 vertices.push_back(     
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
                         (*m_rejSamplePaths)[i].path[j].ray,
-                        (*m_rejSamplePaths)[i].path[j].throughput,
+                        throughput,
                         (*m_rejSamplePaths)[i].path[j].bsdfVal,
                         Spectrum(0.f),
                         (*m_rejSamplePaths)[i].path[j].woPdf,
@@ -2281,7 +2276,7 @@ public:
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
 
                 if(pos >= 0){
-                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+                    L *= vertices[pos].throughput;
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
@@ -2291,7 +2286,6 @@ public:
                     }
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
-                        (*m_rejSamplePaths)[i].path[k].Li += L;
                         vertices[k].radiance += L;
                     }
                 }
@@ -2376,14 +2370,13 @@ public:
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-                (*m_currAugmentedPaths)[i].path[j].throughput = throughput;
 
                 vertices.push_back(     
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
                         (*m_currAugmentedPaths)[i].path[j].ray,
-                        (*m_currAugmentedPaths)[i].path[j].throughput,
+                        throughput,
                         (*m_currAugmentedPaths)[i].path[j].bsdfVal,
                         Spectrum(0.f),
                         (*m_currAugmentedPaths)[i].path[j].woPdf,
@@ -2399,7 +2392,7 @@ public:
                 Spectrum L = (*m_currAugmentedPaths)[i].radiance_record[j].L;
 
                 if(pos >= 0){
-                    L *= (*m_currAugmentedPaths)[i].path[pos].throughput;
+                    L *= vertices[pos].throughput;
                     
                     Float weight = miWeight((*m_currAugmentedPaths)[i].path[pos].woPdf, (*m_currAugmentedPaths)[i].radiance_record[j].pdf);
                     L *= weight;
@@ -2625,7 +2618,6 @@ public:
                 Float acceptProb = newWoPdf / (*m_rejSamplePaths)[i].path[j].woPdf;
                 Float oldWo = (*m_rejSamplePaths)[i].path[j].woPdf;
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-                (*m_rejSamplePaths)[i].path[j].Li = Spectrum(0.f);
 
                 (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 if(sampler->next1D() > acceptProb){
@@ -2635,7 +2627,6 @@ public:
                 else{
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
-                    (*m_rejSamplePaths)[i].path[j].throughput = throughput;
                 }
 
                 vertices.push_back(     
@@ -2643,9 +2634,9 @@ public:
                         dTree,
                         dTreeVoxelSize,
                         (*m_rejSamplePaths)[i].path[j].ray,
-                        (*m_rejSamplePaths)[i].path[j].throughput,
+                        throughput,
                         (*m_rejSamplePaths)[i].path[j].bsdfVal,
-                        (*m_rejSamplePaths)[i].path[j].Li,
+                        Spectrum(0.f),
                         (*m_rejSamplePaths)[i].path[j].woPdf,
                         (*m_rejSamplePaths)[i].path[j].bsdfPdf,
                         dtreePdf,
@@ -2669,7 +2660,7 @@ public:
                 Spectrum L = (*m_rejSamplePaths)[i].radiance_record[j].L;
 
                 if(pos >= 0){
-                    L *= (*m_rejSamplePaths)[i].path[pos].throughput;
+                    L *= vertices[pos].throughput;
 
                     Float weight = miWeight((*m_rejSamplePaths)[i].path[pos].woPdf, (*m_rejSamplePaths)[i].radiance_record[j].pdf);
                     L *= weight;
@@ -2679,7 +2670,6 @@ public:
                     }
 
                     for(std::uint32_t k = 0; k <= pos; ++k){
-                        (*m_rejSamplePaths)[i].path[k].Li += L;
                         vertices[k].radiance += L;
                     }
                 }
@@ -4001,7 +3991,6 @@ public:
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
                 throughput *= bsdfWeight;
-                rpathRecord.path.back().throughput = throughput;
                 eta *= bRec.eta;
                 if (its.isMediumTransition())
                     rRec.medium = its.getTargetMedium(ray.d);
