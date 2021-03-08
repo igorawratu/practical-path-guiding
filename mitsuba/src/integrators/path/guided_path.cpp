@@ -736,7 +736,7 @@ public:
                 Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
 
                 //both nodes are leaves, compute difference for pdf
-                if(newNode.isLeaf(newChildIdx) && oldNode.isLeaf(oldChildIdx)){
+                if(newNode.isLeaf(newChildIdx) || oldNode.isLeaf(oldChildIdx)){
                     Float pdf = computeAugmentedPdf(oldPdf, newPdf);
                     m_nodes[nodePair.nodeIdx].setSum(i, pdf);
                 }
@@ -1016,8 +1016,8 @@ public:
 
     Vector sample(Sampler* sampler, bool augment) const{
         if(augment){
-            //return current_samples >= req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
-            return canonicalToDir(sampling.sample(sampler));
+            return current_samples >= req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
+            //return canonicalToDir(sampling.sample(sampler));
         }
         else return canonicalToDir(sampling.sample(sampler));
     }
