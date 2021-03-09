@@ -975,6 +975,9 @@ public:
 
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
+                if(B > 1000.f){
+                    std::cout << "B: " << B << std::endl;
+                }
             }
             else if(augmentReweight){
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
@@ -2246,7 +2249,7 @@ public:
                 Float newWoPdf = bsf * (*m_rejSamplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
-                //(*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
  
                 Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / (*m_rejSamplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2308,7 +2311,7 @@ public:
 
                     Spectrum L = (*m_rejSamplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_rejSamplePaths)[i].nee_records[j].pdf;
-                    //(*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                    (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer();
                     Spectrum bsdfVal = (*m_rejSamplePaths)[i].nee_records[j].bsdfVal;
 
                     int current_level = 0;
