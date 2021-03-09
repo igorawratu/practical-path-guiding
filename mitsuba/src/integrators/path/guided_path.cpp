@@ -1857,6 +1857,7 @@ public:
                     break;
                 }
                 else{
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= (1.f / acceptProb);
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
 
