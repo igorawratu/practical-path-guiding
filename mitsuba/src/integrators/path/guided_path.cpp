@@ -975,9 +975,6 @@ public:
 
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
-                if(B > 1000.f){
-                    std::cout << "B: " << B << std::endl;
-                }
             }
             else if(augmentReweight){
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
