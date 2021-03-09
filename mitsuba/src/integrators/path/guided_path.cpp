@@ -969,7 +969,7 @@ public:
         previous = sampling;
         building.build();
         
-        if((augment || augmentReweight) && isBuilt && (m_iter >= m_strategyIterationActive)){
+        if((augment || augmentReweight) && isBuilt){
             previous_tree_samples = total_samples;
             float B = 0.f;
 
@@ -1602,7 +1602,9 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this](DTreeWrapper* dTree) { dTree->build(sampler, this->m_augment, this->m_rejectAugment || this->m_reweightAugment, this->m_isBuilt); });
+        bool augment = m_iter >= m_strategyIterationActive ? m_augment : false;
+        bool raugment = m_iter >= m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment : false;
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(sampler, augment, raugment, this->m_isBuilt); });
 
         // Gather statistics
         int maxDepth = 0;
