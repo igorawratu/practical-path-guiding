@@ -1155,10 +1155,10 @@ private:
     DTree previous;
     DTree augmented;
 
-    std::uint32_t current_samples;
-    std::uint32_t req_augmented_samples;
-    std::uint32_t total_samples;
-    std::uint32_t previous_tree_samples;
+    std::uint64_t current_samples;
+    std::uint64_t req_augmented_samples;
+    std::uint64_t total_samples;
+    std::uint64_t previous_tree_samples;
 
     std::uint32_t current_cache_size;
     std::uint32_t current_cache_idx;
