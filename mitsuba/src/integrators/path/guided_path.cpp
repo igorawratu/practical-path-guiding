@@ -969,7 +969,7 @@ public:
         previous = sampling;
         building.build();
         
-        if((augment || augmentReweight) && isBuilt){
+        if((augment || augmentReweight) && isBuilt && (m_iter >= m_strategyIterationActive)){
             previous_tree_samples = total_samples;
             float B = 0.f;
 
@@ -999,7 +999,7 @@ public:
         current_samples = 0;
 
         sampling = building;
-        //m_rejPdfPair = previous.getMajorizingFactor(sampling);
+        m_rejPdfPair = previous.getMajorizingFactor(sampling);
     }
 
     void splitSpatially(){
