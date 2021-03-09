@@ -2173,12 +2173,13 @@ public:
                         continue;
                     }
 
+                    DTreeWrapper* dTree = vertices[pos].dTree;
+
                     Spectrum L = (*m_samplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_samplePaths)[i].nee_records[j].pdf;
                     (*m_samplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer();
                     Spectrum bsdfVal = (*m_samplePaths)[i].nee_records[j].bsdfVal;
-
-                    DTreeWrapper* dTree = vertices[pos].dTree;
+                    
                     int current_level = 0;
                     Float dtreePdf = dTree->pdf((*m_samplePaths)[i].nee_records[j].wo, -1, current_level);
                     Float bsf = dTree->bsdfSamplingFraction();
@@ -2303,12 +2304,13 @@ public:
                         continue;
                     }
 
+                    DTreeWrapper* dTree = vertices[pos].dTree;
+
                     Spectrum L = (*m_rejSamplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_rejSamplePaths)[i].nee_records[j].pdf;
                     (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer();
                     Spectrum bsdfVal = (*m_rejSamplePaths)[i].nee_records[j].bsdfVal;
 
-                    DTreeWrapper* dTree = vertices[pos].dTree;
                     int current_level = 0;
                     Float dtreePdf = dTree->pdf((*m_rejSamplePaths)[i].nee_records[j].wo, -1, current_level);
                     Float bsf = dTree->bsdfSamplingFraction();
@@ -2424,7 +2426,7 @@ public:
 
                     Spectrum L = (*m_currAugmentedPaths)[i].nee_records[j].L;
                     Float pdf = (*m_currAugmentedPaths)[i].nee_records[j].pdf;
-                    (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal; *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                    (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                     Spectrum bsdfVal = (*m_currAugmentedPaths)[i].nee_records[j].bsdfVal;
                     
                     int current_level = 0;
@@ -2543,12 +2545,13 @@ public:
                         continue;
                     }
 
+                    DTreeWrapper* dTree = vertices[pos].dTree;
+
                     Spectrum L = (*m_currRWAugPaths)[i].nee_records[j].L;
                     Float pdf = (*m_currRWAugPaths)[i].nee_records[j].pdf;
                     (*m_currRWAugPaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                     Spectrum bsdfVal = (*m_currRWAugPaths)[i].nee_records[j].bsdfVal;
 
-                    DTreeWrapper* dTree = vertices[pos].dTree;
                     int current_level = 0;
                     Float dtreePdf = dTree->pdf((*m_currRWAugPaths)[i].nee_records[j].wo, -1, current_level);
                     Float bsf = dTree->bsdfSamplingFraction();
