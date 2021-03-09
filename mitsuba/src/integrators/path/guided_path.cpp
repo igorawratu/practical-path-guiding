@@ -2629,10 +2629,6 @@ public:
                 Float oldWo = (*m_rejSamplePaths)[i].path[j].woPdf;
                 (*m_rejSamplePaths)[i].path[j].woPdf = newWoPdf;
 
-                if(std::abs(dTree->getAugmentedNormalizer() - 1.f) < EPSILON){
-                    std::cout << dTree->getAugmentedNormalizer() << std::endl;
-                }
-
                 (*m_rejSamplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
