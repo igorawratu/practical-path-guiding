@@ -1829,6 +1829,7 @@ public:
         //#pragma omp parallel for
         for(std::uint32_t i = 0; i < m_rejSamplePaths->size(); ++i){
             std::vector<Vertex> vertices;
+            std::vector<float> scale_factors;
             (*m_rejSamplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
@@ -1857,7 +1858,9 @@ public:
                     break;
                 }
                 else{
-                    //(*m_rejSamplePaths)[i].path[j].bsdfVal *= (1.f / acceptProb);
+                    float scale = 1.f / std::max(1e-5f, acceptProb);
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= scale;
+                    scale_factors.push_back(scale);
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
 
@@ -1915,6 +1918,7 @@ public:
 
                     Spectrum L = (*m_rejSamplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_rejSamplePaths)[i].nee_records[j].pdf;
+                    (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= scale_factors[pos];
                     Spectrum bsdfVal = (*m_rejSamplePaths)[i].nee_records[j].bsdfVal;
 
                     DTreeWrapper* dTree = vertices[pos].dTree;
