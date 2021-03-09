@@ -1556,6 +1556,8 @@ public:
         m_augment = props.getBoolean("augment", false);
 
         m_renderIntermediateAugmented = props.getBoolean("renderIntermediateAugmented", false);
+
+        m_strategyIterationActive = props.getInteger("stratIterActive", -1);
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -3359,22 +3361,24 @@ public:
                 
                 sampler->advance();
 
-                if(m_reweight)
-                {
-                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                    m_samplePaths->push_back(std::move(pathRecord));
-                }
-                else if(m_reject){
-                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                    m_rejSamplePaths->push_back(std::move(rpathRecord));
-                }
-                else if(m_augment || m_rejectAugment){
-                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                    m_currAugmentedPaths->push_back(std::move(rpathRecord));
-                }
-                else if(m_reweightAugment){
-                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                    m_currRWAugPaths->push_back(std::move(pathRecord));
+                if(m_iter >= m_strategyIterationActive){
+                    if(m_reweight)
+                    {
+                        std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                        m_samplePaths->push_back(std::move(pathRecord));
+                    }
+                    else if(m_reject){
+                        std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                        m_rejSamplePaths->push_back(std::move(rpathRecord));
+                    }
+                    else if(m_augment || m_rejectAugment){
+                        std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                        m_currAugmentedPaths->push_back(std::move(rpathRecord));
+                    }
+                    else if(m_reweightAugment){
+                        std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                        m_currRWAugPaths->push_back(std::move(pathRecord));
+                    }
                 }
             }
         }
@@ -3567,7 +3571,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtreeLevel);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment || m_rejectAugment || m_reweightAugment){
+        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter >= m_strategyIterationActive){
             dTree->incSampleCount();
         }
 
@@ -3616,7 +3620,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtreeLevel);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment || m_rejectAugment || m_reweightAugment){
+        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter >= m_strategyIterationActive){
             dTree->incSampleCount();
         }
 
@@ -3940,7 +3944,8 @@ public:
                             value *= bsdfVal;
                             Spectrum L = throughput * value * weight;
 
-                            if (!m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment && m_nee != EAlways) {
+                            if (!m_isFinalIter && m_nee != EAlways && 
+                                ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
                                 if (dTree) {
                                     Vertex v = Vertex{
                                         dTree,
@@ -4012,7 +4017,7 @@ public:
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
                     if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -4056,7 +4061,7 @@ public:
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -4124,7 +4129,7 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter && !m_augment && !m_rejectAugment && !m_reweightAugment) {
+        if (nVertices > 0 && !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
@@ -4415,6 +4420,8 @@ private:
     bool m_reweightAugment;
     size_t sampleCount;
     bool m_renderIntermediateAugmented;
+
+    int m_strategyIterationActive;
 
 public:
     MTS_DECLARE_CLASS()
