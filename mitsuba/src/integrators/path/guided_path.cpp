@@ -453,7 +453,7 @@ public:
         return true;
     }
 
-    std::pair<Float, Float> getMajorizingFactor(const DTree& other, bool testinfo) const{
+    std::pair<Float, Float> getMajorizingFactor(const DTree& other) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
             std::pair<size_t, int> otherNodeIndex;
@@ -767,7 +767,7 @@ public:
         m_atomic = Atomic{};
         m_maxDepth = 0;
 
-        auto majorizing_pair = newDist.getMajorizingFactor(oldDist, false);
+        auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
