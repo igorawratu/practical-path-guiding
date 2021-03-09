@@ -2620,6 +2620,7 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
+            std::vector<float> scale_factors;
 
             std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size();
             for(std::uint32_t j = 0; j < (*m_rejSamplePaths)[i].path.size(); ++j){
@@ -2640,6 +2641,13 @@ public:
                     break;
                 }
                 else{
+                    float scale = 1.f;
+                    if(acceptProb < 1.f){
+                        scale = 1.f / std::max(EPSILON, acceptProb);
+                        (*m_rejSamplePaths)[i].path[j].bsdfVal *= scale;
+                    }
+                    scale_factors.push_back(scale);
+
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                 }
@@ -2703,7 +2711,7 @@ public:
 
                     Spectrum L = (*m_rejSamplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_rejSamplePaths)[i].nee_records[j].pdf;
-                    (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                    (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= dTree->getAugmentedNormalizer() * scale_factors[pos];
                     Spectrum bsdfVal = (*m_rejSamplePaths)[i].nee_records[j].bsdfVal;
 
                     int current_level = 0;
