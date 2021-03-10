@@ -1976,6 +1976,7 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
+            std::vector<Float> accept_scales;
 
             //first try reject path
             std::uint32_t termination_iter = (*m_rejSamplePaths)[i].path.size() - 1;
@@ -1996,8 +1997,10 @@ public:
                     break;
                 }
                 else{
+                    Float acceptScale = 1.f / std::min(acceptProb, 1.f);
+                    accept_scales.push_back(acceptScale);
                     Float scale = std::max(1.f, newWoPdf / oldWo);
-                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= scale;
+                    (*m_rejSamplePaths)[i].path[j].bsdfVal *= scale * acceptScale;
                     Spectrum bsdfWeight = (*m_rejSamplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                 }
@@ -2059,6 +2062,7 @@ public:
 
                     Spectrum L = (*m_rejSamplePaths)[i].nee_records[j].L;
                     Float pdf = (*m_rejSamplePaths)[i].nee_records[j].pdf;
+                    (*m_rejSamplePaths)[i].nee_records[j].bsdfVal *= accept_scales[pos];
                     Spectrum bsdfVal = (*m_rejSamplePaths)[i].nee_records[j].bsdfVal;
 
                     DTreeWrapper* dTree = vertices[pos].dTree;
