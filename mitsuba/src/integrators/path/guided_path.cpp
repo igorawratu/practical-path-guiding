@@ -968,9 +968,11 @@ public:
             float B = 0.f;
 
             if(augment){
+                std::cout << "building augmented" << std::endl;
                 B = augmented.buildAugmented(sampling, building);
             }
             else if(augmentReweight){
+                std::cout << "building unmajorized augmented" << std::endl;
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
             }
 
