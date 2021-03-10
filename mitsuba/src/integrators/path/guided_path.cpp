@@ -2122,6 +2122,9 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
+                if(nwo < EPSILON){
+                    std::cout << (*m_samplePaths)[i].path[j].bsdfPdf << " " << dtreePdf << std::endl;
+                }
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
                 if(reweight < 1.f){
