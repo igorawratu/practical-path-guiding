@@ -2131,12 +2131,9 @@ public:
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                if(reweight < EPSILON){
-                    std::cout << "reweight: " << reweight << std::endl;
-                }
-
                 if(reweight < 1.f){
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
+                    std::cout << "reweight: " << reweight << std::endl;
                 }
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
