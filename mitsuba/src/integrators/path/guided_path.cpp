@@ -668,8 +668,6 @@ public:
             size_t nodeIdx;
         };
 
-        std::pair<Float, Float> pdfPair(1.f, 1.f);
-
         std::stack<StackNode> nodeStack;
         nodeStack.push({1.f, 0});
 
@@ -693,6 +691,8 @@ public:
                 
             }
         }
+
+        if()
 
         return integral;
     }
@@ -751,9 +751,9 @@ public:
 
         build();
 
+        m_atomic.statisticalWeight.store(newDist.m_atomic.statisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
+
         float integral = computeIntegral();
-        std::cout << integral << " ";
-        
 
         return integral;
     }
