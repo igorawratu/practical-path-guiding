@@ -2131,11 +2131,11 @@ public:
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
-                /*if(reweight < 1.f){
+                if(reweight < 1.f){
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                }*/
+                }
 
-                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                //(*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
 
                 (*m_samplePaths)[i].path[j].owo = nwo;
 
@@ -2503,7 +2503,7 @@ public:
                 int current_level = 0;
                 Float dtreePdf = dTree->pdf((*m_currRWAugPaths)[i].path[j].ray.d, (*m_currRWAugPaths)[i].path[j].level, current_level);
 
-                (*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                //(*m_currRWAugPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
                 Spectrum bsdfWeight = (*m_currRWAugPaths)[i].path[j].bsdfVal / (*m_currRWAugPaths)[i].path[j].owo;
                 
                 throughput *= bsdfWeight;
