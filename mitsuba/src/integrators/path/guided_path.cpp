@@ -727,8 +727,8 @@ public:
             Float newDenom = newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3);
 
             for (int i = 0; i < 4; ++i) {
-                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
-                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
+                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(i) / oldDenom;
+                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(i) / newDenom;
 
                 //both nodes are leaves, compute difference for pdf
                 if(newNode.isLeaf(i) || oldNode.isLeaf(i)){
@@ -968,11 +968,9 @@ public:
             float B = 0.f;
 
             if(augment){
-                std::cout << "building augmented" << std::endl;
                 B = augmented.buildAugmented(sampling, building);
             }
             else if(augmentReweight){
-                std::cout << "building unmajorized augmented" << std::endl;
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
             }
 
