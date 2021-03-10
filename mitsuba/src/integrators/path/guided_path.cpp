@@ -713,7 +713,7 @@ public:
         std::pair<Float, Float> pdfPair(1.f, 1.f);
 
         std::stack<NodePair> pairStack;
-        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
+        pairStack.push({0, 0, 1.f, 1.f, 0});
 
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
