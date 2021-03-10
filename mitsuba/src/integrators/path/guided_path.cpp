@@ -753,6 +753,10 @@ public:
 
         float integral = computeIntegral();
 
+        if(m_atomic.statisticalWeight > EPSILON){
+            std::cout << integral << " " << m_atomic.statisticalWeight << std::endl;
+        }
+
         return integral;
     }
 
