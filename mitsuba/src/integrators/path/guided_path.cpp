@@ -692,8 +692,6 @@ public:
             }
         }
 
-        if()
-
         return integral;
     }
 
