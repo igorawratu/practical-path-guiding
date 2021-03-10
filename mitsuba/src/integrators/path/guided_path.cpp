@@ -752,7 +752,8 @@ public:
         build();
 
         float integral = computeIntegral();
-        std::cout << "Integral: " << integral << std::endl;
+        std::cout << integral << " ";
+        
 
         return integral;
     }
