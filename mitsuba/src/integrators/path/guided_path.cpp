@@ -703,8 +703,8 @@ public:
         m_nodes.emplace_back();
 
         struct NodePair {
-            std::pair<size_t, int> newNodeIndex;
-            std::pair<size_t, int> oldNodeIndex;
+            size_t newNodeIndex;
+            size_t oldNodeIndex;
             Float newNodeFactor;
             Float oldNodeFactor;
             size_t nodeIdx;
@@ -719,24 +719,19 @@ public:
             NodePair nodePair = pairStack.top();
             pairStack.pop();
 
-            const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex.first];
-            const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex.first];
+            const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex];
+            const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex];
 
             //required because trees might not be same depth
-            Float oldDenom = nodePair.oldNodeIndex.second < 0 ? oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3) :
-                oldNode.sum(nodePair.oldNodeIndex.second) * 4.f;
-            Float newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
-                newNode.sum(nodePair.newNodeIndex.second) * 4.f;
+            Float oldDenom = oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3);
+            Float newDenom = newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3);
 
             for (int i = 0; i < 4; ++i) {
-                int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
-                int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
-
                 Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
                 Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
 
                 //both nodes are leaves, compute difference for pdf
-                if(newNode.isLeaf(newChildIdx) || oldNode.isLeaf(oldChildIdx)){
+                if(newNode.isLeaf(i) || oldNode.isLeaf(i)){
                     Float pdf = computeAugmentedPdf(oldPdf, newPdf);
                     m_nodes[nodePair.nodeIdx].setSum(i, pdf);
                 }
@@ -745,10 +740,8 @@ public:
                     m_nodes[nodePair.nodeIdx].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
 
-                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(size_t(nodePair.newNodeIndex.first), newChildIdx) : 
-                        std::make_pair(size_t(newDist.m_nodes[nodePair.newNodeIndex.first].child(newChildIdx)), -1);
-                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(size_t(nodePair.oldNodeIndex.first), oldChildIdx) : 
-                        std::make_pair(size_t(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(oldChildIdx)), -1);
+                    size_t newIdx = size_t(newDist.m_nodes[nodePair.newNodeIndex].child(i));
+                    size_t oldIdx = size_t(oldDist.m_nodes[nodePair.oldNodeIndex].child(i));
 
                     pairStack.push({newIdx, oldIdx, newPdf, oldPdf, m_nodes.size() - 1});
                 }
@@ -759,6 +752,7 @@ public:
         build();
 
         float integral = computeIntegral();
+        std::cout << "Integral: " << integral << std::endl;
 
         return integral;
     }
@@ -2133,7 +2127,6 @@ public:
 
                 if(reweight < 1.f){
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                    std::cout << "reweight: " << reweight << std::endl;
                 }
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
