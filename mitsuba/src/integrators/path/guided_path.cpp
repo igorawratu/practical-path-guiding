@@ -749,7 +749,7 @@ public:
 
         build();
 
-        //m_atomic.statisticalWeight.store(newDist.m_atomic.statisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        m_atomic.statisticalWeight.store(newDist.m_atomic.statisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
         float integral = computeIntegral();
 
@@ -2122,9 +2122,6 @@ public:
                 Float bsf = dTree->bsdfSamplingFraction();
 
                 Float nwo = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * dtreePdf;
-                if(nwo < EPSILON){
-                    std::cout << (*m_samplePaths)[i].path[j].bsdfPdf << " " << dtreePdf << std::endl;
-                }
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].owo;
 
                 if(reweight < 1.f){
