@@ -720,7 +720,6 @@ public:
             const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex];
             const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex];
 
-            //required because trees might not be same depth
             Float oldDenom = oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3);
             Float newDenom = newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3);
 
@@ -728,12 +727,10 @@ public:
                 Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(i) / oldDenom;
                 Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(i) / newDenom;
 
-                //both nodes are leaves, compute difference for pdf
                 if(newNode.isLeaf(i) || oldNode.isLeaf(i)){
                     Float pdf = computeAugmentedPdf(oldPdf, newPdf);
                     m_nodes[nodePair.nodeIdx].setSum(i, pdf);
                 }
-                //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
                 else{
                     m_nodes[nodePair.nodeIdx].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
@@ -752,10 +749,6 @@ public:
         m_atomic.statisticalWeight.store(newDist.m_atomic.statisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
         float integral = computeIntegral();
-
-        if(m_atomic.statisticalWeight > EPSILON){
-            std::cout << integral << " " << m_atomic.statisticalWeight << std::endl;
-        }
 
         return integral;
     }
@@ -3251,7 +3244,7 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
-        m_sdTree->subdivide(15);
+        m_sdTree->subdivide(14);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<PGPath>>(new std::vector<PGPath>());
         m_rejSamplePaths = std::unique_ptr<std::vector<RPGPath>>(new std::vector<RPGPath>());
