@@ -1994,7 +1994,7 @@ public:
 
         Float bsf = dTree->bsdfSamplingFraction();
 
-        return bsf * vertex.bsdfPdf + (1 - bsf) * dtreePdf;
+        return bsf * vertex.bsdfPdf + (1 - bsf) * dTreePdf;
     }
 
     void rejectCurrentPaths(ref<Sampler> sampler){
@@ -2047,7 +2047,7 @@ public:
                             Spectrum(0.f),
                             (*m_samplePaths)[i].path[j].woPdf,
                             (*m_samplePaths)[i].path[j].bsdfPdf,
-                            dtreePdf,
+                            dTreePdf,
                             (*m_samplePaths)[i].path[j].isDelta
                         });
                 }
@@ -2112,7 +2112,7 @@ public:
                         Spectrum(0.f),
                         (*m_samplePaths)[i].path[j].woPdf,
                         (*m_samplePaths)[i].path[j].bsdfPdf,
-                        dtreePdf,
+                        dTreePdf,
                         (*m_samplePaths)[i].path[j].isDelta
                     });
             }
@@ -2170,7 +2170,7 @@ public:
                         Spectrum{0.0f},
                         nwo,
                         (*m_samplePaths)[i].path[j].bsdfPdf,
-                        dtreePdf,
+                        dTreePdf,
                         (*m_samplePaths)[i].path[j].isDelta
                     });
             }
@@ -2221,7 +2221,7 @@ public:
                         Spectrum(0.f),
                         (*m_samplePaths)[i].path[j].woPdf,
                         (*m_samplePaths)[i].path[j].bsdfPdf,
-                        dtreePdf,
+                        dTreePdf,
                         (*m_samplePaths)[i].path[j].isDelta
                     });
             }
@@ -2334,7 +2334,7 @@ public:
                         Spectrum(0.f),
                         (*m_samplePaths)[i].path[j].woPdf,
                         (*m_samplePaths)[i].path[j].bsdfPdf,
-                        dtreePdf,
+                        dTreePdf,
                         (*m_samplePaths)[i].path[j].isDelta
                     });
             }
@@ -2377,10 +2377,10 @@ public:
                     break;
                 }
 
-                Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
+                Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                (*m_samplePaths)[i].path[j].woPdf = nwo;
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2397,7 +2397,7 @@ public:
                         Spectrum{0.0f},
                         (*m_samplePaths)[i].path[j].woPdf,
                         (*m_samplePaths)[i].path[j].bsdfPdf,
-                        dtreePdf,
+                        dTreePdf,
                         (*m_samplePaths)[i].path[j].isDelta
                     });
             }
@@ -2420,7 +2420,7 @@ public:
         }
     }
 
-    void renderIterations(){
+    void renderIterations(Scene* scene, ref<Film> film){
         ref<Film> currentIterationFilm = createFilm(film->getCropSize().x, film->getCropSize().y, true);
 
         for(int curr_iter = 0; curr_iter < m_iter; ++curr_iter){
@@ -2510,7 +2510,7 @@ public:
                 reweightCurrentPaths(sampler);
                 
                 if(m_renderReweightIterations){
-                    renderIterations();
+                    renderIterations(scene, film);
                 }
 
                 if(m_isFinalIter){
@@ -2521,7 +2521,7 @@ public:
                 rejectCurrentPaths(sampler);
 
                 if(m_renderReweightIterations){
-                    renderIterations();
+                    renderIterations(scene, film);
                 }
 
                 if(m_isFinalIter){
@@ -2532,7 +2532,7 @@ public:
                 rejectReweightHybrid(sampler);
 
                 if(m_renderReweightIterations){
-                    renderIterations();
+                    renderIterations(scene, film);
                 }
 
                 if(m_isFinalIter){
@@ -2584,7 +2584,7 @@ public:
             }
             else if(m_reweightAugment){
                 reweightAugmentHybrid(sampler);
-                correctCurrRWAugmentedSamples(sampler, m_isFinalIter);
+                correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 if(m_isFinalIter){
                     renderFinalImage(film, *m_samplePaths);
