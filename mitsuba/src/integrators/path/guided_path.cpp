@@ -1959,19 +1959,19 @@ public:
     }
 
     void computeRadiance(RPath& sample_path, std::vector<Vertex>& vertices, ref<Sampler> sampler){
-        for(std::uint32_t j = 0; j < sample_path.radiance_record.size(); ++j){
-            int pos = sample_path.radiance_record[j].pos;
+        for(std::uint32_t j = 0; j < sample_path.radiance_records.size(); ++j){
+            int pos = sample_path.radiance_records[j].pos;
 
             if(pos >= vertices.size()){
                 continue;
             }
 
-            Spectrum L = sample_path.radiance_record[j].L;
+            Spectrum L = sample_path.radiance_records[j].L;
 
             if(pos >= 0){
                 L *= vertices[pos].throughput;
 
-                Float weight = miWeight(sample_path.path[pos].woPdf, sample_path.radiance_record[j].pdf);
+                Float weight = miWeight(sample_path.path[pos].woPdf, sample_path.radiance_records[j].pdf);
                 L *= weight;
 
                 if(!L.isValid()){
@@ -3203,7 +3203,7 @@ public:
                         recordRadiance(throughput * value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
+                            pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
                         }
                     }
 
@@ -3216,7 +3216,7 @@ public:
                     Spectrum eL = its.Le(-ray.d);
                     recordRadiance(throughput * eL);
                     if(!eL.isZero()){
-                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
                     }
                 }
 
@@ -3226,7 +3226,7 @@ public:
                     recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
-                        pathRecord.radiance_record.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
                     }
                 }
 
@@ -3425,7 +3425,7 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
-                        pathRecord.radiance_record.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
@@ -3484,7 +3484,7 @@ public:
             scattered = true;
         }
 
-        if(pathRecord.radiance_record.size() == 0 && pathRecord.nee_records.size() == 0){
+        if(pathRecord.radiance_records.size() == 0 && pathRecord.nee_records.size() == 0){
             pathRecord.path.clear();
             pathRecord.Li = Spectrum(0.f);
         }
