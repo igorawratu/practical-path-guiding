@@ -1876,7 +1876,7 @@ public:
     struct RVertex{
         Ray ray;
         Spectrum bsdfVal;
-        Float bsdfPdf, owo;
+        Float bsdfPdf, woPdf;
         bool isDelta;
         int level;
     };
