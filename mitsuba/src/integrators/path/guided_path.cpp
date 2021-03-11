@@ -1814,6 +1814,99 @@ public:
         }
     }
 
+    struct Vertex {
+        DTreeWrapper* dTree;
+        Vector dTreeVoxelSize;
+        Ray ray;
+
+        Spectrum throughput;
+        Spectrum bsdfVal;
+
+        Spectrum radiance;
+
+        Float woPdf, bsdfPdf, dTreePdf;
+        bool isDelta;
+
+        void record(const Spectrum& r) {
+            radiance += r;
+        }
+
+        void commit(STree& sdTree, Float statisticalWeight, ESpatialFilter spatialFilter, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
+            if (!(woPdf > 0) || !radiance.isValid() || !bsdfVal.isValid()) {
+                return;
+            }
+
+            Spectrum localRadiance = Spectrum{0.0f};
+            if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
+            if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
+            if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
+            Spectrum product = localRadiance * bsdfVal;
+
+            DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
+            switch (spatialFilter) {
+                case ESpatialFilter::ENearest:
+                    dTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
+                    break;
+                case ESpatialFilter::EStochasticBox:
+                    {
+                        DTreeWrapper* splatDTree = dTree;
+
+                        // Jitter the actual position within the
+                        // filter box to perform stochastic filtering.
+                        Vector offset = dTreeVoxelSize;
+                        offset.x *= sampler->next1D() - 0.5f;
+                        offset.y *= sampler->next1D() - 0.5f;
+                        offset.z *= sampler->next1D() - 0.5f;
+
+                        Point origin = sdTree.aabb().clip(ray.o + offset);
+
+                        splatDTree = sdTree.dTreeWrapper(origin);
+                        if (splatDTree) {
+                            splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
+                        }
+                        break;
+                    }
+                case ESpatialFilter::EBox:
+                    sdTree.record(ray.o, dTreeVoxelSize, rec, directionalFilter, bsdfSamplingFractionLoss);
+                    break;
+            }
+        }
+    };
+
+    struct RVertex{
+        Ray ray;
+        Spectrum bsdfVal;
+        Float bsdfPdf, owo;
+        bool isDelta;
+        int level;
+    };
+
+    struct RadRecord{
+        int pos;
+        Spectrum L;
+        float pdf;
+    };
+
+    struct NEERecord{
+        int pos;
+        Spectrum L;
+        float pdf;
+        Vector wo;
+        Spectrum bsdfVal;
+        Float bsdfPdf;
+    };
+
+    struct RPath{
+        std::vector<RVertex> path;
+        std::vector<RadRecord> radiance_records;
+        std::vector<NEERecord> nee_records;
+        Point2 sample_pos;
+        Spectrum spec;
+        Spectrum Li;
+        Float alpha;
+        int iter;
+    };
+
     void computeNee(RPath& sample_path, const std::vector<Vertex>& vertices, const std::vector<float>& scale_factors, float multiplier){
         for(std::uint32_t j = 0; j < sample_path.nee_records.size(); ++j){
             int pos = sample_path.nee_records[j].pos;
@@ -2833,99 +2926,6 @@ public:
             scheduler->cancel(m_renderProcesses[i]);
         }
     }
-
-    struct Vertex {
-        DTreeWrapper* dTree;
-        Vector dTreeVoxelSize;
-        Ray ray;
-
-        Spectrum throughput;
-        Spectrum bsdfVal;
-
-        Spectrum radiance;
-
-        Float woPdf, bsdfPdf, dTreePdf;
-        bool isDelta;
-
-        void record(const Spectrum& r) {
-            radiance += r;
-        }
-
-        void commit(STree& sdTree, Float statisticalWeight, ESpatialFilter spatialFilter, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
-            if (!(woPdf > 0) || !radiance.isValid() || !bsdfVal.isValid()) {
-                return;
-            }
-
-            Spectrum localRadiance = Spectrum{0.0f};
-            if (throughput[0] * woPdf > Epsilon) localRadiance[0] = radiance[0] / throughput[0];
-            if (throughput[1] * woPdf > Epsilon) localRadiance[1] = radiance[1] / throughput[1];
-            if (throughput[2] * woPdf > Epsilon) localRadiance[2] = radiance[2] / throughput[2];
-            Spectrum product = localRadiance * bsdfVal;
-
-            DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
-            switch (spatialFilter) {
-                case ESpatialFilter::ENearest:
-                    dTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
-                    break;
-                case ESpatialFilter::EStochasticBox:
-                    {
-                        DTreeWrapper* splatDTree = dTree;
-
-                        // Jitter the actual position within the
-                        // filter box to perform stochastic filtering.
-                        Vector offset = dTreeVoxelSize;
-                        offset.x *= sampler->next1D() - 0.5f;
-                        offset.y *= sampler->next1D() - 0.5f;
-                        offset.z *= sampler->next1D() - 0.5f;
-
-                        Point origin = sdTree.aabb().clip(ray.o + offset);
-
-                        splatDTree = sdTree.dTreeWrapper(origin);
-                        if (splatDTree) {
-                            splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
-                        }
-                        break;
-                    }
-                case ESpatialFilter::EBox:
-                    sdTree.record(ray.o, dTreeVoxelSize, rec, directionalFilter, bsdfSamplingFractionLoss);
-                    break;
-            }
-        }
-    };
-
-    struct RVertex{
-        Ray ray;
-        Spectrum bsdfVal;
-        Float bsdfPdf, owo;
-        bool isDelta;
-        int level;
-    };
-
-    struct RadRecord{
-        int pos;
-        Spectrum L;
-        float pdf;
-    };
-
-    struct NEERecord{
-        int pos;
-        Spectrum L;
-        float pdf;
-        Vector wo;
-        Spectrum bsdfVal;
-        Float bsdfPdf;
-    };
-
-    struct RPath{
-        std::vector<RVertex> path;
-        std::vector<RadRecord> radiance_records;
-        std::vector<NEERecord> nee_records;
-        Point2 sample_pos;
-        Spectrum spec;
-        Spectrum Li;
-        Float alpha;
-        int iter;
-    };
 
     void pdfMat(Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree, int& curr_level) const {
         dTreePdf = 0;
