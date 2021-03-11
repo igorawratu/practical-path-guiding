@@ -2569,7 +2569,7 @@ public:
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 if(m_renderReweightIterations){
-                    renderIterations();
+                    renderIterations(scene, film);
                 }
 
                 if(m_isFinalIter){
@@ -2896,8 +2896,6 @@ public:
                 else{
                     spec *= Li(sensorRay, rRec);
                 }
-
-                spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
 
                 if(reuseSamples && !m_augment && !m_rejectAugment && !m_reweightAugment){
                     block->put(samplePos, spec, rRec.alpha);
