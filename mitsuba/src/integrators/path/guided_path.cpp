@@ -2745,7 +2745,7 @@ public:
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
         //m_sdTree->subdivide(16);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
-        m_samplePaths = std::unique_ptr<std::vector<RPGPath>>(new std::vector<RPath>());
+        m_samplePaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
         m_currAugmentedPaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
 
         m_iter = 0;
@@ -2896,13 +2896,6 @@ public:
                 else{
                     spec *= Li(sensorRay, rRec);
                 }
-
-                PGPath pathRecord;
-                RPGPath rpathRecord;
-                pathRecord.sample_pos = samplePos;
-                pathRecord.spec = spec;
-                rpathRecord.sample_pos = samplePos;
-                rpathRecord.spec = spec;
 
                 spec *= Li(sensorRay, rRec, pathRecord, rpathRecord);
 
@@ -3067,7 +3060,7 @@ public:
         MediumSamplingRecord mRec;
         RayDifferential ray(r);
         Spectrum Li(0.0f);
-        rpathRecord.Li = Spectrum(0.f);
+
         Float eta = 1.0f;
 
         /* Perform the first ray intersection (or ignore if the
@@ -3274,7 +3267,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
-                pathRecord.path.push_back(RWVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel});
+                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
