@@ -2851,12 +2851,12 @@ public:
             std::uint32_t num_new_samples = points.size() * m_sppPerPass;
 
             if(m_reweight || m_reject || m_rejectReweight){
-                start_pos = m_samplePaths.size();
-                m_samplePaths.resize(m_samplePaths.size() + num_new_samples);
+                start_pos = m_samplePaths->size();
+                m_samplePaths->resize(m_samplePaths->size() + num_new_samples);
             }
             else{
-                start_pos = m_currAugmentedPaths.size();
-                m_currAugmentedPaths.resize(m_currAugmentedPaths.size() + num_new_samples);
+                start_pos = m_currAugmentedPaths->size();
+                m_currAugmentedPaths->resize(m_currAugmentedPaths->size() + num_new_samples);
             }
         }
 
@@ -2883,14 +2883,14 @@ public:
                     std::uint32_t path_pos = start_pos + i * m_sppPerPass + j;
 
                     if(m_reweight || m_reject || m_rejectReweight){
-                        m_samplePaths[path_pos].sample_pos = samplePos;
-                        m_samplePaths[path_pos].spec = spec;
-                        spec *= Li(sensorRay, rRec, m_samplePaths[path_pos]);
+                        (*m_samplePaths)[path_pos].sample_pos = samplePos;
+                        (*m_samplePaths)[path_pos].spec = spec;
+                        spec *= Li(sensorRay, rRec, (*m_samplePaths)[path_pos]);
                     }
                     else{
-                        m_currAugmentedPaths[path_pos].sample_pos = samplePos;
-                        m_currAugmentedPaths[path_pos].spec = spec;
-                        spec *= Li(sensorRay, rRec, m_currAugmentedPaths[path_pos]);
+                        (*m_currAugmentedPaths)[path_pos].sample_pos = samplePos;
+                        (*m_currAugmentedPaths)[path_pos].spec = spec;
+                        spec *= Li(sensorRay, rRec, (*m_currAugmentedPaths)[path_pos]);
                     }
                 }
                 else{
