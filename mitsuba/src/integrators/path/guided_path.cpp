@@ -1907,7 +1907,7 @@ public:
         int iter;
     };
 
-    void computeNee(RPath& sample_path, const std::vector<Vertex>& vertices, const std::vector<float>& scale_factors, float multiplier){
+    void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, const std::vector<float>& scale_factors, float multiplier, ref<Sampler> sampler){
         for(std::uint32_t j = 0; j < sample_path.nee_records.size(); ++j){
             int pos = sample_path.nee_records[j].pos;
             if(pos >= vertices.size()){
@@ -1916,7 +1916,7 @@ public:
 
             Spectrum L = sample_path.nee_records[j].L;
             Float pdf = sample_path.nee_records[j].pdf;
-            sample_path.nee_records[j].bsdfVal *= scale_factors * multiplier;
+            sample_path.nee_records[j].bsdfVal *= scale_factors[j] * multiplier;
             DTreeWrapper* dTree = vertices[pos].dTree;
 
             int curr_level = 0;
@@ -1958,7 +1958,7 @@ public:
         }
     }
 
-    void computeRadiance(RPath& sample_path, const std::vector<Vertex>& vertices){
+    void computeRadiance(RPath& sample_path, std::vector<Vertex>& vertices, ref<Sampler> sampler){
         for(std::uint32_t j = 0; j < sample_path.radiance_record.size(); ++j){
             int pos = sample_path.radiance_record[j].pos;
 
@@ -2056,10 +2056,10 @@ public:
 
             (*m_samplePaths)[i].path.resize(termination_iter + 1);
 
-            computeRadiance((*m_samplePaths)[i], vertices);
+            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, 1.f);
+                computeNee((*m_samplePaths)[i], vertices, scale_factors, 1.f, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2120,10 +2120,10 @@ public:
 
             (*m_samplePaths)[i].path.resize(termination_iter + 1);
 
-            computeRadiance((*m_samplePaths)[i], vertices);
+            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, 1.f);
+                computeNee((*m_samplePaths)[i], vertices, scale_factors, 1.f, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2176,10 +2176,10 @@ public:
                     });
             }
 
-            computeRadiance((*m_samplePaths)[i], vertices);
+            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer());
+                computeNee((*m_samplePaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer(), sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2227,10 +2227,10 @@ public:
                     });
             }
 
-            computeRadiance((*m_samplePaths)[i], vertices);
+            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer());
+                computeNee((*m_samplePaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer(), sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2274,10 +2274,10 @@ public:
                     });
             }
 
-            computeRadiance((*m_currAugmentedPaths)[i], vertices);
+            computeRadiance((*m_currAugmentedPaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_currAugmentedPaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier());
+                computeNee((*m_currAugmentedPaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier(), sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {;
@@ -2342,10 +2342,10 @@ public:
 
             (*m_samplePaths)[i].path.resize(termination_iter + 1);
 
-            computeRadiance((*m_samplePaths)[i], vertices);
+            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer());
+                computeNee((*m_samplePaths)[i], vertices, scale_factors, dTree->getAugmentedNormalizer(), sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2407,11 +2407,11 @@ public:
                 (*m_samplePaths)[i].path.resize(discard_iter);
             }
 
-            computeRadiance((*m_samplePaths)[i], vertices);
+            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             //compute NEE if enabled
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, 1.f);
+                computeNee((*m_samplePaths)[i], vertices, scale_factors, 1.f, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
