@@ -1988,10 +1988,9 @@ public:
     }
 
     float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
-        Vector dTreeVoxelSize;
         dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
-        dtreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
+        dTreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
 
         Float bsf = dTree->bsdfSamplingFraction();
 
@@ -2013,7 +2012,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf(RVertex& vertex, dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
 
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
                 Float bsf = dTree->bsdfSamplingFraction();
@@ -2085,7 +2084,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf(RVertex& vertex, dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
                 Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
@@ -2147,7 +2146,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float nwo = computePdf(RVertex& vertex, dTree, dTreeVoxelSize, dTreePdf);
+                Float nwo = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
 
                 if(reweight < 1.f){
@@ -2203,7 +2202,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf(RVertex& vertex, dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
  
@@ -2303,7 +2302,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf(RVertex& vertex, dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
                 Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
@@ -2372,7 +2371,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf(RVertex& vertex, dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 if(newWoPdf < EPSILON){
                     discard_iter = j;
                     break;
