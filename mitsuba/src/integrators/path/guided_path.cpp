@@ -1910,7 +1910,7 @@ public:
     void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, const std::vector<float>& scale_factors, ref<Sampler> sampler){
         for(std::uint32_t j = 0; j < sample_path.nee_records.size(); ++j){
             int pos = sample_path.nee_records[j].pos;
-            if(pos >= vertices.size()){
+            if(pos >= int(vertices.size())){
                 continue;
             }
 
@@ -1933,7 +1933,7 @@ public:
                 continue;
             }
 
-            for(std::uint32_t k = 0; k <= pos; ++k){
+            for(int k = 0; k <= pos; ++k){
                 vertices[k].radiance += L;
             }
             sample_path.Li += L;
@@ -1962,7 +1962,7 @@ public:
         for(std::uint32_t j = 0; j < sample_path.radiance_records.size(); ++j){
             int pos = sample_path.radiance_records[j].pos;
 
-            if(pos >= vertices.size()){
+            if(pos >= int(vertices.size())){
                 continue;
             }
 
@@ -1978,7 +1978,7 @@ public:
                     continue;
                 }
 
-                for(std::uint32_t k = 0; k <= pos; ++k){
+                for(int k = 0; k <= pos; ++k){
                     vertices[k].radiance += L;
                 }
             }
@@ -2251,7 +2251,7 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
-                int curr_level;
+                int curr_level = 0;
                 Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
@@ -2306,7 +2306,6 @@ public:
 
                 Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
-                Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
@@ -2952,9 +2951,6 @@ public:
         }
 
         Spectrum result;
-        bool sbsdf = false;
-        bool zero = false;
-        float pdf = 0.f;
         if (sample.x < bsdfSamplingFraction) {
             sbsdf = true;
             sample.x /= bsdfSamplingFraction;
@@ -3242,8 +3238,6 @@ public:
                 if (bsdf->getType() & BSDF::ESmooth) {
                     dTree = m_sdTree->dTreeWrapper(its.p, dTreeVoxelSize);
                 }
-
-                Intersection curr_its = its;
 
                 Float bsdfSamplingFraction = m_bsdfSamplingFraction;
                 if (dTree && m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) {
