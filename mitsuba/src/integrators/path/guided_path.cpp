@@ -1998,6 +1998,19 @@ public:
         return bsf * vertex.bsdfPdf + (1 - bsf) * dTreePdf;
     }
 
+    void checkActivePerc(){
+        std::uint32_t active = 0;
+        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if((*m_samplePaths)[i].active){
+                active++;
+            }
+        }
+
+        float active_perc = float(active) / m_samplePaths->size();
+
+        std::cout << "Percentage of active paths: " << active_perc << std::endl;
+    }
+
     void rejectCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
@@ -2081,16 +2094,8 @@ public:
                 (*m_samplePaths)[i].radiance_records.clear();
             }       
         }
-        std::uint32_t active = 0;
-        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-            if((*m_samplePaths)[i].active){
-                active++;
-            }
-        }
 
-        float active_perc = float(active) / m_samplePaths->size();
-
-        std::cout << "Percentage of active paths: " << active_perc << std::endl;
+        checkActivePerc();
     }
 
     void rejectReweightHybrid(ref<Sampler> sampler){
@@ -2104,6 +2109,7 @@ public:
 
             //first try reject path
             std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
+            bool terminated = false;
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
@@ -2116,6 +2122,7 @@ public:
 
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
+                    terminated = true;
                     break;
                 }
                 else{
@@ -2142,19 +2149,29 @@ public:
                     });
             }
 
-            (*m_samplePaths)[i].path.resize(termination_iter + 1);
+            if(!terminated){
+                (*m_samplePaths)[i].path.resize(termination_iter + 1);
 
-            computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
-            if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                if(m_doNee){
+                    computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                }
+
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
-
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            else{
+                (*m_samplePaths)[i].active = false;
+                (*m_samplePaths)[i].path.clear();
+                (*m_samplePaths)[i].nee_records.clear();
+                (*m_samplePaths)[i].radiance_records.clear();
             }
         }
+
+        checkActivePerc();
     }
 
     void reweightAugmentHybrid(ref<Sampler> sampler){
@@ -2323,6 +2340,7 @@ public:
             std::vector<float> scale_factors;
 
             std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
+            bool rejected = false;
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2336,6 +2354,7 @@ public:
                 (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
+                    rejected = true;
                     break;
                 }
                 else{
@@ -2365,20 +2384,30 @@ public:
                     });
             }
 
-            (*m_samplePaths)[i].path.resize(termination_iter + 1);
+            if(!rejected){
+                (*m_samplePaths)[i].path.resize(termination_iter + 1);
 
-            computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
-            if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                if(m_doNee){
+                    computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                }
+
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
-
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            else{
+                (*m_samplePaths)[i].active = false;
+                (*m_samplePaths)[i].path.clear();
+                (*m_samplePaths)[i].nee_records.clear();
+                (*m_samplePaths)[i].radiance_records.clear();
             }
         }
+
+        checkActivePerc();
     }
 
     void reweightCurrentPaths(ref<Sampler> sampler){
