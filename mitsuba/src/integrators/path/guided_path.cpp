@@ -2844,22 +2844,12 @@ public:
 
         bool reuseSamples = m_iter >= m_strategyIterationActive && (m_reweight || m_rejectReweight || m_reject || 
             m_augment || m_rejectAugment || m_reweightAugment);
-        size_t start_pos = 0;
+
+        std::unique_ptr<std::vector<RPath>> paths;
 
         if(reuseSamples){
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-
             std::uint32_t num_new_samples = points.size() * m_sppPerPass;
-
-            if(m_reweight || m_reject || m_rejectReweight){
-                start_pos = m_samplePaths->size();
-                m_samplePaths->resize(m_samplePaths->size() + num_new_samples);
-                std::cout << m_samplePaths->size() << std::endl;
-            }
-            else{
-                start_pos = m_currAugmentedPaths->size();
-                m_currAugmentedPaths->resize(m_currAugmentedPaths->size() + num_new_samples);
-            }
+            paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
         for (size_t i = 0; i < points.size(); ++i) {    
@@ -2882,33 +2872,33 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    std::uint32_t path_pos = start_pos + i * m_sppPerPass + j;
+                    std::uint32_t path_pos = i * m_sppPerPass + j;
+                    (*paths)[path_pos].sample_pos = samplePos;
+                    (*paths)[path_pos].spec = spec;
 
-                    if(m_reweight || m_reject || m_rejectReweight){
-                        RPath path;
-                        path.sample_pos = samplePos;
-                        path.spec = spec;
-                        spec *= Li(sensorRay, rRec, path);
-                        (*m_samplePaths)[path_pos] = path;
-                    }
-                    else{
-                        RPath path;
-                        path.sample_pos = samplePos;
-                        path.spec = spec;
-                        spec *= Li(sensorRay, rRec, path);
-                        (*m_currAugmentedPaths)[path_pos] = path;
-                    }
+                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
                 }
 
-                if(reuseSamples && !m_augment && !m_rejectAugment && !m_reweightAugment){
+                if(!m_augment && !m_rejectAugment && !m_reweightAugment){
                     block->put(samplePos, spec, rRec.alpha);
                     squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 }
                 
                 sampler->advance();
+            }
+        }
+
+        if(reuseSamples){
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+
+            if(m_augment || m_rejectAugment || m_reweightAugment){
+                m_currAugmentedPaths->insert(m_currAugmentedPaths->end(), paths->begin(), paths->end());
+            }
+            else{
+                m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
             }
         }
 
