@@ -2882,6 +2882,7 @@ public:
 
                 if(reuseSamples){
                     std::uint32_t path_pos = start_pos + i * m_sppPerPass + j;
+                    std::cout << "PATH POS: " << path_pos << " : " << m_samplePaths.size() << " : " << m_currAugmentedPaths.size() << std::endl;
 
                     if(m_reweight || m_reject || m_rejectReweight){
                         RPath path;
