@@ -2883,7 +2883,7 @@ public:
                 if(reuseSamples){
                     std::uint32_t path_pos = start_pos + i * m_sppPerPass + j;
 
-                    if(path_pos >= m_samplePaths.size()){
+                    if(path_pos >= m_samplePaths->size()){
                         std::cout << "PATH POS: " << path_pos << " : " << m_samplePaths->size() << std::endl;    
                     }
                     
