@@ -2952,13 +2952,10 @@ public:
 
         Spectrum result;
         if (sample.x < bsdfSamplingFraction) {
-            sbsdf = true;
             sample.x /= bsdfSamplingFraction;
             result = bsdf->sample(bRec, bsdfPdf, sample);
-            pdf = bsdfPdf;
             if (result.isZero()) {
                 woPdf = bsdfPdf = dTreePdf = 0;
-                zero = true;
                 return Spectrum{0.0f};
             }
 
