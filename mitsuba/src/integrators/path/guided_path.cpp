@@ -1904,6 +1904,7 @@ public:
         Spectrum spec;
         Spectrum Li;
         Float alpha;
+        bool active;
         int iter;
     };
 
@@ -2000,6 +2001,10 @@ public:
     void rejectCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if((*m_samplePaths)[i].active){
+                continue;
+            }
+
             std::vector<Vertex> vertices;
             std::vector<float> scale_factors;
             (*m_samplePaths)[i].Li = Spectrum(0.f);
@@ -2007,6 +2012,7 @@ public:
 
             //first try reject path
             std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
+            bool terminated = false;
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
@@ -2027,6 +2033,7 @@ public:
                 //rejected
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
+                    terminated = true;
                     break;
                 }
                 else{
@@ -2053,18 +2060,27 @@ public:
                 }
             }
 
-            (*m_samplePaths)[i].path.resize(termination_iter + 1);
+            if(!terminated){
+                (*m_samplePaths)[i].path.resize(termination_iter + 1);
 
-            computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
-            if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                if(m_doNee){
+                    computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                }
+
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
-
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            else{
+                (*m_samplePaths)[i].active = false;
+                (*m_samplePaths)[i].path.clear();
+                (*m_samplePaths)[i].nee_records.clear();
+                (*m_samplePaths)[i].radiance_records.clear();
             }
+            
         }
     }
 
@@ -2452,7 +2468,11 @@ public:
         previousSamples->clear();
 
         #pragma omp parallel for
-        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+        for(std::uint32_t i = 0; i < sample_paths.size(); ++i){
+            if(!sample_paths[i].active){
+                continue;
+            }
+            
             Spectrum s = sample_paths[i].spec * sample_paths[i].Li;
             previousSamples->put(sample_paths[i].sample_pos, s, sample_paths[i].alpha);
         }
@@ -3479,6 +3499,7 @@ public:
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
+        pathRecord.active = true;
 
         return Li;
     }
