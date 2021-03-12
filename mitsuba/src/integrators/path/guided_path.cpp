@@ -2884,14 +2884,18 @@ public:
                     std::uint32_t path_pos = start_pos + i * m_sppPerPass + j;
 
                     if(m_reweight || m_reject || m_rejectReweight){
-                        (*m_samplePaths)[path_pos].sample_pos = samplePos;
-                        (*m_samplePaths)[path_pos].spec = spec;
-                        spec *= Li(sensorRay, rRec, (*m_samplePaths)[path_pos]);
+                        RPath path;
+                        path.sample_pos = samplePos;
+                        path.spec = spec;
+                        spec *= Li(sensorRay, rRec, path);
+                        (*m_samplePaths)[path_pos] = path;
                     }
                     else{
-                        (*m_currAugmentedPaths)[path_pos].sample_pos = samplePos;
-                        (*m_currAugmentedPaths)[path_pos].spec = spec;
-                        spec *= Li(sensorRay, rRec, (*m_currAugmentedPaths)[path_pos]);
+                        RPath path;
+                        path.sample_pos = samplePos;
+                        path.spec = spec;
+                        spec *= Li(sensorRay, rRec, path);
+                        (*m_currAugmentedPaths)[path_pos] = path;
                     }
                 }
                 else{
