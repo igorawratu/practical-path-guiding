@@ -2126,7 +2126,7 @@ public:
                     break;
                 }
                 else{
-                    Float acceptScale = 1.f / std::min(acceptProb, 1.f);
+                    Float acceptScale = 1.f;// / std::min(acceptProb, 1.f);
                     scale_factors.push_back(acceptScale);
                     Float rw_scale = std::max(1.f, newWoPdf / oldWo);
                     (*m_samplePaths)[i].path[j].bsdfVal *= rw_scale * acceptScale;
@@ -2359,10 +2359,10 @@ public:
                 }
                 else{
                     float scale = 1.f;
-                    if(acceptProb < 1.f){
+                    /*if(acceptProb < 1.f){
                         scale = 1.f / std::max(EPSILON, acceptProb);
                         (*m_samplePaths)[i].path[j].bsdfVal *= scale;
-                    }
+                    }*/
                     scale_factors.push_back(scale * dTree->getAugmentedNormalizer());
 
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
