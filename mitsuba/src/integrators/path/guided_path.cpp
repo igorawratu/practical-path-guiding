@@ -2251,6 +2251,8 @@ public:
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
+                int curr_level;
+                Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
@@ -2268,7 +2270,7 @@ public:
                         Spectrum(0.f),
                         (*m_currAugmentedPaths)[i].path[j].woPdf,
                         (*m_currAugmentedPaths)[i].path[j].bsdfPdf,
-                        (*m_currAugmentedPaths)[i].path[j].dTreePdf,
+                        dTreePdf,
                         (*m_currAugmentedPaths)[i].path[j].isDelta
                     });
             }
@@ -2410,7 +2412,7 @@ public:
 
             //compute NEE if enabled
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, 1.f, sampler);
+                computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2551,7 +2553,7 @@ public:
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
                 if(m_renderReweightIterations){
-                    renderIterations();
+                    renderIterations(scene, film);
                 }
 
                 if(m_isFinalIter){
