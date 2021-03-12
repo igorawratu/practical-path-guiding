@@ -2854,6 +2854,7 @@ public:
             if(m_reweight || m_reject || m_rejectReweight){
                 start_pos = m_samplePaths->size();
                 m_samplePaths->resize(m_samplePaths->size() + num_new_samples);
+                std::cout << m_samplePaths.size() << std::endl;
             }
             else{
                 start_pos = m_currAugmentedPaths->size();
@@ -2888,14 +2889,14 @@ public:
                         path.sample_pos = samplePos;
                         path.spec = spec;
                         spec *= Li(sensorRay, rRec, path);
-                        //(*m_samplePaths)[path_pos] = path;
+                        (*m_samplePaths)[path_pos] = path;
                     }
                     else{
                         RPath path;
                         path.sample_pos = samplePos;
                         path.spec = spec;
                         spec *= Li(sensorRay, rRec, path);
-                        //(*m_currAugmentedPaths)[path_pos] = path;
+                        (*m_currAugmentedPaths)[path_pos] = path;
                     }
                 }
                 else{
