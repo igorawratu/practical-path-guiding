@@ -2038,7 +2038,7 @@ public:
                 }
                 else{
                     //not sure if this is correct, check again
-                    float scale = 1.f / std::max(1e-5f, acceptProb);
+                    float scale = 1.f;// / std::max(1e-5f, acceptProb);
                     (*m_samplePaths)[i].path[j].bsdfVal *= scale;
                     scale_factors.push_back(scale);
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
@@ -2472,7 +2472,7 @@ public:
             if(!sample_paths[i].active){
                 continue;
             }
-            
+
             Spectrum s = sample_paths[i].spec * sample_paths[i].Li;
             previousSamples->put(sample_paths[i].sample_pos, s, sample_paths[i].alpha);
         }
