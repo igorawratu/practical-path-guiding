@@ -2001,7 +2001,7 @@ public:
     void rejectCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-            if((*m_samplePaths)[i].active){
+            if(!(*m_samplePaths)[i].active){
                 continue;
             }
 
@@ -2079,9 +2079,18 @@ public:
                 (*m_samplePaths)[i].path.clear();
                 (*m_samplePaths)[i].nee_records.clear();
                 (*m_samplePaths)[i].radiance_records.clear();
-            }
-            
+            }       
         }
+        std::uint32_t active = 0;
+        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if((*m_samplePaths)[i].active){
+                active++;
+            }
+        }
+
+        float active_perc = float(active) / m_samplePaths->size();
+
+        std::cout << "Percentage of active paths: " << active_perc << std::endl;
     }
 
     void rejectReweightHybrid(ref<Sampler> sampler){
