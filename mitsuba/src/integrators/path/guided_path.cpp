@@ -1026,6 +1026,13 @@ public:
         }
     }
 
+    void correctSampleCounts(){
+        if(current_samples < req_augmented_samples){
+            total_samples = previous_tree_samples + req_augmented_samples;
+            current_samples = req_augmented_samples;
+        }
+    }
+
     float getAugmentedMultiplier(){
         return current_samples < req_augmented_samples ? float(req_augmented_samples) / current_samples  : 1.f;
     }
@@ -1578,6 +1585,12 @@ public:
     void verifyAugmentedSDTree(Scene* scene) {
         m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
             dTree->verifyEnoughSamples();
+        });
+    }
+
+    void correctDTreeSampleCounts(Scene* scene) {
+        m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
+            dTree->correctSampleCounts();
         });
     }
 
@@ -2288,9 +2301,6 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 int curr_level = 0;
                 Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
-                if(dTree->getAugmentedMultiplier() > 1.f){
-                    std::cout << dTree->getAugmentedMultiplier() " " << dTree->getAugmentedNormalizer() << std::endl;
-                }
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
@@ -2600,6 +2610,8 @@ public:
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
+
+                correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
