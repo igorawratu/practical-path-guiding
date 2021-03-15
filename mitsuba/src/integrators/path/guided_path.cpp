@@ -2588,39 +2588,12 @@ public:
             if(m_augment || m_rejectAugment || m_reweightAugment){
                 if(m_augment){
                     performAugmentedSamples(sampler, m_isFinalIter);
-                    
                 } 
                 else if(m_rejectAugment){
                     rejectAugmentHybrid(sampler);
-                    correctCurrAugmentedSamples(sampler, m_isFinalIter);
-
-                    if(m_renderIterations){
-                        renderIterations(scene, film);
-                    }
-
-                    if(m_isFinalIter){
-                        renderFinalImage(film, *m_samplePaths);
-                        renderFinalImage(film, *m_currAugmentedPaths);
-                    }
-                    else{
-                        m_samplePaths->insert(m_samplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                        m_currAugmentedPaths->clear();
-                        m_currAugmentedPaths->shrink_to_fit();
-                    }
                 }
                 else if(m_reweightAugment){
                     reweightAugmentHybrid(sampler);
-                    correctCurrAugmentedSamples(sampler, m_isFinalIter);
-
-                    if(m_isFinalIter){
-                        renderFinalImage(film, *m_samplePaths);
-                        renderFinalImage(film, *m_currAugmentedPaths);
-                    }
-                    else{
-                        m_samplePaths->insert(m_samplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                        m_currAugmentedPaths->clear();
-                        m_currAugmentedPaths->shrink_to_fit();
-                    }
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
