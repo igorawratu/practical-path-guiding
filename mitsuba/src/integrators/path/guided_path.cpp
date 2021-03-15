@@ -2107,6 +2107,10 @@ public:
     void rejectReweightHybrid(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].active){
+                continue;
+            }
+
             (*m_samplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
@@ -2339,6 +2343,10 @@ public:
     void rejectAugmentHybrid(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].active){
+                continue;
+            }
+            
             (*m_samplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
