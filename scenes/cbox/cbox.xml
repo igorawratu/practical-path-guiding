@@ -30,10 +30,10 @@
 		<boolean name="rejectAugment" value="false"/>
 		<boolean name="rejectReweight" value="false"/>
 		<boolean name="reweight" value="false"/>
-		<boolean name="reweightAugment" value="true"/>
+		<boolean name="reweightAugment" value="false"/>
 
 		<integer name="stratIterActive" value="0"/>
-		<boolean name="renderIterations" value="true"/>
+		<boolean name="renderIterations" value="false"/>
 
 	</integrator>
 
