@@ -2288,9 +2288,6 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 int curr_level = 0;
                 Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
-                if(dTree->getAugmentedMultiplier() > 1.f){
-                    std::cout << dTree->getAugmentedMultiplier() << std::endl;
-                }
                 (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
