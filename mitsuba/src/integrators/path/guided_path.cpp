@@ -2041,7 +2041,7 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                if(false/*sampler->next1D() > acceptProb*/){
+                if(sampler->next1D() > acceptProb){
                     terminated = true;
                     break;
                 }
