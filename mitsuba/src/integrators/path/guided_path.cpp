@@ -1588,7 +1588,7 @@ public:
         });
     }
 
-    void correctDTreeSampleCounts(Scene* scene) {
+    void correctDTreeSampleCounts() {
         m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
             dTree->correctSampleCounts();
         });
