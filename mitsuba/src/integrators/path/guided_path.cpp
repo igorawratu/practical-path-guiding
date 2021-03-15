@@ -2069,8 +2069,6 @@ public:
             }
 
             if(!terminated){
-                (*m_samplePaths)[i].path.resize(termination_iter + 1);
-
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
