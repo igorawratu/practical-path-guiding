@@ -2085,7 +2085,9 @@ public:
                 (*m_samplePaths)[i].path.clear();
                 (*m_samplePaths)[i].nee_records.clear();
                 (*m_samplePaths)[i].radiance_records.clear();
-            }       
+            }
+
+            (*m_samplePaths)[i].active = false;       
         }
 
         checkActivePerc();
