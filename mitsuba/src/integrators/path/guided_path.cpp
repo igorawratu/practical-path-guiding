@@ -2041,7 +2041,7 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                if(/*sampler->next1D() > acceptProb*/true){
+                if(sampler->next1D() > acceptProb){
                     terminated = true;
                     break;
                 }
@@ -2085,9 +2085,7 @@ public:
                 (*m_samplePaths)[i].path.clear();
                 (*m_samplePaths)[i].nee_records.clear();
                 (*m_samplePaths)[i].radiance_records.clear();
-            }
-
-            (*m_samplePaths)[i].active = false;       
+            }       
         }
 
         checkActivePerc();
@@ -3482,10 +3480,10 @@ public:
             scattered = true;
         }
 
-        if(pathRecord.radiance_records.size() == 0 && pathRecord.nee_records.size() == 0){
+        /*if(pathRecord.radiance_records.size() == 0 && pathRecord.nee_records.size() == 0){
             pathRecord.path.clear();
             pathRecord.Li = Spectrum(0.f);
-        }
+        }*/
 
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
