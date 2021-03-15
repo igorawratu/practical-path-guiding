@@ -2565,10 +2565,18 @@ public:
             
             resetSDTree(m_augment);
 
-            if(m_reweight){
-                reweightCurrentPaths(sampler);
-                
-                if(m_renderReweightIterations){
+            if(m_reweight || m_reject || m_rejectReweight){
+                if(m_reweight){
+                    reweightCurrentPaths(sampler); 
+                }
+                else if(m_reject){
+                    rejectCurrentPaths(sampler);
+                }
+                else if(m_rejectReweight){
+                    rejectReweightHybrid(sampler);
+                }
+
+                if(m_renderIterations){
                     renderIterations(scene, film);
                 }
 
@@ -2576,28 +2584,7 @@ public:
                     renderFinalImage(film, *m_samplePaths);
                 }
             }
-            else if(m_reject){
-                rejectCurrentPaths(sampler);
-
-                if(m_renderReweightIterations){
-                    renderIterations(scene, film);
-                }
-
-                if(m_isFinalIter){
-                    renderFinalImage(film, *m_samplePaths);
-                }
-            }
-            else if(m_rejectReweight){
-                rejectReweightHybrid(sampler);
-
-                if(m_renderReweightIterations){
-                    renderIterations(scene, film);
-                }
-
-                if(m_isFinalIter){
-                    renderFinalImage(film, *m_samplePaths);
-                }
-            }
+            
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -2605,29 +2592,47 @@ public:
                 break;
             }
 
-            if(m_augment){
-                performAugmentedSamples(sampler, m_isFinalIter);
+            if(m_augment || m_rejectAugment || m_reweightAugment){
+                if(m_augment){
+                    performAugmentedSamples(sampler, m_isFinalIter);
+                    
+                } 
+                else if(m_rejectAugment){
+                    rejectAugmentHybrid(sampler);
+                    correctCurrAugmentedSamples(sampler, m_isFinalIter);
+
+                    if(m_renderReweightIterations){
+                        renderIterations(scene, film);
+                    }
+
+                    if(m_isFinalIter){
+                        renderFinalImage(film, *m_samplePaths);
+                        renderFinalImage(film, *m_currAugmentedPaths);
+                    }
+                    else{
+                        m_samplePaths->insert(m_samplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
+                        m_currAugmentedPaths->clear();
+                        m_currAugmentedPaths->shrink_to_fit();
+                    }
+                }
+                else if(m_reweightAugment){
+                    reweightAugmentHybrid(sampler);
+                    correctCurrAugmentedSamples(sampler, m_isFinalIter);
+
+                    if(m_isFinalIter){
+                        renderFinalImage(film, *m_samplePaths);
+                        renderFinalImage(film, *m_currAugmentedPaths);
+                    }
+                    else{
+                        m_samplePaths->insert(m_samplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
+                        m_currAugmentedPaths->clear();
+                        m_currAugmentedPaths->shrink_to_fit();
+                    }
+                }
+
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                if(m_renderReweightIterations){
-                    renderIterations(scene, film);
-                }
-
-                if(m_isFinalIter){
-                    renderFinalImage(film, *m_samplePaths);
-                    renderFinalImage(film, *m_currAugmentedPaths);
-                }
-                else{
-                    m_samplePaths->insert(m_samplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                    m_currAugmentedPaths->clear();
-                    m_currAugmentedPaths->shrink_to_fit();
-                }
-            } 
-            else if(m_rejectAugment){
-                rejectAugmentHybrid(sampler);
-                correctCurrAugmentedSamples(sampler, m_isFinalIter);
-
-                if(m_renderReweightIterations){
+                if(m_renderIterations){
                     renderIterations(scene, film);
                 }
 
@@ -2641,20 +2646,7 @@ public:
                     m_currAugmentedPaths->shrink_to_fit();
                 }
             }
-            else if(m_reweightAugment){
-                reweightAugmentHybrid(sampler);
-                correctCurrAugmentedSamples(sampler, m_isFinalIter);
-
-                if(m_isFinalIter){
-                    renderFinalImage(film, *m_samplePaths);
-                    renderFinalImage(film, *m_currAugmentedPaths);
-                }
-                else{
-                    m_samplePaths->insert(m_samplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                    m_currAugmentedPaths->clear();
-                    m_currAugmentedPaths->shrink_to_fit();
-                }
-            }
+            
 
             const Float lastVarAtEnd = currentVarAtEnd;
             currentVarAtEnd = passesThisIteration * variance / remainingPasses;
@@ -3805,15 +3797,13 @@ private:
     std::unique_ptr<std::mutex> m_samplePathMutex;
 
     bool m_reweight;
-    bool m_renderReweightIterations;
     bool m_reject;
-    bool m_renderRejectIterations;
     bool m_augment;
     bool m_rejectReweight;
     bool m_rejectAugment;
     bool m_reweightAugment;
     size_t sampleCount;
-    bool m_renderIntermediateAugmented;
+    bool m_renderIterations;
 
     int m_strategyIterationActive;
 
