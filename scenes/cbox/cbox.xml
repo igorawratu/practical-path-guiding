@@ -33,7 +33,7 @@
 		<boolean name="reweightAugment" value="false"/>
 
 		<integer name="stratIterActive" value="0"/>
-		<boolean name="renderIterations" value="false"/>
+		<boolean name="renderIterations" value="true"/>
 
 	</integrator>
 
