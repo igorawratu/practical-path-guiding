@@ -2288,12 +2288,12 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 int curr_level = 0;
                 Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
-                //(*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer()/* * dTree->getAugmentedMultiplier()*/;
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                scale_factors.push_back(1.f/*dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier()*/);
+                scale_factors.push_back(dTree->getAugmentedNormalizer()/* * dTree->getAugmentedMultiplier()*/);
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2344,7 +2344,7 @@ public:
                 Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
-                //(*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     rejected = true;
@@ -2356,7 +2356,7 @@ public:
                         scale = 1.f / std::max(EPSILON, acceptProb);
                         (*m_samplePaths)[i].path[j].bsdfVal *= scale;
                     }*/
-                    scale_factors.push_back(scale/* * dTree->getAugmentedNormalizer()*/);
+                    scale_factors.push_back(scale * dTree->getAugmentedNormalizer());
 
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
