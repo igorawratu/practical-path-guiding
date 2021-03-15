@@ -2021,7 +2021,6 @@ public:
             Spectrum throughput(1.0f);
 
             //first try reject path
-            std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
             bool terminated = false;
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2042,7 +2041,6 @@ public:
 
                 //rejected
                 if(sampler->next1D() > acceptProb){
-                    termination_iter = j;
                     terminated = true;
                     break;
                 }
