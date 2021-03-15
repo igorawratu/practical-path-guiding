@@ -23,7 +23,7 @@
 		<string name="budgetType" value="spp"/>
 		<float name="budget" value="127"/>
 
-		<string name="nee" value="never"/>
+		<string name="nee" value="kickstart"/>
 
 		<boolean name="augment" value="false"/>
 		<boolean name="reject" value="true"/>
@@ -32,8 +32,8 @@
 		<boolean name="reweight" value="false"/>
 		<boolean name="reweightAugment" value="false"/>
 
-		<integer name="stratIterActive" value="3"/>
-		<boolean name="renderIterations" value="false"/>
+		<integer name="stratIterActive" value="0"/>
+		<boolean name="renderIterations" value="true"/>
 
 	</integrator>
 
