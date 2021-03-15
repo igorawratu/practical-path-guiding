@@ -2041,12 +2041,11 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                if(sampler->next1D() > acceptProb){
+                if(false/*sampler->next1D() > acceptProb*/){
                     terminated = true;
                     break;
                 }
                 else{
-                    //not sure if this is correct, check again
                     float scale = 1.f;// / std::max(1e-5f, acceptProb);
                     (*m_samplePaths)[i].path[j].bsdfVal *= scale;
                     scale_factors.push_back(scale);
