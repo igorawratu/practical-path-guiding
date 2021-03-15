@@ -1915,6 +1915,7 @@ public:
             Spectrum L = sample_path.nee_records[j].L;
             Float pdf = sample_path.nee_records[j].pdf;
             sample_path.nee_records[j].bsdfVal *= scale_factors[j];
+            L *= sample_path.nee_records[j].bsdfVal;
             DTreeWrapper* dTree = vertices[pos].dTree;
 
             int curr_level = 0;
@@ -3336,6 +3337,8 @@ public:
                             /* Weight using the power heuristic */
                             const Float weight = miWeight(dRec.pdf, woPdf);
 
+                            Spectrum premult_value = value;
+
                             value *= bsdfVal;
                             Spectrum L = throughput * value * weight;
 
@@ -3359,7 +3362,7 @@ public:
                                 }
                             }
 
-                            pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
                             
                             addedNee = true;
 
