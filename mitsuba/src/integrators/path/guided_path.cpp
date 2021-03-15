@@ -1534,10 +1534,8 @@ public:
         m_dumpSDTree = props.getBoolean("dumpSDTree", false);
 
         m_reweight = props.getBoolean("reweight", false);
-        m_renderReweightIterations = props.getBoolean("renderReweightIterations", false);
-
+        
         m_reject = props.getBoolean("reject", false);
-        m_renderRejectIterations = props.getBoolean("renderRejectIterations", false);
 
         m_rejectReweight = props.getBoolean("rejectReweight", false);
         m_rejectAugment = props.getBoolean("rejectAugment", false);
@@ -1545,9 +1543,8 @@ public:
 
         m_augment = props.getBoolean("augment", false);
 
-        m_renderIntermediateAugmented = props.getBoolean("renderIntermediateAugmented", false);
-
         m_strategyIterationActive = props.getInteger("stratIterActive", -1);
+        m_renderIterations = props.getBoolean("renderIterations", false);
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -2601,7 +2598,7 @@ public:
                     rejectAugmentHybrid(sampler);
                     correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                    if(m_renderReweightIterations){
+                    if(m_renderIterations){
                         renderIterations(scene, film);
                     }
 
