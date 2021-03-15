@@ -1588,8 +1588,8 @@ public:
         });
     }
 
-    void correctDTreeSampleCounts() {
-        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
+    void correctDTreeSampleCounts(Scene* scene) {
+        m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
             dTree->correctSampleCounts();
         });
     }
@@ -2611,7 +2611,7 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                correctDTreeSampleCounts();
+                //correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
