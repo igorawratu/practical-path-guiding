@@ -1038,7 +1038,7 @@ public:
     }
 
     float getAugmentedNormalizer(){
-        return current_samples < req_augmented_samples ? /*float(total_samples)*/1.f / float(previous_tree_samples + req_augmented_samples) : 1.f;
+        return current_samples < req_augmented_samples ? float(total_samples) / float(previous_tree_samples + req_augmented_samples) : 1.f;
         /*return current_samples < req_augmented_samples ? 
             float(total_samples) / 
             (float(current_samples) + previous_tree_samples * getAugmentedMultiplier())
@@ -2346,7 +2346,7 @@ public:
             if(!(*m_samplePaths)[i].active){
                 continue;
             }
-
+            
             (*m_samplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
