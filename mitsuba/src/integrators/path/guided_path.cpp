@@ -1033,12 +1033,12 @@ public:
         }
     }
 
-    float getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? float(req_augmented_samples) / current_samples  : 1.f;
+    double getAugmentedMultiplier(){
+        return current_samples < req_augmented_samples ? double(req_augmented_samples) / current_samples  : 1.f;
     }
 
-    float getAugmentedNormalizer(){
-        return current_samples < req_augmented_samples ? float(total_samples) / float(previous_tree_samples + req_augmented_samples) : 1.f;
+    double getAugmentedNormalizer(){
+        return current_samples < req_augmented_samples ? double(total_samples) / double(previous_tree_samples + req_augmented_samples) : 1.f;
         /*return current_samples < req_augmented_samples ? 
             float(total_samples) / 
             (float(current_samples) + previous_tree_samples * getAugmentedMultiplier())
