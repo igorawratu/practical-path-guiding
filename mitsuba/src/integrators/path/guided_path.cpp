@@ -1343,7 +1343,7 @@ public:
             cur.children[i] = idx;
             nodes[idx].axis = (cur.axis + 1) % 3;
             nodes[idx].dTree = cur.dTree;
-            nodes[idx].dTree.splitSpatially();
+            //nodes[idx].dTree.splitSpatially();
             nodes[idx].level = cur.level + 1;
             nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding() / 2);
         }
@@ -2346,7 +2346,7 @@ public:
             if(!(*m_samplePaths)[i].active){
                 continue;
             }
-            
+
             (*m_samplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
