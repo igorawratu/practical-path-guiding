@@ -1918,7 +1918,8 @@ public:
         int iter;
     };
 
-    void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, const std::vector<float>& scale_factors, ref<Sampler> sampler){
+    template<typename T>
+    void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, const std::vector<T>& scale_factors, ref<Sampler> sampler){
         for(std::uint32_t j = 0; j < sample_path.nee_records.size(); ++j){
             int pos = sample_path.nee_records[j].pos;
             if(pos >= int(vertices.size())){
@@ -2247,7 +2248,7 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
-            std::vector<float> scale_factors;
+            std::vector<double> scale_factors;
             
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2298,7 +2299,7 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
-            std::vector<float> scale_factors;
+            std::vector<double> scale_factors;
 
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
