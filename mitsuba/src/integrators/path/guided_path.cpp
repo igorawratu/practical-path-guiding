@@ -1930,7 +1930,7 @@ public:
 
             Spectrum L = sample_path.nee_records[j].L;
             Float pdf = sample_path.nee_records[j].pdf;
-            sample_path.nee_records[j].bsdfVal *= scale_factors[j];
+            //sample_path.nee_records[j].bsdfVal *= scale_factors[j];
             L *= sample_path.nee_records[j].bsdfVal;
             DTreeWrapper* dTree = vertices[pos].dTree;
 
