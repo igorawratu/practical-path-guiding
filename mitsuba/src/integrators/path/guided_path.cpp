@@ -1889,6 +1889,8 @@ public:
         Float bsdfPdf, woPdf;
         bool isDelta;
         int level;
+        double normalizing_sc;
+        double sc;
     };
 
     struct RadRecord{
@@ -1996,7 +1998,7 @@ public:
                 }
             }
             
-            sample_path.Li += L;
+            sample_path.Li += L * vertices[pos].sc * vertices[pos].normalizing_sc;
         }
     }
 
@@ -2257,7 +2259,7 @@ public:
 
                 Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
-                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2306,7 +2308,8 @@ public:
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 int curr_level = 0;
                 Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
-                (*m_currAugmentedPaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier();
+                (*m_currAugmentedPaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+                (*m_currAugmentedPaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2620,7 +2623,7 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                //correctDTreeSampleCounts();
+                correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
@@ -3293,7 +3296,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
-                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel});
+                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
