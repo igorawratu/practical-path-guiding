@@ -1588,7 +1588,7 @@ public:
         });
     }
 
-    void correctDTreeSampleCounts() {
+    voicorrectDTreeSampleCounts() {
         m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
             dTree->correctSampleCounts();
         });
@@ -2623,7 +2623,7 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                //correctDTreeSampleCounts();
+                correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
