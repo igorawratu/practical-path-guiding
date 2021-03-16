@@ -2623,7 +2623,7 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                correctDTreeSampleCounts();
+                //correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
