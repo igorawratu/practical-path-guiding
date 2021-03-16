@@ -1998,7 +1998,7 @@ public:
                 }
             }
             
-            sample_path.Li += L * vertices[pos].sc * vertices[pos].normalizing_sc;
+            sample_path.Li += L * sample_path.path[pos].sc * sample_path.path[pos].normalizing_sc;
         }
     }
 
