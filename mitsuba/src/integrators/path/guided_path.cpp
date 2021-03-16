@@ -35,7 +35,7 @@
 
 MTS_NAMESPACE_BEGIN
 
-const float EPSILON = 1e-10f;
+const float EPSILON = 1e-5f;
 
 ref<Film> createFilm(std::uint32_t width, std::uint32_t height, bool hdr){
     Properties props = hdr ? Properties("hdrfilm") : Properties("ldrfilm");
