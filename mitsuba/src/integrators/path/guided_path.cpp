@@ -1979,7 +1979,7 @@ public:
                 continue;
             }
 
-            Spectrum L = sample_path.radiance_records[j].L * sample_path.path[pos].sc;
+            Spectrum L = sample_path.radiance_records[j].L;
 
             if(pos >= 0){
                 L *= vertices[pos].throughput;
@@ -1992,11 +1992,11 @@ public:
                 }
 
                 for(int k = 0; k <= pos; ++k){
-                    vertices[k].radiance += L;
+                    vertices[k].radiance += L * sample_path.path[pos].sc;
                 }
             }
             
-            sample_path.Li += L * sample_path.path[pos].normalizing_sc;
+            sample_path.Li += L * sample_path.path[pos].sc * sample_path.path[pos].normalizing_sc;
         }
     }
 
