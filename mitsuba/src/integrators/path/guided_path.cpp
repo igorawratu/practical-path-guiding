@@ -35,13 +35,13 @@
 
 MTS_NAMESPACE_BEGIN
 
-const double EPSILON = 1e-5f;
+const float EPSILON = 1e-5f;
 
 ref<Film> createFilm(std::uint32_t width, std::uint32_t height, bool hdr){
     Properties props = hdr ? Properties("hdrfilm") : Properties("ldrfilm");
     props.setInteger("width", width);
     props.setInteger("height", height);
-    props.setdouble("gamma", 2.2);
+    props.setFloat("gamma", 2.2);
     props.setBoolean("banner", false);
 
     ref<Film> film = static_cast<Film*> (PluginManager::getInstance()->createObject(MTS_CLASS(Film), props));
@@ -73,19 +73,19 @@ private:
     std::ofstream f;
 };
 
-static void addToAtomicdouble(std::atomic<double>& var, double val) {
+static void addToAtomicFloat(std::atomic<Float>& var, Float val) {
     auto current = var.load();
     while (!var.compare_exchange_weak(current, current + val));
 }
 
-inline double logistic(double x) {
+inline Float logistic(Float x) {
     return 1 / (1 + std::exp(-x));
 }
 
 // Implements the stochastic-gradient-based Adam optimizer [Kingma and Ba 2014]
 class AdamOptimizer {
 public:
-    AdamOptimizer(double learningRate, int batchSize = 1, double epsilon = 1e-08f, double beta1 = 0.9f, double beta2 = 0.999f) {
+    AdamOptimizer(Float learningRate, int batchSize = 1, Float epsilon = 1e-08f, Float beta1 = 0.9f, Float beta2 = 0.999f) {
 		m_hparams = { learningRate, batchSize, epsilon, beta1, beta2 };
 	}
 
@@ -99,7 +99,7 @@ public:
         *this = arg;
     }
 
-    void append(double gradient, double statisticalWeight) {
+    void append(Float gradient, Float statisticalWeight) {
         m_state.batchGradient += gradient * statisticalWeight;
         m_state.batchAccumulation += statisticalWeight;
 
@@ -111,10 +111,10 @@ public:
         }
     }
 
-    void step(double gradient) {
+    void step(Float gradient) {
         ++m_state.iter;
 
-        double actualLearningRate = m_hparams.learningRate * std::sqrt(1 - std::pow(m_hparams.beta2, m_state.iter)) / (1 - std::pow(m_hparams.beta1, m_state.iter));
+        Float actualLearningRate = m_hparams.learningRate * std::sqrt(1 - std::pow(m_hparams.beta2, m_state.iter)) / (1 - std::pow(m_hparams.beta1, m_state.iter));
         m_state.firstMoment = m_hparams.beta1 * m_state.firstMoment + (1 - m_hparams.beta1) * gradient;
         m_state.secondMoment = m_hparams.beta2 * m_state.secondMoment + (1 - m_hparams.beta2) * gradient * gradient;
         m_state.variable -= actualLearningRate * m_state.firstMoment / (std::sqrt(m_state.secondMoment) + m_hparams.epsilon);
@@ -125,27 +125,27 @@ public:
         m_state.variable = std::min(std::max(m_state.variable, -20.0f), 20.0f);
     }
 
-    double variable() const {
+    Float variable() const {
         return m_state.variable;
     }
 
 private:
     struct State {
         int iter = 0;
-        double firstMoment = 0;
-        double secondMoment = 0;
-        double variable = 0;
+        Float firstMoment = 0;
+        Float secondMoment = 0;
+        Float variable = 0;
 
-        double batchAccumulation = 0;
-        double batchGradient = 0;
+        Float batchAccumulation = 0;
+        Float batchGradient = 0;
     } m_state;
 
     struct Hyperparameters {
-        double learningRate;
+        Float learningRate;
         int batchSize;
-        double epsilon;
-        double beta1;
-        double beta2;
+        Float epsilon;
+        Float beta1;
+        Float beta2;
     } m_hparams;
 };
 
@@ -181,11 +181,11 @@ public:
         }
     }
 
-    void setSum(int index, double val) {
+    void setSum(int index, Float val) {
         m_sum[index].store(val, std::memory_order_relaxed);
     }
 
-    double sum(int index) const {
+    Float sum(int index) const {
         return m_sum[index].load(std::memory_order_relaxed);
     }
 
@@ -213,7 +213,7 @@ public:
         return m_children[idx];
     }
 
-    void setSum(double val) {
+    void setSum(Float val) {
         for (int i = 0; i < 4; ++i) {
             setSum(i, val);
         }
@@ -236,7 +236,7 @@ public:
     // Evaluates the directional irradiance *sum density* (i.e. sum / area) at a given location p.
     // To obtain radiance, the sum density (result of this function) must be divided
     // by the total statistical weight of the estimates that were summed up.
-    double eval(Point2& p, const std::vector<QuadTreeNode>& nodes) const {
+    Float eval(Point2& p, const std::vector<QuadTreeNode>& nodes) const {
         SAssert(p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1);
         const int index = childIndex(p);
         if (isLeaf(index)) {
@@ -246,14 +246,14 @@ public:
         }
     }
 
-    double pdf(Point2& p, const std::vector<QuadTreeNode>& nodes, int level, int& curr_level) const {
+    Float pdf(Point2& p, const std::vector<QuadTreeNode>& nodes, int level, int& curr_level) const {
         SAssert(p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1);
         const int index = childIndex(p);
         if (!(sum(index) > 0)) {
             return 0;
         }
 
-        const double factor = 4 * sum(index) / (sum(0) + sum(1) + sum(2) + sum(3));
+        const Float factor = 4 * sum(index) / (sum(0) + sum(1) + sum(2) + sum(3));
         if (isLeaf(index) || level == curr_level) {
             return factor;
         } else {
@@ -275,20 +275,20 @@ public:
     Point2 sample(Sampler* sampler, const std::vector<QuadTreeNode>& nodes) const {
         int index = 0;
 
-        double topLeft = sum(0);
-        double topRight = sum(1);
-        double partial = topLeft + sum(2);
-        double total = partial + topRight + sum(3);
+        Float topLeft = sum(0);
+        Float topRight = sum(1);
+        Float partial = topLeft + sum(2);
+        Float total = partial + topRight + sum(3);
 
         // Should only happen when there are numerical instabilities.
         if (!(total > 0.0f)) {
             return sampler->next2D();
         }
 
-        double boundary = partial / total;
+        Float boundary = partial / total;
         Point2 origin = Point2{0.0f, 0.0f};
 
-        double sample = sampler->next1D();
+        Float sample = sampler->next1D();
 
         if (sample < boundary) {
             SAssert(partial > 0);
@@ -318,36 +318,36 @@ public:
         }
     }
 
-    void record(Point2& p, double irradiance, std::vector<QuadTreeNode>& nodes) {
+    void record(Point2& p, Float irradiance, std::vector<QuadTreeNode>& nodes) {
         SAssert(p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1);
         int index = childIndex(p);
 
         if (isLeaf(index)) {
-            addToAtomicdouble(m_sum[index], irradiance);
+            addToAtomicFloat(m_sum[index], irradiance);
         } else {
             nodes[child(index)].record(p, irradiance, nodes);
         }
     }
 
-    double computeOverlappingArea(const Point2& min1, const Point2& max1, const Point2& min2, const Point2& max2) {
-        double lengths[2];
+    Float computeOverlappingArea(const Point2& min1, const Point2& max1, const Point2& min2, const Point2& max2) {
+        Float lengths[2];
         for (int i = 0; i < 2; ++i) {
             lengths[i] = std::max(std::min(max1[i], max2[i]) - std::max(min1[i], min2[i]), 0.0f);
         }
         return lengths[0] * lengths[1];
     }
 
-    void record(const Point2& origin, double size, Point2 nodeOrigin, double nodeSize, double value, std::vector<QuadTreeNode>& nodes) {
-        double childSize = nodeSize / 2;
+    void record(const Point2& origin, Float size, Point2 nodeOrigin, Float nodeSize, Float value, std::vector<QuadTreeNode>& nodes) {
+        Float childSize = nodeSize / 2;
         for (int i = 0; i < 4; ++i) {
             Point2 childOrigin = nodeOrigin;
             if (i & 1) { childOrigin[0] += childSize; }
             if (i & 2) { childOrigin[1] += childSize; }
 
-            double w = computeOverlappingArea(origin, origin + Point2(size), childOrigin, childOrigin + Point2(childSize));
+            Float w = computeOverlappingArea(origin, origin + Point2(size), childOrigin, childOrigin + Point2(childSize));
             if (w > 0.0f) {
                 if (isLeaf(i)) {
-                    addToAtomicdouble(m_sum[i], value * w);
+                    addToAtomicFloat(m_sum[i], value * w);
                 } else {
                     nodes[child(i)].record(origin, size, childOrigin, childSize, value, nodes);
                 }
@@ -375,7 +375,7 @@ public:
             c.build(nodes);
 
             // ...then sum up the children's sums.
-            double sum = 0;
+            Float sum = 0;
             for (int j = 0; j < 4; ++j) {
                 sum += c.sum(j);
             }
@@ -384,7 +384,7 @@ public:
     }
 
 private:
-    std::array<std::atomic<double>, 4> m_sum;
+    std::array<std::atomic<Float>, 4> m_sum;
     std::array<uint16_t, 4> m_children;
 };
 
@@ -401,12 +401,12 @@ public:
         return m_nodes[i];
     }
 
-    bool validateMajorizingFactor(const DTree& other, double factor) const{
+    bool validateMajorizingFactor(const DTree& other, float factor) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
             std::pair<size_t, int> otherNodeIndex;
-            double nodeFactor;
-            double otherNodeFactor;
+            Float nodeFactor;
+            Float otherNodeFactor;
         };
 
         std::stack<NodePair> pairStack;
@@ -419,21 +419,21 @@ public:
             const QuadTreeNode& node = m_nodes[nodePair.nodeIndex.first];
             const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherNodeIndex.first];
 
-            double denom = nodePair.nodeIndex.second < 0 ? node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3) : 
+            Float denom = nodePair.nodeIndex.second < 0 ? node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3) : 
                 node.sum(nodePair.nodeIndex.second) * 4.f;
-            double otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
+            Float otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
                 otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
 
             for (int i = 0; i < 4; ++i) {
                 int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;
                 int otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
 
-                double pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
-                double otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
+                Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
+                Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
 
                 //both nodes are leaf, check if majorization factor majorizes
                 if(node.isLeaf(childIdx) && otherNode.isLeaf(otherChildIdx)){
-                    double mpdf = factor * pdf;
+                    float mpdf = factor * pdf;
                     if((mpdf - otherPdf) < -EPSILON){
                         std::cout << "Factor " << factor << " does not majorize " << mpdf << " over " << otherPdf << std::endl;
                         return false;
@@ -453,18 +453,18 @@ public:
         return true;
     }
 
-    std::pair<double, double> getMajorizingFactor(const DTree& other) const{
+    std::pair<Float, Float> getMajorizingFactor(const DTree& other) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
             std::pair<size_t, int> otherNodeIndex;
-            double nodeFactor;
-            double otherNodeFactor;
+            Float nodeFactor;
+            Float otherNodeFactor;
             int nodeLevel;
             int otherNodeLevel;
         };
 
-        std::pair<double, double> pdfPair(1.f, 1.f);
-        double largestScalingFactor = 0.f;
+        std::pair<Float, Float> pdfPair(1.f, 1.f);
+        Float largestScalingFactor = 0.f;
 
         std::stack<NodePair> pairStack;
         pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0, 0});
@@ -476,23 +476,23 @@ public:
             const QuadTreeNode& node = m_nodes[nodePair.nodeIndex.first];
             const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherNodeIndex.first];
 
-            double denom = nodePair.nodeIndex.second < 0 ? node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3) : 
+            Float denom = nodePair.nodeIndex.second < 0 ? node.sum(0) + node.sum(1) + node.sum(2) + node.sum(3) : 
                 node.sum(nodePair.nodeIndex.second) * 4.f;
-            double otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
+            Float otherDenom = nodePair.otherNodeIndex.second < 0 ? otherNode.sum(0) + otherNode.sum(1) + otherNode.sum(2) + otherNode.sum(3) : 
                 otherNode.sum(nodePair.otherNodeIndex.second) * 4.f;
 
             for (int i = 0; i < 4; ++i) {
                 int childIdx = nodePair.nodeIndex.second < 0 ? i : nodePair.nodeIndex.second;   
                 int otherChildIdx = nodePair.otherNodeIndex.second < 0 ? i : nodePair.otherNodeIndex.second;
 
-                double pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
-                double otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
+                Float pdf = denom < EPSILON ? 0.f : nodePair.nodeFactor * 4.f * node.sum(childIdx) / denom;
+                Float otherPdf = otherDenom < EPSILON ? 0.f : nodePair.otherNodeFactor * 4.f * otherNode.sum(otherChildIdx) / otherDenom;
 
                 //both nodes are leaf, we can compute the scaling factors here
                 if(node.isLeaf(childIdx) || otherNode.isLeaf(otherChildIdx)){
                     pdf = std::max(pdf, EPSILON);
                     otherPdf = std::max(otherPdf, EPSILON);
-                    double scalingFactor = otherPdf / pdf;
+                    Float scalingFactor = otherPdf / pdf;
 
                     //std::cout << "leaves: " << otherPdf << " " << otherDenom << " : " << pdf << " " << node.sum(childIdx) << " " << nodePair.nodeFactor << " " << denom << " : " << scalingFactor << std::endl;
                     if(scalingFactor > largestScalingFactor){
@@ -517,11 +517,11 @@ public:
         return pdfPair;
     }
 
-    double mean() const {
+    Float mean() const {
         if (m_atomic.statisticalWeight == 0) {
             return 0;
         }
-        const double factor = 1 / (M_PI * 4 * m_atomic.statisticalWeight);
+        const Float factor = 1 / (M_PI * 4 * m_atomic.statisticalWeight);
         return factor * m_atomic.sum;
     }
 
@@ -529,16 +529,16 @@ public:
         std::cout << m_atomic.statisticalWeight << " " << m_atomic.sum << std::endl;
     }
 
-    void recordIrradiance(Point2 p, double irradiance, double statisticalWeight, EDirectionalFilter directionalFilter) {
+    void recordIrradiance(Point2 p, Float irradiance, Float statisticalWeight, EDirectionalFilter directionalFilter) {
         if (std::isfinite(statisticalWeight) && statisticalWeight > 0) {
-            addToAtomicdouble(m_atomic.statisticalWeight, statisticalWeight);
+            addToAtomicFloat(m_atomic.statisticalWeight, statisticalWeight);
 
             if (std::isfinite(irradiance) && irradiance > 0) {
                 if (directionalFilter == EDirectionalFilter::ENearest) {
                     m_nodes[0].record(p, irradiance * statisticalWeight, m_nodes);
                 } else {
                     int depth = depthAt(p);
-                    double size = std::pow(0.5f, depth);
+                    Float size = std::pow(0.5f, depth);
 
                     Point2 origin = p;
                     origin.x -= size / 2;
@@ -549,7 +549,7 @@ public:
         }
     }
 
-    double pdf(Point2 p, int level, int& curr_level) const {
+    Float pdf(Point2 p, int level, int& curr_level) const {
         if (!(mean() > 0)) {
             return 1 / (4 * M_PI);
         }
@@ -582,15 +582,15 @@ public:
         return m_nodes.size();
     }
 
-    double statisticalWeight() const {
+    Float statisticalWeight() const {
         return m_atomic.statisticalWeight;
     }
 
-    void setStatisticalWeight(double statisticalWeight) {
+    void setStatisticalWeight(Float statisticalWeight) {
         m_atomic.statisticalWeight = statisticalWeight;
     }
 
-    void reset(const DTree& previousDTree, int newMaxDepth, double subdivisionThreshold, bool augment) {
+    void reset(const DTree& previousDTree, int newMaxDepth, Float subdivisionThreshold, bool augment) {
         m_atomic = Atomic{};
         m_maxDepth = 0;
         m_nodes.clear();
@@ -606,7 +606,7 @@ public:
         std::stack<StackNode> nodeIndices;
         nodeIndices.push({0, 0, &previousDTree, 1});
 
-        const double total = previousDTree.m_atomic.sum;
+        const Float total = previousDTree.m_atomic.sum;
         
         // Create the topology of the new DTree to be the refined version
         // of the previous DTree. Subdivision is recursive if enough energy is there.
@@ -620,7 +620,7 @@ public:
 
             for (int i = 0; i < 4; ++i) {
                 m_nodes[sNode.nodeIndex].setSum(i, otherNode.sum(i));
-                const double fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
+                const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 SAssert(fraction <= 1.0f + Epsilon);
 
                 if ((sNode.depth < newMaxDepth && fraction > subdivisionThreshold) || !otherNode.isLeaf(i)) {
@@ -652,19 +652,19 @@ public:
         }
     }
 
-    double computeAugmentedPdf(double oldPdf, double newPdf, double A){
+    float computeAugmentedPdf(float oldPdf, float newPdf, float A){
         return (A * newPdf - oldPdf) / (A - 1.f);
     }
 
-    double computeAugmentedPdf(double oldPdf, double newPdf){
+    float computeAugmentedPdf(float oldPdf, float newPdf){
         return std::max(newPdf - oldPdf, 0.f);
     }
 
-    double computeIntegral(){
-        double integral = 0.f;
+    float computeIntegral(){
+        float integral = 0.f;
 
         struct StackNode {
-            double nodeFactor;
+            Float nodeFactor;
             size_t nodeIdx;
         };
 
@@ -676,7 +676,7 @@ public:
             nodeStack.pop();
 
             const QuadTreeNode& curr_node = m_nodes[curr_stacknode.nodeIdx];
-            double factor = curr_stacknode.nodeFactor / 4.f;
+            float factor = curr_stacknode.nodeFactor / 4.f;
 
             for (int i = 0; i < 4; ++i) {
                 //both nodes are leaves, compute difference for pdf
@@ -695,7 +695,7 @@ public:
         return integral;
     }
 
-    double buildUnmajorizedAugmented(const DTree& oldDist, const DTree& newDist){
+    float buildUnmajorizedAugmented(const DTree& oldDist, const DTree& newDist){
         m_atomic = Atomic{};
         m_nodes.clear();
         m_nodes.emplace_back();
@@ -703,12 +703,12 @@ public:
         struct NodePair {
             size_t newNodeIndex;
             size_t oldNodeIndex;
-            double newNodeFactor;
-            double oldNodeFactor;
+            Float newNodeFactor;
+            Float oldNodeFactor;
             size_t nodeIdx;
         };
 
-        std::pair<double, double> pdfPair(1.f, 1.f);
+        std::pair<Float, Float> pdfPair(1.f, 1.f);
 
         std::stack<NodePair> pairStack;
         pairStack.push({0, 0, 1.f, 1.f, 0});
@@ -720,15 +720,15 @@ public:
             const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex];
             const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex];
 
-            double oldDenom = oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3);
-            double newDenom = newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3);
+            Float oldDenom = oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3);
+            Float newDenom = newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3);
 
             for (int i = 0; i < 4; ++i) {
-                double oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(i) / oldDenom;
-                double newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(i) / newDenom;
+                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(i) / oldDenom;
+                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(i) / newDenom;
 
                 if(newNode.isLeaf(i) || oldNode.isLeaf(i)){
-                    double pdf = computeAugmentedPdf(oldPdf, newPdf);
+                    Float pdf = computeAugmentedPdf(oldPdf, newPdf);
                     m_nodes[nodePair.nodeIdx].setSum(i, pdf);
                 }
                 else{
@@ -748,17 +748,17 @@ public:
 
         m_atomic.statisticalWeight.store(newDist.m_atomic.statisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
-        double integral = computeIntegral();
+        float integral = computeIntegral();
 
         return integral;
     }
 
-    double buildAugmented(const DTree& oldDist, const DTree& newDist){
+    float buildAugmented(const DTree& oldDist, const DTree& newDist){
         m_atomic = Atomic{};
         m_maxDepth = 0;
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
-        double A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
+        float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -770,12 +770,12 @@ public:
         struct NodePair {
             std::pair<size_t, int> newNodeIndex;
             std::pair<size_t, int> oldNodeIndex;
-            double newNodeFactor;
-            double oldNodeFactor;
+            Float newNodeFactor;
+            Float oldNodeFactor;
             size_t nodeIdx;
         };
 
-        std::pair<double, double> pdfPair(1.f, 1.f);
+        std::pair<Float, Float> pdfPair(1.f, 1.f);
 
         std::stack<NodePair> pairStack;
         pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
@@ -792,19 +792,19 @@ public:
             const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex.first];
 
             //required because trees might not be same depth
-            double oldDenom = nodePair.oldNodeIndex.second < 0 ? oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3) :
+            Float oldDenom = nodePair.oldNodeIndex.second < 0 ? oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3) :
                 oldNode.sum(nodePair.oldNodeIndex.second) * 4.f;
-            double newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
+            Float newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
                 newNode.sum(nodePair.newNodeIndex.second) * 4.f; 
 
             for (int i = 0; i < 4; ++i) {
                 int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
                 int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
 
-                double oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
-                double newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
+                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
+                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
 
-                double pdf = computeAugmentedPdf(oldPdf, newPdf, A);
+                Float pdf = computeAugmentedPdf(oldPdf, newPdf, A);
 
                 //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
                 if(!(newNode.isLeaf(newChildIdx) || oldNode.isLeaf(oldChildIdx))){
@@ -842,14 +842,14 @@ public:
 
         // Ensure that the overall sum of irradiance estimates equals
         // the sum of irradiance estimates found in the quadtree.
-        double sum = 0;
+        Float sum = 0;
         for (int i = 0; i < 4; ++i) {
             sum += root.sum(i);
         }
         m_atomic.sum.store(sum);
     }
 
-    double getTotalEnergy(){
+    float getTotalEnergy(){
         return m_atomic.sum;
     }
 
@@ -872,8 +872,8 @@ private:
             return *this;
         }
 
-        std::atomic<double> sum;
-        std::atomic<double> statisticalWeight;
+        std::atomic<Float> sum;
+        std::atomic<Float> statisticalWeight;
 
     } m_atomic;
 
@@ -882,9 +882,9 @@ private:
 
 struct DTreeRecord {
     Vector d;
-    double radiance, product;
-    double woPdf, bsdfPdf, dTreePdf;
-    double statisticalWeight;
+    Float radiance, product;
+    Float woPdf, bsdfPdf, dTreePdf;
+    Float statisticalWeight;
     bool isDelta;
 };
 
@@ -904,7 +904,7 @@ public:
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
         if (!rec.isDelta) {
-            double irradiance = rec.radiance / rec.woPdf;
+            Float irradiance = rec.radiance / rec.woPdf;
             building.recordIrradiance(dirToCanonical(rec.d), irradiance, rec.statisticalWeight, directionalFilter);
         }
 
@@ -932,11 +932,11 @@ public:
     }
 
     static Vector canonicalToDir(Point2 p) {
-        const double cosTheta = 2 * p.x - 1;
-        const double phi = 2 * M_PI * p.y;
+        const Float cosTheta = 2 * p.x - 1;
+        const Float phi = 2 * M_PI * p.y;
 
-        const double sinTheta = sqrt(1 - cosTheta * cosTheta);
-        double sinPhi, cosPhi;
+        const Float sinTheta = sqrt(1 - cosTheta * cosTheta);
+        Float sinPhi, cosPhi;
         math::sincos(phi, &sinPhi, &cosPhi);
 
         return {sinTheta * cosPhi, sinTheta * sinPhi, cosTheta};
@@ -947,8 +947,8 @@ public:
             return {0, 0};
         }
 
-        const double cosTheta = std::min(std::max(d.z, -1.0f), 1.0f);
-        double phi = std::atan2(d.y, d.x);
+        const Float cosTheta = std::min(std::max(d.z, -1.0f), 1.0f);
+        Float phi = std::atan2(d.y, d.x);
         while (phi < 0)
             phi += 2.0 * M_PI;
 
@@ -961,7 +961,7 @@ public:
         
         if((augment || augmentReweight) && isBuilt){
             previous_tree_samples = std::max(total_samples, previous_tree_samples + req_augmented_samples);
-            double B = 0.f; 
+            float B = 0.f; 
 
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
@@ -974,8 +974,8 @@ public:
                 req_augmented_samples = 0;
             }
             else{
-                double req = B * previous_tree_samples;
-                double frac = req - int(req);
+                float req = B * previous_tree_samples;
+                float frac = req - int(req);
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
                     req_augmented_samples++;
@@ -1000,7 +1000,7 @@ public:
         return current_samples < req_augmented_samples;
     }
 
-    void reset(int maxDepth, double subdivisionThreshold, bool augment) {
+    void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
         building.reset(sampling, maxDepth, subdivisionThreshold, augment);
     }
 
@@ -1040,16 +1040,16 @@ public:
     double getAugmentedNormalizer(){
         return current_samples < req_augmented_samples ? double(total_samples) / double(previous_tree_samples + req_augmented_samples) : 1;
         /*return current_samples < req_augmented_samples ? 
-            double(total_samples) / 
-            (double(current_samples) + previous_tree_samples * getAugmentedMultiplier())
+            float(total_samples) / 
+            (float(current_samples) + previous_tree_samples * getAugmentedMultiplier())
             : 1.f;*/
     }
 
-    double pdf(const Vector& dir, int level, int& curr_level) const {
+    Float pdf(const Vector& dir, int level, int& curr_level) const {
         return sampling.pdf(dirToCanonical(dir), level, curr_level);
     }
 
-    double diff(const DTreeWrapper& other) const {
+    Float diff(const DTreeWrapper& other) const {
         return 0.0f;
     }
 
@@ -1061,19 +1061,19 @@ public:
         return sampling.numNodes();
     }
 
-    double meanRadiance() const {
+    Float meanRadiance() const {
         return sampling.mean();
     }
 
-    double statisticalWeight() const {
+    Float statisticalWeight() const {
         return sampling.statisticalWeight();
     }
 
-    double statisticalWeightBuilding() const {
+    Float statisticalWeightBuilding() const {
         return building.statisticalWeight();
     }
 
-    void setStatisticalWeightBuilding(double statisticalWeight) {
+    void setStatisticalWeightBuilding(Float statisticalWeight) {
         building.setStatisticalWeight(statisticalWeight);
     }
 
@@ -1081,39 +1081,39 @@ public:
         return building.approxMemoryFootprint() + sampling.approxMemoryFootprint();
     }
 
-    inline double bsdfSamplingFraction(double variable) const {
+    inline Float bsdfSamplingFraction(Float variable) const {
         return logistic(variable);
     }
 
-    inline double dBsdfSamplingFraction_dVariable(double variable) const {
-        double fraction = bsdfSamplingFraction(variable);
+    inline Float dBsdfSamplingFraction_dVariable(Float variable) const {
+        Float fraction = bsdfSamplingFraction(variable);
         return fraction * (1 - fraction);
     }
 
-    inline double bsdfSamplingFraction() const {
+    inline Float bsdfSamplingFraction() const {
         return bsdfSamplingFraction(bsdfSamplingFractionOptimizer.variable());
     }
 
-    void optimizeBsdfSamplingFraction(const DTreeRecord& rec, double ratioPower) {
+    void optimizeBsdfSamplingFraction(const DTreeRecord& rec, Float ratioPower) {
         m_lock.lock();
 
         // GRADIENT COMPUTATION
-        double variable = bsdfSamplingFractionOptimizer.variable();
-        double samplingFraction = bsdfSamplingFraction(variable);
+        Float variable = bsdfSamplingFractionOptimizer.variable();
+        Float samplingFraction = bsdfSamplingFraction(variable);
 
         // Loss gradient w.r.t. sampling fraction
-        double mixPdf = samplingFraction * rec.bsdfPdf + (1 - samplingFraction) * rec.dTreePdf;
-        double ratio = std::pow(rec.product / mixPdf, ratioPower);
-        double dLoss_dSamplingFraction = -ratio / rec.woPdf * (rec.bsdfPdf - rec.dTreePdf);
+        Float mixPdf = samplingFraction * rec.bsdfPdf + (1 - samplingFraction) * rec.dTreePdf;
+        Float ratio = std::pow(rec.product / mixPdf, ratioPower);
+        Float dLoss_dSamplingFraction = -ratio / rec.woPdf * (rec.bsdfPdf - rec.dTreePdf);
 
         // Chain rule to get loss gradient w.r.t. trainable variable
-        double dLoss_dVariable = dLoss_dSamplingFraction * dBsdfSamplingFraction_dVariable(variable);
+        Float dLoss_dVariable = dLoss_dSamplingFraction * dBsdfSamplingFraction_dVariable(variable);
 
         // We want some regularization such that our parameter does not become too big.
         // We use l2 regularization, resulting in the following linear gradient.
-        double l2RegGradient = 0.01f * variable;
+        Float l2RegGradient = 0.01f * variable;
 
-        double lossGradient = l2RegGradient + dLoss_dVariable;
+        Float lossGradient = l2RegGradient + dLoss_dVariable;
 
         // ADAM GRADIENT DESCENT
         bsdfSamplingFractionOptimizer.append(lossGradient, rec.statisticalWeight);
@@ -1123,23 +1123,23 @@ public:
 
     void dump(BlobWriter& blob, const Point& p, const Vector& size) const {
         blob
-            << (double)p.x << (double)p.y << (double)p.z
-            << (double)size.x << (double)size.y << (double)size.z
-            << (double)sampling.mean() << (uint64_t)sampling.statisticalWeight() << (uint64_t)sampling.numNodes();
+            << (float)p.x << (float)p.y << (float)p.z
+            << (float)size.x << (float)size.y << (float)size.z
+            << (float)sampling.mean() << (uint64_t)sampling.statisticalWeight() << (uint64_t)sampling.numNodes();
 
         for (size_t i = 0; i < sampling.numNodes(); ++i) {
             const auto& node = sampling.node(i);
             for (int j = 0; j < 4; ++j) {
-                blob << (double)node.sum(j) << (uint16_t)node.child(j);
+                blob << (float)node.sum(j) << (uint16_t)node.child(j);
             }
         }
     }
 
-    std::pair<double, double> getMajorizingFactor(){
+    std::pair<Float, Float> getMajorizingFactor(){
         return m_rejPdfPair;
     }
 
-    double estimatedEnergy(){
+    Float estimatedEnergy(){
         return sampling.getTotalEnergy() / previous_tree_samples;
     }
 
@@ -1159,7 +1159,7 @@ private:
 
     std::vector<Intersection> point_cache;
 
-    std::pair<double, double> m_rejPdfPair;
+    std::pair<Float, Float> m_rejPdfPair;
 
     AdamOptimizer bsdfSamplingFractionOptimizer{0.01f};
 
@@ -1260,8 +1260,8 @@ struct STreeNode {
         }
     }
 
-    double computeOverlappingVolume(const Point& min1, const Point& max1, const Point& min2, const Point& max2) {
-        double lengths[3];
+    Float computeOverlappingVolume(const Point& min1, const Point& max1, const Point& min2, const Point& max2) {
+        Float lengths[3];
         for (int i = 0; i < 3; ++i) {
             lengths[i] = std::max(std::min(max1[i], max2[i]) - std::max(min1[i], min2[i]), 0.0f);
         }
@@ -1269,7 +1269,7 @@ struct STreeNode {
     }
 
     void record(const Point& min1, const Point& max1, Point min2, Vector size2, const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, std::vector<STreeNode>& nodes) {
-        double w = computeOverlappingVolume(min1, max1, min2, min2 + size2);
+        Float w = computeOverlappingVolume(min1, max1, min2, min2 + size2);
         if (w > 0) {
             if (isLeaf) {
                 dTree.record({ rec.d, rec.radiance, rec.product, rec.woPdf, rec.bsdfPdf, rec.dTreePdf, rec.statisticalWeight * w, rec.isDelta }, directionalFilter, bsdfSamplingFractionLoss);
@@ -1304,7 +1304,7 @@ public:
         // Enlarge AABB to turn it into a cube. This has the effect
         // of nicer hierarchical subdivisions.
         Vector size = m_aabb.max - m_aabb.min;
-        double maxSize = std::max(std::max(size.x, size.y), size.z);
+        Float maxSize = std::max(std::max(size.x, size.y), size.z);
         m_aabb.max = m_aabb.min + Vector(maxSize);
     }
 
@@ -1390,7 +1390,7 @@ public:
     }
 
     void record(const Point& p, const Vector& dTreeVoxelSize, DTreeRecord rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
-        double volume = 1;
+        Float volume = 1;
         for (int i = 0; i < 3; ++i) {
             volume *= dTreeVoxelSize[i];
         }
@@ -1524,8 +1524,8 @@ public:
 
         m_sdTreeMaxMemory = props.getInteger("sdTreeMaxMemory", -1);
         m_sTreeThreshold = props.getInteger("sTreeThreshold", 12000);
-        m_dTreeThreshold = props.getdouble("dTreeThreshold", 0.01f);
-        m_bsdfSamplingFraction = props.getdouble("bsdfSamplingFraction", 0.5f);
+        m_dTreeThreshold = props.getFloat("dTreeThreshold", 0.01f);
+        m_bsdfSamplingFraction = props.getFloat("bsdfSamplingFraction", 0.5f);
         m_sppPerPass = props.getInteger("sppPerPass", 4);
 
         m_budgetStr = props.getString("budgetType", "seconds");
@@ -1537,7 +1537,7 @@ public:
             Assert(false);
         }
 
-        m_budget = props.getdouble("budget", 300.0f);
+        m_budget = props.getFloat("budget", 300.0f);
         m_dumpSDTree = props.getBoolean("dumpSDTree", false);
 
         m_reweight = props.getBoolean("reweight", false);
@@ -1605,16 +1605,16 @@ public:
         // Gather statistics
         int maxDepth = 0;
         int minDepth = std::numeric_limits<int>::max();
-        double avgDepth = 0;
-        double maxAvgRadiance = 0;
-        double minAvgRadiance = std::numeric_limits<double>::max();
-        double avgAvgRadiance = 0;
+        Float avgDepth = 0;
+        Float maxAvgRadiance = 0;
+        Float minAvgRadiance = std::numeric_limits<Float>::max();
+        Float avgAvgRadiance = 0;
         size_t maxNodes = 0;
         size_t minNodes = std::numeric_limits<size_t>::max();
-        double avgNodes = 0;
-        double maxStatisticalWeight = 0;
-        double minStatisticalWeight = std::numeric_limits<double>::max();
-        double avgStatisticalWeight = 0;
+        Float avgNodes = 0;
+        Float maxStatisticalWeight = 0;
+        Float minStatisticalWeight = std::numeric_limits<Float>::max();
+        Float avgStatisticalWeight = 0;
 
         int nPoints = 0;
         int nPointsNodes = 0;
@@ -1625,7 +1625,7 @@ public:
             minDepth = std::min(minDepth, depth);
             avgDepth += depth;
 
-            const double avgRadiance = dTree->meanRadiance();
+            const Float avgRadiance = dTree->meanRadiance();
             maxAvgRadiance = std::max(maxAvgRadiance, avgRadiance);
             minAvgRadiance = std::min(minAvgRadiance, avgRadiance);
             avgAvgRadiance += avgRadiance;
@@ -1638,7 +1638,7 @@ public:
                 ++nPointsNodes;
             }
 
-            const double statisticalWeight = dTree->statisticalWeight();
+            const Float statisticalWeight = dTree->statisticalWeight();
             maxStatisticalWeight = std::max(maxStatisticalWeight, statisticalWeight);
             minStatisticalWeight = std::min(minStatisticalWeight, statisticalWeight);
             avgStatisticalWeight += statisticalWeight;
@@ -1684,14 +1684,14 @@ public:
 
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
-                blob << (double)cameraMatrix(i, j);
+                blob << (float)cameraMatrix(i, j);
             }
         }
 
         m_sdTree->dump(blob);
     }
 
-    bool performRenderPasses(double& variance, int numPasses, Scene *scene, RenderQueue *queue, const RenderJob *job,
+    bool performRenderPasses(Float& variance, int numPasses, Scene *scene, RenderQueue *queue, const RenderJob *job,
         int sceneResID, int sensorResID, int samplerResID, int integratorResID) {
 
         ref<Scheduler> sched = Scheduler::getInstance();
@@ -1788,13 +1788,13 @@ public:
             for (int y = 0; y < size.y; ++y) {
                 Point2i pos = Point2i(x, y);
                 Spectrum pixel = image->getPixel(pos);
-                Spectrum localVar = squaredImage->getPixel(pos) - pixel * pixel / (double)N;
+                Spectrum localVar = squaredImage->getPixel(pos) - pixel * pixel / (Float)N;
                 image->setPixel(pos, Spectrum(1.f));
                 // The local variance is clamped such that fireflies don't cause crazily unstable estimates.
                 variance += std::min(localVar.getLuminance(), 10000.0f);
             }
 
-        variance /= (double)size.x * size.y * (N - 1);
+        variance /= (Float)size.x * size.y * (N - 1);
 
         m_varianceBuffer->put(m_image);
 
@@ -1803,10 +1803,10 @@ public:
             m_variances.push_back(variance);
         }
 
-        double seconds = computeElapsedSeconds(start);
+        Float seconds = computeElapsedSeconds(start);
 
-        const double ttuv = seconds * variance;
-        const double stuv = passesRenderedLocal * m_sppPerPass * variance;
+        const Float ttuv = seconds * variance;
+        const Float stuv = passesRenderedLocal * m_sppPerPass * variance;
         Log(EInfo, "%.2f seconds, Total passes: %d, Var: %f, TTUV: %f, STUV: %f.",
             seconds, m_passesRendered, variance, ttuv, stuv);
 
@@ -1834,14 +1834,14 @@ public:
 
         Spectrum radiance;
 
-        double woPdf, bsdfPdf, dTreePdf;
+        Float woPdf, bsdfPdf, dTreePdf;
         bool isDelta;
 
         void record(const Spectrum& r) {
             radiance += r;
         }
 
-        void commit(STree& sdTree, double statisticalWeight, ESpatialFilter spatialFilter, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
+        void commit(STree& sdTree, Float statisticalWeight, ESpatialFilter spatialFilter, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
             if (!(woPdf > 0) || !radiance.isValid() || !bsdfVal.isValid()) {
                 return;
             }
@@ -1886,7 +1886,7 @@ public:
     struct RVertex{
         Ray ray;
         Spectrum bsdfVal;
-        double bsdfPdf, woPdf;
+        Float bsdfPdf, woPdf;
         bool isDelta;
         int level;
         double normalizing_sc;
@@ -1896,16 +1896,16 @@ public:
     struct RadRecord{
         int pos;
         Spectrum L;
-        double pdf;
+        float pdf;
     };
 
     struct NEERecord{
         int pos;
         Spectrum L;
-        double pdf;
+        float pdf;
         Vector wo;
         Spectrum bsdfVal;
-        double bsdfPdf;
+        Float bsdfPdf;
     };
 
     struct RPath{
@@ -1915,7 +1915,7 @@ public:
         Point2 sample_pos;
         Spectrum spec;
         Spectrum Li;
-        double alpha;
+        Float alpha;
         bool active;
         int iter;
     };
@@ -1928,14 +1928,14 @@ public:
             }
 
             Spectrum L = sample_path.nee_records[j].L;
-            double pdf = sample_path.nee_records[j].pdf;
+            Float pdf = sample_path.nee_records[j].pdf;
             L *= sample_path.nee_records[j].bsdfVal;
             DTreeWrapper* dTree = vertices[pos].dTree;
 
             int curr_level = 0;
-            double dtreePdf = dTree->pdf(sample_path.nee_records[j].wo, -1, curr_level);
-            double bsf = dTree->bsdfSamplingFraction();
-            double woPdf = bsf * sample_path.nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
+            Float dtreePdf = dTree->pdf(sample_path.nee_records[j].wo, -1, curr_level);
+            Float bsf = dTree->bsdfSamplingFraction();
+            Float woPdf = bsf * sample_path.nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
             L *= miWeight(sample_path.nee_records[j].pdf, woPdf);
 
@@ -1984,7 +1984,7 @@ public:
             if(pos >= 0){
                 L *= vertices[pos].throughput;
 
-                double weight = miWeight(sample_path.path[pos].woPdf, sample_path.radiance_records[j].pdf);
+                Float weight = miWeight(sample_path.path[pos].woPdf, sample_path.radiance_records[j].pdf);
                 L *= weight;
 
                 if(!L.isValid()){
@@ -2000,12 +2000,12 @@ public:
         }
     }
 
-    double computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, double& dTreePdf){
+    float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
         dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
         dTreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
 
-        double bsf = dTree->bsdfSamplingFraction();
+        Float bsf = dTree->bsdfSamplingFraction();
 
         return bsf * vertex.bsdfPdf + (1 - bsf) * dTreePdf;
     }
@@ -2018,7 +2018,7 @@ public:
             }
         }
 
-        double active_perc = double(active) / m_samplePaths->size();
+        float active_perc = float(active) / m_samplePaths->size();
 
         std::cout << "Percentage of active paths: " << active_perc << std::endl;
     }
@@ -2039,18 +2039,18 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
-                double dTreePdf;
+                float dTreePdf;
 
-                double newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
 
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
-                double bsf = dTree->bsdfSamplingFraction();
-                std::pair<double, double> maxPdfPair = dTree->getMajorizingFactor();
-                double oldPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.first;
-                double newPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.second;
-                double c = newPdfBound / oldPdfBound;
+                Float bsf = dTree->bsdfSamplingFraction();
+                std::pair<Float, Float> maxPdfPair = dTree->getMajorizingFactor();
+                Float oldPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.first;
+                Float newPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.second;
+                Float c = newPdfBound / oldPdfBound;
 
-                double acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
+                Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
@@ -2119,11 +2119,11 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
-                double dTreePdf;
+                float dTreePdf;
 
-                double newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
-                double acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
-                double oldWo = (*m_samplePaths)[i].path[j].woPdf;
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
+                Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 if(sampler->next1D() > acceptProb){
@@ -2132,7 +2132,7 @@ public:
                     break;
                 }
                 else{
-                    double rw_scale = std::max(1.f, newWoPdf / oldWo);
+                    Float rw_scale = std::max(1.f, newWoPdf / oldWo);
                     (*m_samplePaths)[i].path[j].sc *= rw_scale;
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
@@ -2189,10 +2189,10 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
-                double dTreePdf;
+                float dTreePdf;
 
-                double nwo = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
-                double reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
+                Float nwo = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
 
                 if(reweight < 1.f){
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
@@ -2242,9 +2242,9 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
-                double dTreePdf;
+                float dTreePdf;
 
-                double newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
  
@@ -2291,7 +2291,7 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
                 int curr_level = 0;
-                double dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
+                Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
                 (*m_currAugmentedPaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_currAugmentedPaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
 
@@ -2344,10 +2344,10 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
-                double dTreePdf;
+                float dTreePdf;
 
-                double newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
-                double acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
@@ -2416,15 +2416,15 @@ public:
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
-                double dTreePdf;
+                float dTreePdf;
 
-                double newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 if(newWoPdf < EPSILON){
                     discard_iter = j;
                     break;
                 }
 
-                double reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
+                Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
@@ -2518,11 +2518,11 @@ public:
         ref<Sensor> sensor = static_cast<Sensor *>(sched->getResource(sensorResID));
         ref<Film> film = sensor->getFilm();
 
-        int nPasses = (int)std::ceil(sampleCount / (double)m_sppPerPass);
+        int nPasses = (int)std::ceil(sampleCount / (Float)m_sppPerPass);
         sampleCount = m_sppPerPass * nPasses;
 
         bool result = true;
-        double currentVarAtEnd = std::numeric_limits<double>::infinity();
+        Float currentVarAtEnd = std::numeric_limits<Float>::infinity();
 
         m_progress = std::unique_ptr<ProgressReporter>(new ProgressReporter("Rendering", nPasses, job));
 
@@ -2576,7 +2576,7 @@ public:
             }
             
 
-            double variance;
+            Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
                 break;
@@ -2613,7 +2613,7 @@ public:
             }
             
 
-            const double lastVarAtEnd = currentVarAtEnd;
+            const Float lastVarAtEnd = currentVarAtEnd;
             currentVarAtEnd = passesThisIteration * variance / remainingPasses;
 
             Log(EInfo,
@@ -2655,10 +2655,10 @@ public:
         return result;
     }
 
-    static double computeElapsedSeconds(std::chrono::steady_clock::time_point start) {
+    static Float computeElapsedSeconds(std::chrono::steady_clock::time_point start) {
         auto current = std::chrono::steady_clock::now();
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(current - start);
-        return (double)ms.count() / 1000;
+        return (Float)ms.count() / 1000;
     }
 
     bool renderTime(Scene *scene, RenderQueue *queue, const RenderJob *job,
@@ -2668,14 +2668,14 @@ public:
         ref<Sensor> sensor = static_cast<Sensor *>(sched->getResource(sensorResID));
         ref<Film> film = sensor->getFilm();
 
-        double nSeconds = m_budget;
+        Float nSeconds = m_budget;
 
         bool result = true;
-        double currentVarAtEnd = std::numeric_limits<double>::infinity();
+        Float currentVarAtEnd = std::numeric_limits<Float>::infinity();
 
         m_progress = std::unique_ptr<ProgressReporter>(new ProgressReporter("Rendering", (int)nSeconds, job));
 
-        double elapsedSeconds = 0;
+        Float elapsedSeconds = 0;
 
         Properties props("independent");
         ref<Sampler> sampler = static_cast<Sampler*>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
@@ -2686,7 +2686,7 @@ public:
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
 
-            double remainingTime = nSeconds - elapsedSeconds;
+            Float remainingTime = nSeconds - elapsedSeconds;
             const int passesThisIteration = 1 << m_iter;
 
             Log(EInfo, "ITERATION %d, %d passes", m_iter, passesThisIteration);
@@ -2703,15 +2703,15 @@ public:
                 rejectCurrentPaths(sampler);
             }
 
-            double variance;
+            Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
                 break;
             }
 
-            const double secondsIter = computeElapsedSeconds(startIter);
+            const Float secondsIter = computeElapsedSeconds(startIter);
 
-            const double lastVarAtEnd = currentVarAtEnd;
+            const Float lastVarAtEnd = currentVarAtEnd;
             currentVarAtEnd = secondsIter * variance / remainingTime;
 
             Log(EInfo,
@@ -2817,7 +2817,7 @@ public:
             ref<ImageBlock> tmp = new ImageBlock(Bitmap::ESpectrum, film->getCropSize());
             size_t begin = m_images.size() - std::min(m_images.size(), (size_t)4);
 
-            double totalWeight = 0;
+            Float totalWeight = 0;
             for (size_t i = begin; i < m_variances.size(); ++i) {
                 totalWeight += 1.0f / m_variances[i];
             }
@@ -2835,15 +2835,15 @@ public:
         Sampler *sampler, ImageBlock *block, const bool &stop,
         const std::vector< TPoint2<uint8_t> > &points) const {
 
-        double diffScaleFactor = 1.0f /
-            std::sqrt((double)m_sppPerPass);
+        Float diffScaleFactor = 1.0f /
+            std::sqrt((Float)m_sppPerPass);
 
         bool needsApertureSample = sensor->needsApertureSample();
         bool needsTimeSample = sensor->needsTimeSample();
 
         RadianceQueryRecord rRec(scene, sampler);
         Point2 apertureSample(0.5f);
-        double timeSample = 0.5f;
+        Float timeSample = 0.5f;
         RayDifferential sensorRay;
 
         block->clear();
@@ -2928,7 +2928,7 @@ public:
         }
     }
 
-    void pdfMat(double& woPdf, double& bsdfPdf, double& dTreePdf, double bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree, int& curr_level) const {
+    void pdfMat(Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, const BSDF* bsdf, const BSDFSamplingRecord& bRec, const DTreeWrapper* dTree, int& curr_level) const {
         dTreePdf = 0;
 
         auto type = bsdf->getType();
@@ -2949,7 +2949,7 @@ public:
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
 
-    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, double& woPdf, double& bsdfPdf, double& dTreePdf, double bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree, int& dtreeLevel) const {
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, RadianceQueryRecord& rRec, DTreeWrapper* dTree, int& dtreeLevel) const {
         Point2 sample = rRec.nextSample2D();
 
         auto type = bsdf->getType();
@@ -2998,7 +2998,7 @@ public:
         return result / woPdf;
     }
 
-    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, double& woPdf, double& bsdfPdf, double& dTreePdf, double bsdfSamplingFraction, ref<Sampler> sampler, DTreeWrapper* dTree, int& dtreeLevel) const {
+    Spectrum sampleMat(const BSDF* bsdf, BSDFSamplingRecord& bRec, Float& woPdf, Float& bsdfPdf, Float& dTreePdf, Float bsdfSamplingFraction, ref<Sampler> sampler, DTreeWrapper* dTree, int& dtreeLevel) const {
         Point2 sample = sampler->next2D();
 
         auto type = bsdf->getType();
@@ -3064,7 +3064,7 @@ public:
         RayDifferential ray(r);
         Spectrum Li(0.0f);
 
-        double eta = 1.0f;
+        Float eta = 1.0f;
 
         /* Perform the first ray intersection (or ignore if the
         intersection has already been provided). */
@@ -3117,16 +3117,16 @@ public:
 
                         /* Evaluate the phase function */
                         PhaseFunctionSamplingRecord pRec(mRec, -ray.d, dRec.d);
-                        double phaseVal = phase->eval(pRec);
+                        Float phaseVal = phase->eval(pRec);
 
                         if (phaseVal != 0) {
                             /* Calculate prob. of having sampled that direction using
                             phase function sampling */
-                            double phasePdf = (emitter->isOnSurface() && dRec.measure == ESolidAngle)
-                                ? phase->pdf(pRec) : (double) 0.0f;
+                            Float phasePdf = (emitter->isOnSurface() && dRec.measure == ESolidAngle)
+                                ? phase->pdf(pRec) : (Float) 0.0f;
 
                             /* Weight using the power heuristic */
-                            const double weight = miWeight(dRec.pdf, phasePdf);
+                            const Float weight = miWeight(dRec.pdf, phasePdf);
                             recordRadiance(throughput * value * phaseVal * weight);
                         }
                     }
@@ -3136,9 +3136,9 @@ public:
                 /*                         Phase function sampling                      */
                 /* ==================================================================== */
 
-                double phasePdf;
+                Float phasePdf;
                 PhaseFunctionSamplingRecord pRec(mRec, -ray.d);
-                double phaseVal = phase->sample(pRec, phasePdf, rRec.sampler);
+                Float phaseVal = phase->sample(pRec, phasePdf, rRec.sampler);
                 if (phaseVal == 0)
                     break;
                 throughput *= phaseVal;
@@ -3154,7 +3154,7 @@ public:
                 /* If a luminaire was hit, estimate the local illumination and
                 weight using the power heuristic */
                 if (!value.isZero() && (rRec.type & RadianceQueryRecord::EDirectMediumRadiance)) {
-                    const double emitterPdf = scene->pdfEmitterDirect(dRec);
+                    const Float emitterPdf = scene->pdfEmitterDirect(dRec);
                     recordRadiance(throughput * value * miWeight(phasePdf, emitterPdf));
                 }
 
@@ -3173,7 +3173,7 @@ public:
                     index boundaries. Stop with at least some probability to avoid
                     getting stuck (e.g. due to total internal reflection) */
 
-                    double q = std::min(throughput.max() * eta * eta, (double) 0.95f);
+                    Float q = std::min(throughput.max() * eta * eta, (Float) 0.95f);
                     if (rRec.nextSample1D() >= q)
                         break;
                     throughput /= q;
@@ -3229,7 +3229,7 @@ public:
                     break;
 
                 /* Prevent light leaks due to the use of shading normals */
-                double wiDotGeoN = -dot(its.geoFrame.n, ray.d),
+                Float wiDotGeoN = -dot(its.geoFrame.n, ray.d),
                     wiDotShN = Frame::cosTheta(its.wi);
                 if (wiDotGeoN * wiDotShN < 0 && m_strictNormals)
                     break;
@@ -3246,7 +3246,7 @@ public:
                     dTree = m_sdTree->dTreeWrapper(its.p, dTreeVoxelSize);
                 }
 
-                double bsdfSamplingFraction = m_bsdfSamplingFraction;
+                Float bsdfSamplingFraction = m_bsdfSamplingFraction;
                 if (dTree && m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) {
                     bsdfSamplingFraction = dTree->bsdfSamplingFraction();
                 }
@@ -3257,7 +3257,7 @@ public:
 
                 /* Sample BSDF * cos(theta) */
                 BSDFSamplingRecord bRec(its, rRec.sampler, ERadiance);
-                double woPdf, bsdfPdf, dTreePdf;
+                Float woPdf, bsdfPdf, dTreePdf;
                 int dTreeLevel;
                 Spectrum bsdfWeight = sampleMat(bsdf, bRec, woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, rRec, dTree, dTreeLevel);
 
@@ -3290,7 +3290,7 @@ public:
                     if (!value.isZero()) {
                         BSDFSamplingRecord bRec(its, its.toLocal(dRec.d));
 
-                        double woDotGeoN = dot(its.geoFrame.n, dRec.d);
+                        Float woDotGeoN = dot(its.geoFrame.n, dRec.d);
 
                         /* Prevent light leaks due to the use of shading normals */
                         if (!m_strictNormals || woDotGeoN * Frame::cosTheta(bRec.wo) > 0) {
@@ -3299,14 +3299,14 @@ public:
 
                             /* Calculate prob. of having generated that direction using BSDF sampling */
                             const Emitter *emitter = static_cast<const Emitter *>(dRec.object);
-                            double woPdf = 0, bsdfPdf = 0, dTreePdf = 0;
+                            Float woPdf = 0, bsdfPdf = 0, dTreePdf = 0;
                             if (emitter->isOnSurface() && dRec.measure == ESolidAngle) {
                                 int dtl;
                                 pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtl);
                             }
 
                             /* Weight using the power heuristic */
-                            const double weight = miWeight(dRec.pdf, woPdf);
+                            const Float weight = miWeight(dRec.pdf, woPdf);
 
                             Spectrum premult_value = value;
 
@@ -3344,7 +3344,7 @@ public:
 
 
                 /* Prevent light leaks due to the use of shading normals */
-                double woDotGeoN = dot(its.geoFrame.n, wo);
+                Float woDotGeoN = dot(its.geoFrame.n, wo);
 
                 // BSDF handling
                 if (bsdfWeight.isZero() || (woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
@@ -3414,9 +3414,9 @@ public:
                 /* If a luminaire was hit, estimate the local illumination and
                 weight using the power heuristic */
                 if (rRec.type & RadianceQueryRecord::EDirectSurfaceRadiance) {
-                    const double emitterPdf = (m_doNee && !isDelta && !value.isZero()) ? scene->pdfEmitterDirect(dRec) : 0;
+                    const Float emitterPdf = (m_doNee && !isDelta && !value.isZero()) ? scene->pdfEmitterDirect(dRec) : 0;
 
-                    const double weight = miWeight(woPdf, emitterPdf);
+                    const Float weight = miWeight(woPdf, emitterPdf);
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
@@ -3456,7 +3456,7 @@ public:
 
                 // Russian roulette
                 if (rRec.depth++ >= m_rrDepth) {
-                    double successProb = 1.0f;
+                    Float successProb = 1.0f;
                     if (dTree && !(bRec.sampledType & BSDF::EDelta)) {
                         if (!m_isBuilt) {
                             successProb = throughput.max() * eta * eta;
@@ -3583,13 +3583,13 @@ public:
 
             if (env && env->fillDirectSamplingRecord(dRec, ray)) {
                 value = transmittance * env->evalEnvironment(RayDifferential(ray));
-                dRec.dist = std::numeric_limits<double>::infinity();
-                its->t = std::numeric_limits<double>::infinity();
+                dRec.dist = std::numeric_limits<Float>::infinity();
+                its->t = std::numeric_limits<Float>::infinity();
             }
         }
     }
 
-    double miWeight(double pdfA, double pdfB) const {
+    Float miWeight(Float pdfA, Float pdfB) const {
         pdfA *= pdfA; pdfB *= pdfB;
         return pdfA / (pdfA + pdfB);
     }
@@ -3614,7 +3614,7 @@ private:
     mutable ref<ImageBlock> m_image;
 
     std::vector<ref<Bitmap>> m_images;
-    std::vector<double> m_variances;
+    std::vector<Float> m_variances;
 
     /// This contains the currently estimated variance.
     mutable ref<Film> m_varianceBuffer;
@@ -3653,7 +3653,7 @@ private:
     */
     std::string m_budgetStr;
     EBudget m_budgetType;
-    double m_budget;
+    Float m_budget;
 
     bool m_isBuilt = false;
     int m_iter;
@@ -3724,7 +3724,7 @@ private:
         of energy they carry exceeds this value.
         Default = 0.01 (1%)
     */
-    double m_dTreeThreshold;
+    Float m_dTreeThreshold;
 
     /**
         When guiding, we perform MIS with the balance heuristic between the guiding
@@ -3733,7 +3733,7 @@ private:
         vs. how often the guiding distribution is sampled.
         Default = 0.5 (50%)
     */
-    double m_bsdfSamplingFraction;
+    Float m_bsdfSamplingFraction;
 
     /**
         The loss function to use when learning the bsdfSamplingFraction using gradient
