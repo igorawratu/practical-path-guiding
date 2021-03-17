@@ -1034,11 +1034,11 @@ public:
     }
 
     double getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? std::min(100, double(req_augmented_samples) / current_samples)  : 1.f;
+        return current_samples < req_augmented_samples ? std::min(100, double(req_augmented_samples) / current_samples)  : 1;
     }
 
     double getAugmentedNormalizer(){
-        return current_samples < req_augmented_samples ? double(total_samples) / double(previous_tree_samples + req_augmented_samples) : 1.f;
+        return current_samples < req_augmented_samples ? double(total_samples) / double(previous_tree_samples + req_augmented_samples) : 1;
         /*return current_samples < req_augmented_samples ? 
             double(total_samples) / 
             (double(current_samples) + previous_tree_samples * getAugmentedMultiplier())
