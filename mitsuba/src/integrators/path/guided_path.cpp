@@ -653,7 +653,7 @@ public:
     }
 
     float computeAugmentedPdf(float oldPdf, float newPdf, float A){
-        return (A * newPdf - oldPdf) / (A - 1.f);
+        return std::max(0.f, (A * newPdf - oldPdf) / (A - 1.f));
     }
 
     float computeAugmentedPdf(float oldPdf, float newPdf){
@@ -759,6 +759,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
+        A = std::min(100.f, A);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -1034,7 +1035,7 @@ public:
     }
 
     double getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? std::min(100., double(req_augmented_samples) / current_samples)  : 1;
+        return current_samples < req_augmented_samples ? double(req_augmented_samples) / current_samples : 1;
     }
 
     double getAugmentedNormalizer(){
