@@ -960,7 +960,7 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
-            previous_tree_samples = total_samples;//std::max(total_samples, previous_tree_samples + req_augmented_samples);
+            previous_tree_samples = std::max(total_samples, previous_tree_samples + req_augmented_samples);
             float B = 0.f; 
 
             if(augment){
@@ -1034,7 +1034,7 @@ public:
     }
 
     double getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? double(req_augmented_samples) / current_samples  : 1.f;
+        return current_samples < req_augmented_samples ? std::min(100.f, double(req_augmented_samples) / current_samples)  : 1.f;
     }
 
     double getAugmentedNormalizer(){
