@@ -1034,7 +1034,7 @@ public:
     }
 
     double getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? std::min(100, double(req_augmented_samples) / current_samples)  : 1;
+        return current_samples < req_augmented_samples ? std::min(100., double(req_augmented_samples) / current_samples)  : 1;
     }
 
     double getAugmentedNormalizer(){
