@@ -1948,9 +1948,9 @@ public:
             }
 
             for(int k = 0; k <= pos; ++k){
-                vertices[k].radiance += L;
+                vertices[k].radiance += L * sample_path.path[pos].sc;
             }
-            sample_path.Li += L;
+            sample_path.Li += L * sample_path.path[pos].sc * sample_path.path[pos].normalizing_sc;
 
             if(m_nee == EKickstart){
                 Vertex v = Vertex{ 
@@ -1959,7 +1959,7 @@ public:
                     Ray(vertices[pos].ray.o, sample_path.nee_records[j].wo, 0),
                     prevThroughput * sample_path.nee_records[j].bsdfVal / pdf,
                     sample_path.nee_records[j].bsdfVal,
-                    L,
+                    L * sample_path.path[pos].sc,
                     pdf,
                     sample_path.nee_records[j].bsdfPdf,
                     dtreePdf,
