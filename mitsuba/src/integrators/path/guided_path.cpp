@@ -960,8 +960,8 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
-            previous_tree_samples = total_samples;
-            float B = 0.f;
+            previous_tree_samples = std::max(total_samples, previous_tree_samples + req_augmented_samples);
+            float B = 0.f; 
 
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
@@ -974,7 +974,7 @@ public:
                 req_augmented_samples = 0;
             }
             else{
-                float req = B * total_samples;
+                float req = B * previous_tree_samples;
                 float frac = req - int(req);
                 req_augmented_samples = req;
                 if(sampler->next1D() < frac){
@@ -1588,7 +1588,7 @@ public:
         });
     }
 
-    voicorrectDTreeSampleCounts() {
+    void correctDTreeSampleCounts() {
         m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
             dTree->correctSampleCounts();
         });
@@ -2623,7 +2623,7 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                correctDTreeSampleCounts();
+                //correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
