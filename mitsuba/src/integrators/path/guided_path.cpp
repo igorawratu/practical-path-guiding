@@ -960,7 +960,7 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
-            previous_tree_samples = total_samples;//std::max(total_samples, previous_tree_samples + req_augmented_samples);
+            previous_tree_samples = std::max(total_samples, previous_tree_samples + req_augmented_samples);
             float B = 0.f; 
 
             if(augment){
@@ -1920,8 +1920,7 @@ public:
         int iter;
     };
 
-    template<typename T>
-    void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, const std::vector<T>& scale_factors, ref<Sampler> sampler){
+    void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, ref<Sampler> sampler){
         for(std::uint32_t j = 0; j < sample_path.nee_records.size(); ++j){
             int pos = sample_path.nee_records[j].pos;
             if(pos >= int(vertices.size())){
@@ -1930,7 +1929,6 @@ public:
 
             Spectrum L = sample_path.nee_records[j].L;
             Float pdf = sample_path.nee_records[j].pdf;
-            //sample_path.nee_records[j].bsdfVal *= scale_factors[j];
             L *= sample_path.nee_records[j].bsdfVal;
             DTreeWrapper* dTree = vertices[pos].dTree;
 
@@ -2033,7 +2031,6 @@ public:
             }
 
             std::vector<Vertex> vertices;
-            std::vector<float> scale_factors;
             (*m_samplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
@@ -2062,9 +2059,6 @@ public:
                     break;
                 }
                 else{
-                    float scale = 1.f;// / std::max(1e-5f, acceptProb);
-                    (*m_samplePaths)[i].path[j].bsdfVal *= scale;
-                    scale_factors.push_back(scale);
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
 
@@ -2088,7 +2082,7 @@ public:
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
-                    computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                    computeNee((*m_samplePaths)[i], vertices, sampler);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2118,7 +2112,6 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
-            std::vector<Float> scale_factors;
 
             //first try reject path
             std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
@@ -2139,10 +2132,8 @@ public:
                     break;
                 }
                 else{
-                    Float acceptScale = 1.f;// / std::min(acceptProb, 1.f);
-                    scale_factors.push_back(acceptScale);
                     Float rw_scale = std::max(1.f, newWoPdf / oldWo);
-                    (*m_samplePaths)[i].path[j].bsdfVal *= rw_scale * acceptScale;
+                    (*m_samplePaths)[i].path[j].sc *= rw_scale;
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                 }
@@ -2168,7 +2159,7 @@ public:
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
-                    computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                    computeNee((*m_samplePaths)[i], vertices, sampler);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2191,7 +2182,6 @@ public:
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             std::vector<Vertex> vertices;
-            std::vector<float> scale_factors;
 
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
@@ -2208,12 +2198,10 @@ public:
                     (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 }
 
-                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].woPdf = nwo;
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
                 throughput *= bsdfWeight;
-
-                scale_factors.push_back(dTree->getAugmentedNormalizer());
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2233,7 +2221,7 @@ public:
             computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                computeNee((*m_samplePaths)[i], vertices, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2250,7 +2238,6 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
-            std::vector<double> scale_factors;
             
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2263,8 +2250,6 @@ public:
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-
-                scale_factors.push_back(dTree->getAugmentedNormalizer());
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2284,7 +2269,7 @@ public:
             computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                computeNee((*m_samplePaths)[i], vertices, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2301,7 +2286,6 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
-            std::vector<double> scale_factors;
 
             for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2313,8 +2297,6 @@ public:
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-
-                scale_factors.push_back(dTree->getAugmentedNormalizer() * dTree->getAugmentedMultiplier());
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2334,7 +2316,7 @@ public:
             computeRadiance((*m_currAugmentedPaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_currAugmentedPaths)[i], vertices, scale_factors, sampler);
+                computeNee((*m_currAugmentedPaths)[i], vertices, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {;
@@ -2355,7 +2337,6 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
-            std::vector<float> scale_factors;
 
             std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
             bool rejected = false;
@@ -2369,20 +2350,14 @@ public:
                 Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
-                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+
                 if(sampler->next1D() > acceptProb){
                     termination_iter = j;
                     rejected = true;
                     break;
                 }
                 else{
-                    float scale = 1.f;
-                    /*if(acceptProb < 1.f){
-                        scale = 1.f / std::max(EPSILON, acceptProb);
-                        (*m_samplePaths)[i].path[j].bsdfVal *= scale;
-                    }*/
-                    scale_factors.push_back(scale * dTree->getAugmentedNormalizer());
-
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                 }
@@ -2408,7 +2383,7 @@ public:
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
-                    computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                    computeNee((*m_samplePaths)[i], vertices, sampler);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
@@ -2432,7 +2407,6 @@ public:
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             std::vector<Vertex> vertices;
-            std::vector<float> scale_factors;
 
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
@@ -2458,8 +2432,6 @@ public:
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                scale_factors.push_back(1.f);
-
                 vertices.push_back(     
                     Vertex{ 
                         dTree,
@@ -2483,7 +2455,7 @@ public:
 
             //compute NEE if enabled
             if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, scale_factors, sampler);
+                computeNee((*m_samplePaths)[i], vertices, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {
