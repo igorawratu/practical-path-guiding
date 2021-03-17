@@ -960,7 +960,7 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
-            previous_tree_samples = std::max(total_samples, previous_tree_samples + req_augmented_samples);
+            previous_tree_samples = total_samples;//std::max(total_samples, previous_tree_samples + req_augmented_samples);
             float B = 0.f; 
 
             if(augment){
