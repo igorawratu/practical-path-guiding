@@ -759,7 +759,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        //A = std::min(100.f, A);
+        A = std::min(100.f, A);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -2327,9 +2327,6 @@ public:
                 Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
                 (*m_currAugmentedPaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_currAugmentedPaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
-                if((*m_currAugmentedPaths)[i].path[j].sc > 100){
-                    std::cout << (*m_currAugmentedPaths)[i].path[j].sc << std::endl;
-                }
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2592,6 +2589,11 @@ public:
             resetSDTree(m_augment);
 
             if(m_reweight || m_reject || m_rejectReweight){
+                recordSavedSamples();
+                updateRequiredSamples(sampler);
+            }
+
+            if(m_reweight || m_reject || m_rejectReweight){
                 if(m_reweight){
                     reweightCurrentPaths(sampler); 
                 }
@@ -2680,11 +2682,6 @@ public:
 
             if(!m_isFinalIter){
                 buildSDTree(sampler);
-
-                if(m_reweight || m_reject || m_rejectReweight){
-                    recordSavedSamples();
-                    updateRequiredSamples(sampler);
-                }
             }
 
             if (m_dumpSDTree) {
