@@ -2327,6 +2327,9 @@ public:
                 Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
                 (*m_currAugmentedPaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_currAugmentedPaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
+                if((*m_currAugmentedPaths)[i].path[j].sc > 100){
+                    std::cout << (*m_currAugmentedPaths)[i].path[j].sc << std::endl;
+                }
 
                 Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
