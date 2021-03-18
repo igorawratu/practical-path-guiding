@@ -893,12 +893,13 @@ struct DTreeWrapper {
 public:
     DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
         current_samples = 0;
-        total_samples = 0;
-        previous_tree_samples = 0;
+        actual_samples = 0;
+        weighted_samplecount = 0;
         req_augmented_samples = 0;
         
         current_cache_size = 0;
         current_cache_idx = 0;
+        B = 0.f;
 
         point_cache.resize(100);
     }
@@ -956,45 +957,39 @@ public:
         return {(cosTheta + 1) / 2, phi / (2 * M_PI)};
     }
 
+    void computeRequiredSamples(){
+        if(B < EPSILON){
+            req_augmented_samples = 0;
+        }
+        else{
+            float req = B * weighted_samplecount;
+            float frac = req - int(req);
+            req_augmented_samples = req;
+            if(sampler->next1D() < frac){
+                req_augmented_samples++;
+            }
+        }
+    }
+
     void build(ref<Sampler> sampler, bool augment, bool augmentReweight, bool isBuilt) {
         previous = sampling;
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
-            previous_tree_samples = std::max(total_samples, previous_tree_samples + req_augmented_samples);
-            float B = 0.f; 
-
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
             }
             else if(augmentReweight){
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
             }
-
-            if(B < EPSILON){
-                req_augmented_samples = 0;
-            }
-            else{
-                float req = B * previous_tree_samples;
-                float frac = req - int(req);
-                req_augmented_samples = req;
-                if(sampler->next1D() < frac){
-                    req_augmented_samples++;
-                }
-            }
         }
 
+        weighted_samplecount = 0;
         current_samples = 0;
+        actual_samples = 0;
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
-    }
-
-    void splitSpatially(){
-        req_augmented_samples /= 2;
-        previous_tree_samples /= 2;
-        total_samples /= 2;
-        current_samples /= 2;
     }
 
     bool requiresAugmentedSamples(){
@@ -1015,7 +1010,16 @@ public:
 
     void incSampleCount(){
         current_samples++;
-        total_samples++;
+        actual_samples++;
+    }
+
+    void incSampleCount(double weight){
+        actual_samples++;
+        weighted_samplecount += weight;
+    }
+
+    void updateWeightedWithCurrent(){
+        weighted_samplecount += getAugmentedMultiplier() * current_samples;
     }
 
     void verifyEnoughSamples() const{
@@ -1029,7 +1033,7 @@ public:
 
     void correctSampleCounts(){
         if(current_samples < req_augmented_samples){
-            total_samples = previous_tree_samples + req_augmented_samples;
+            actual_samples = weighted_samplecount + req_augmented_samples;
             current_samples = req_augmented_samples;
         }
     }
@@ -1039,10 +1043,10 @@ public:
     }
 
     double getAugmentedNormalizer(){
-        return current_samples < req_augmented_samples ? double(total_samples) / double(previous_tree_samples + req_augmented_samples) : 1;
+        return current_samples < req_augmented_samples ? double(actual_samples) / (weighted_samplecount + req_augmented_samples) : 1;
         /*return current_samples < req_augmented_samples ? 
-            float(total_samples) / 
-            (float(current_samples) + previous_tree_samples * getAugmentedMultiplier())
+            float(actual_samples) / 
+            (float(current_samples) + weighted_samplecount * getAugmentedMultiplier())
             : 1.f;*/
     }
 
@@ -1141,7 +1145,7 @@ public:
     }
 
     Float estimatedEnergy(){
-        return sampling.getTotalEnergy() / previous_tree_samples;
+        return sampling.getTotalEnergy() / weighted_samplecount;
     }
 
 private:
@@ -1152,8 +1156,9 @@ private:
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
-    std::uint64_t total_samples;
-    std::uint64_t previous_tree_samples;
+    std::uint64_t actual_samples;
+    double weighted_samplecount;
+    float B;
 
     std::uint32_t current_cache_size;
     std::uint32_t current_cache_idx;
@@ -1344,7 +1349,6 @@ public:
             cur.children[i] = idx;
             nodes[idx].axis = (cur.axis + 1) % 3;
             nodes[idx].dTree = cur.dTree;
-            nodes[idx].dTree.splitSpatially();
             nodes[idx].level = cur.level + 1;
             nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding() / 2);
         }
@@ -1592,6 +1596,18 @@ public:
     void correctDTreeSampleCounts() {
         m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
             dTree->correctSampleCounts();
+        });
+    }
+
+    void updateDTreeWeightedSamplecounts(){
+        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
+            dTree->updateWeightedWithCurrent();
+        });
+    }
+
+    void updateRequiredSamples(){
+        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
+            dTree->computeRequiredSamples();
         });
     }
 
@@ -2232,6 +2248,22 @@ public:
         }
     }
 
+    void recordSavedSamples(){
+        #pragma omp parallel for
+        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].path.active){
+                continue;
+            }
+
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+
+                dTree->incSampleCount((*m_samplePaths)[i].path[j].sc)
+            }
+        }
+    }
+
     void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
@@ -2584,6 +2616,8 @@ public:
             }
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
+                updateDTreeWeightedSamplecounts();
+
                 if(m_augment){
                     performAugmentedSamples(sampler, m_isFinalIter);
                 } 
@@ -2643,6 +2677,11 @@ public:
 
             if(!m_isFinalIter){
                 buildSDTree(sampler);
+
+                if(m_reweight || m_reject || m_rejectReweight){
+                    recordSavedSamples();
+                    updateRequiredSamples();
+                }
             }
 
             if (m_dumpSDTree) {
