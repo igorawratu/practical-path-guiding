@@ -957,7 +957,7 @@ public:
         return {(cosTheta + 1) / 2, phi / (2 * M_PI)};
     }
 
-    void computeRequiredSamples(){
+    void computeRequiredSamples(ref<Sampler> sampler){
         if(B < EPSILON){
             req_augmented_samples = 0;
         }
@@ -971,7 +971,7 @@ public:
         }
     }
 
-    void build(ref<Sampler> sampler, bool augment, bool augmentReweight, bool isBuilt) {
+    void build(bool augment, bool augmentReweight, bool isBuilt) {
         previous = sampling;
         building.build();
         
@@ -1605,9 +1605,9 @@ public:
         });
     }
 
-    void updateRequiredSamples(){
-        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
-            dTree->computeRequiredSamples();
+    void updateRequiredSamples(ref<Sampler> sampler){
+        m_sdTree->forEachDTreeWrapperParallel([this, sampler](DTreeWrapper* dTree) { 
+            dTree->computeRequiredSamples(sampler);
         });
     }
 
@@ -2251,7 +2251,7 @@ public:
     void recordSavedSamples(){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-            if(!(*m_samplePaths)[i].path.active){
+            if(!(*m_samplePaths)[i].active){
                 continue;
             }
 
@@ -2259,7 +2259,7 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
 
-                dTree->incSampleCount((*m_samplePaths)[i].path[j].sc)
+                dTree->incSampleCount((*m_samplePaths)[i].path[j].sc);
             }
         }
     }
@@ -2680,7 +2680,7 @@ public:
 
                 if(m_reweight || m_reject || m_rejectReweight){
                     recordSavedSamples();
-                    updateRequiredSamples();
+                    updateRequiredSamples(sampler);
                 }
             }
 
