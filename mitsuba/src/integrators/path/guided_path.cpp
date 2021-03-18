@@ -1606,7 +1606,7 @@ public:
     }
 
     void updateRequiredSamples(ref<Sampler> sampler){
-        m_sdTree->forEachDTreeWrapperParallel([this, sampler](DTreeWrapper* dTree) { 
+        m_sdTree->forEachDTreeWrapperParallel([this, &sampler](DTreeWrapper* dTree) { 
             dTree->computeRequiredSamples(sampler);
         });
     }
@@ -1617,7 +1617,7 @@ public:
         // Build distributions
         bool augment = m_iter >= m_strategyIterationActive ? m_augment : false;
         bool raugment = m_iter >= m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment : false;
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(sampler, augment, raugment, this->m_isBuilt); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(augment, raugment, this->m_isBuilt); });
 
         // Gather statistics
         int maxDepth = 0;
