@@ -2588,7 +2588,7 @@ public:
             
             resetSDTree(m_augment);
 
-            if(m_reweight || m_reject || m_rejectReweight){
+            if(m_augment || m_rejectAugment || m_reweightAugment){
                 recordSavedSamples();
                 updateRequiredSamples(sampler);
             }
