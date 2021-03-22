@@ -2131,7 +2131,6 @@ public:
             std::vector<Vertex> vertices;
 
             //first try reject path
-            std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
             bool terminated = false;
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2144,7 +2143,6 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 if(sampler->next1D() > acceptProb){
-                    termination_iter = j;
                     terminated = true;
                     break;
                 }
@@ -2171,8 +2169,6 @@ public:
             }
 
             if(!terminated){
-                (*m_samplePaths)[i].path.resize(termination_iter + 1);
-
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
