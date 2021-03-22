@@ -2147,8 +2147,8 @@ public:
                     break;
                 }
                 else{
-                    Float rw_scale = newWoPdf / oldWo;//std::max(1.f, newWoPdf / oldWo);
-                    (*m_samplePaths)[i].path[j].sc *= rw_scale;
+                    Float rw_scale = std::max(1.f, newWoPdf / oldWo);
+                    //(*m_samplePaths)[i].path[j].sc *= rw_scale;
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                 }
