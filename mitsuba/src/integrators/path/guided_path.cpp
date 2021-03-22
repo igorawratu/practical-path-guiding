@@ -2138,10 +2138,6 @@ public:
                 float dTreePdf;
 
                 Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
-                if(newWoPdf < EPSILON){
-                    terminated = true;
-                    break;
-                }
                 Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
                 Float oldWo = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
@@ -2152,7 +2148,7 @@ public:
                 }
                 else{
                     Float rw_scale = std::max(1.f, newWoPdf / oldWo);
-                    (*m_samplePaths)[i].path[j].sc *= rw_scale;
+                    (*m_samplePaths)[i].path[j].bsdfVal *= rw_scale;
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
                 }
