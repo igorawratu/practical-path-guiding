@@ -2068,7 +2068,7 @@ public:
                 Float newPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / std::max(oldPdfBound, EPSILON);
 
-                Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
+                Float acceptProb = 0.f;//newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
