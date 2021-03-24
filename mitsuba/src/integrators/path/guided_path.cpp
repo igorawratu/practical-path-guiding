@@ -2065,17 +2065,17 @@ public:
                 std::pair<Float, Float> maxPdfPair = dTree->getMajorizingFactor();
                 Float oldPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.first;
                 Float newPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.second;
-                Float c = newPdfBound / oldPdfBound;
+                Float c = newPdfBound / std::max(oldPdfBound, EPSILON);
 
                 Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
-                //(*m_samplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                /*if(sampler->next1D() > acceptProb){
+                if(sampler->next1D() > acceptProb){
                     terminated = true;
                     break;
                 }
-                else*/{
+                else{
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
 
