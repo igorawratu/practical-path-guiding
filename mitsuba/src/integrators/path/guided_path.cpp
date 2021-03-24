@@ -35,7 +35,7 @@
 
 MTS_NAMESPACE_BEGIN
 
-const float EPSILON = 1e-10f;
+const float EPSILON = 1e-5f;
 
 ref<Film> createFilm(std::uint32_t width, std::uint32_t height, bool hdr){
     Properties props = hdr ? Properties("hdrfilm") : Properties("ldrfilm");
@@ -1442,7 +1442,7 @@ public:
             // Subdivide if needed and leaf
             if (m_nodes[sNode.index].isLeaf) {
                 if (shallSplit(m_nodes[sNode.index], sNode.depth, sTreeThreshold)) {
-                    //subdivide((int)sNode.index, m_nodes);
+                    subdivide((int)sNode.index, m_nodes);
                 }
             }
 
@@ -1982,8 +1982,8 @@ public:
                     false
                 };
 
-                v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
-                    m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                /*v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
+                    m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);*/
             }
         }
     }
@@ -2477,7 +2477,10 @@ public:
             }
 
             if(discard_iter >= 0){
-                (*m_samplePaths)[i].path.resize(discard_iter);
+                (*m_samplePaths)[i].path.active = false;
+                (*m_samplePaths)[i].path.clear();
+                (*m_samplePaths)[i].nee_records.clear();
+                (*m_samplePaths)[i].radiance_records.clear();
             }
 
             computeRadiance((*m_samplePaths)[i], vertices, sampler);
@@ -2487,10 +2490,10 @@ public:
                 computeNee((*m_samplePaths)[i], vertices, sampler);
             }
 
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+            /*for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                 vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                     m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
+            }*/
         }
     }
 
@@ -2795,7 +2798,7 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
-        m_sdTree->subdivide(16);
+        //m_sdTree->subdivide(16);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
         m_currAugmentedPaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
