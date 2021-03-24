@@ -1982,8 +1982,8 @@ public:
                     false
                 };
 
-                /*v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
-                    m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);*/
+                v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
+                    m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
         }
     }
@@ -2071,11 +2071,11 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
-                if(sampler->next1D() > acceptProb){
+                /*if(sampler->next1D() > acceptProb){
                     terminated = true;
                     break;
                 }
-                else{
+                else*/{
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
 
@@ -2482,18 +2482,19 @@ public:
                 (*m_samplePaths)[i].nee_records.clear();
                 (*m_samplePaths)[i].radiance_records.clear();
             }
+            else{
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
-            computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                //compute NEE if enabled
+                if(m_doNee){
+                    computeNee((*m_samplePaths)[i], vertices, sampler);
+                }
 
-            //compute NEE if enabled
-            if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, sampler);
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
-
-            /*for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }*/
         }
     }
 
