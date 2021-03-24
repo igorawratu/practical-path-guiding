@@ -2063,7 +2063,7 @@ public:
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
                 Float bsf = dTree->bsdfSamplingFraction();
                 std::pair<Float, Float> maxPdfPair = dTree->getMajorizingFactor();
-                Float bsdfPdf = 0.f;//bsf * (*m_samplePaths)[i].path[j].bsdfPdf;
+                Float bsdfPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf;
                 Float oldPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.first;
                 Float newPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / std::max(oldPdfBound, EPSILON);
@@ -2096,7 +2096,7 @@ public:
                 }
             }
 
-            if(!terminated){
+            if(!terminated && (*m_samplePaths)[i].path.size() > 0){
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
