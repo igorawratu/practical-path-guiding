@@ -2068,7 +2068,7 @@ public:
                 Float c = newPdfBound / oldPdfBound;
 
                 Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
+                //(*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
                 /*if(sampler->next1D() > acceptProb){
