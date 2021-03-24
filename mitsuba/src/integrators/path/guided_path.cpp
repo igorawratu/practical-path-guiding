@@ -2096,7 +2096,7 @@ public:
                 }
             }
 
-            if(!terminated && (*m_samplePaths)[i].path.size() > 0){
+            if(!terminated){
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
