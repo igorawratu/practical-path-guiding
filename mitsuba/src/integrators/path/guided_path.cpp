@@ -2063,8 +2063,9 @@ public:
                 //this can technically be cached per d-tree, but computing it here can maybe allow for tighter bounds
                 Float bsf = dTree->bsdfSamplingFraction();
                 std::pair<Float, Float> maxPdfPair = dTree->getMajorizingFactor();
-                Float oldPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.first;
-                Float newPdfBound = bsf * (*m_samplePaths)[i].path[j].bsdfPdf + (1 - bsf) * maxPdfPair.second;
+                Float bsdfPdf = 0.f;//bsf * (*m_samplePaths)[i].path[j].bsdfPdf;
+                Float oldPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.first;
+                Float newPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / std::max(oldPdfBound, EPSILON);
 
                 Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
