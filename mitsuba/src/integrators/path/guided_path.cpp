@@ -2066,7 +2066,7 @@ public:
                 Float bsdfPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf;
                 Float oldPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.first;
                 Float newPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.second;
-                Float c = newPdfBound / std::max(oldPdfBound, EPSILON);
+                Float c = newPdfBound / EPSILON;
 
                 Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
