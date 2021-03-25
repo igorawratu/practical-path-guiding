@@ -2068,7 +2068,7 @@ public:
                 Float newPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.second;
                 Float c = newPdfBound / std::max(oldPdfBound, EPSILON);
 
-                Float acceptProb = 0.f;//newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
+                Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 //rejected
@@ -3389,11 +3389,11 @@ public:
 
                 // BSDF handling
                 if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
-                    /*pathRecord.path.pop_back();
+                    pathRecord.path.pop_back();
 
                     if(addedNee){
                         pathRecord.nee_records.pop_back();
-                    }*/
+                    }
 
                     break;
                 }
