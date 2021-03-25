@@ -2066,7 +2066,7 @@ public:
                 Float bsdfPdf = bsf * (*m_samplePaths)[i].path[j].bsdfPdf;
                 Float oldPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.first;
                 Float newPdfBound = bsdfPdf + (1 - bsf) * maxPdfPair.second;
-                Float c = newPdfBound / EPSILON;
+                Float c = newPdfBound / std::max(oldPdfBound, EPSILON);
 
                 Float acceptProb = newWoPdf / (c * (*m_samplePaths)[i].path[j].woPdf);
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
@@ -2077,7 +2077,7 @@ public:
                     break;
                 }
                 else{
-                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
+                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal;// / newWoPdf;
                     throughput *= bsdfWeight;
 
                     vertices.push_back(     
