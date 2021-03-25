@@ -2077,9 +2077,6 @@ public:
                     break;
                 }
                 else{
-                    if(newWoPdf < EPSILON){
-                        std::cout << "NEWWOPDF: " << newWoPdf << " - " << acceptProb << " - " << c << " - " << (*m_samplePaths)[i].path[j].woPdf << std::endl;
-                    }
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
 
@@ -3126,6 +3123,8 @@ public:
             }
         };
 
+        bool valid_path = true;
+
         while (rRec.depth <= m_maxDepth || m_maxDepth < 0) {
 
             /* ==================================================================== */
@@ -3402,6 +3401,7 @@ public:
                 }
 
                 if(bsdfWeight.isZero()){
+                    valid_path = false;
                     break;
                 }
 
@@ -3544,7 +3544,7 @@ public:
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
-        pathRecord.active = true;
+        pathRecord.active = valid_path;
 
         return Li;
     }
