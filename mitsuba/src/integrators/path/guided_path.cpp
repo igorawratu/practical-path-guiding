@@ -2078,7 +2078,7 @@ public:
                 }
                 else{
                     if(newWoPdf < EPSILON){
-                        std::cout << "NEWWOPDF: " << newWoPdf << " - " << acceptProb << std::endl;
+                        std::cout << "NEWWOPDF: " << newWoPdf << " - " << acceptProb << " - " << c << " - " << (*m_samplePaths)[i].path[j].woPdf << std::endl;
                     }
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
