@@ -2535,7 +2535,7 @@ public:
                 continue;
             }
 
-            Spectrum s = Spectrum(10.f);//sample_paths[i].spec * sample_paths[i].Li;
+            Spectrum s = sample_paths[i].spec * sample_paths[i].Li;
             previousSamples->put(sample_paths[i].sample_pos, s, sample_paths[i].alpha);
         }
 
