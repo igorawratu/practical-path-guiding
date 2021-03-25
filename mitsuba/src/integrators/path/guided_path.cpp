@@ -3388,16 +3388,17 @@ public:
                 Float woDotGeoN = dot(its.geoFrame.n, wo);
 
                 // BSDF handling
-                if (bsdfWeight.isZero() || (woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
+                if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
                     pathRecord.path.pop_back();
 
                     if(addedNee){
                         pathRecord.nee_records.pop_back();
                     }
 
-                    if(bsdfWeight.isZero())
-                        pathRecord.active = false;
+                    break;
+                }
 
+                if(bsdfWeight.isZero()){
                     break;
                 }
 
