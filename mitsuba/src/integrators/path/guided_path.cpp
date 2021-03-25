@@ -3389,11 +3389,11 @@ public:
 
                 // BSDF handling
                 if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
-                    pathRecord.path.pop_back();
+                    /*pathRecord.path.pop_back();
 
                     if(addedNee){
                         pathRecord.nee_records.pop_back();
-                    }
+                    }*/
 
                     break;
                 }
