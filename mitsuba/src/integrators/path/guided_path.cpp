@@ -3395,6 +3395,8 @@ public:
                         pathRecord.nee_records.pop_back();
                     }
 
+                    pathRecord.active = false;
+
                     break;
                 }
 
