@@ -3395,7 +3395,8 @@ public:
                         pathRecord.nee_records.pop_back();
                     }
 
-                    pathRecord.active = false;
+                    if(bsdfWeight.isZero())
+                        pathRecord.active = false;
 
                     break;
                 }
