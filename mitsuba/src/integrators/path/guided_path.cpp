@@ -2077,7 +2077,10 @@ public:
                     break;
                 }
                 else{
-                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal;// / newWoPdf;
+                    if(newWoPdf < EPSILON){
+                        std::cout << "NEWWOPDF: " << newWoPdf << " - " << acceptProb << std::endl;
+                    }
+                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
                     throughput *= bsdfWeight;
 
                     vertices.push_back(     
