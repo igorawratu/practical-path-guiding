@@ -3390,7 +3390,7 @@ public:
                 Float woDotGeoN = dot(its.geoFrame.n, wo);
 
                 // BSDF handling
-                if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
+                if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals) || bsdfWeight.isZero()){
                     pathRecord.path.pop_back();
 
                     if(addedNee){
@@ -3400,12 +3400,12 @@ public:
                     break;
                 }
 
-                if(bsdfWeight.isZero()){
-                    //if(woPdf < EPSILON){
+                /*if(bsdfWeight.isZero()){
+                    if(woPdf < EPSILON){
                         valid_path = false;
-                    //}
+                    }
                     break;
-                }
+                }*/
 
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
