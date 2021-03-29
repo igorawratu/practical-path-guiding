@@ -2203,6 +2203,7 @@ public:
 
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
+            bool terminated = false;
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2210,6 +2211,10 @@ public:
                 float dTreePdf;
 
                 Float nwo = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                if(nwo < EPSILON){
+                    true;
+                }
+
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
 
                 if(reweight < 1.f){
@@ -2236,15 +2241,25 @@ public:
                     });
             }
 
-            computeRadiance((*m_samplePaths)[i], vertices, sampler);
-
-            if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, sampler);
+            if(terminated){
+                if(discard_iter >= 0){
+                    (*m_samplePaths)[i].active = false;
+                    (*m_samplePaths)[i].path.clear();
+                    (*m_samplePaths)[i].nee_records.clear();
+                    (*m_samplePaths)[i].radiance_records.clear();
+                }
             }
+            else{
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                if(m_doNee){
+                    computeNee((*m_samplePaths)[i], vertices, sampler);
+                }
+
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
         }
     }
@@ -2380,9 +2395,7 @@ public:
 
             std::vector<Vertex> vertices;
 
-            std::uint32_t termination_iter = (*m_samplePaths)[i].path.size() - 1;
             bool rejected = false;
-
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
@@ -2395,7 +2408,6 @@ public:
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
 
                 if(sampler->next1D() > acceptProb){
-                    termination_iter = j;
                     rejected = true;
                     break;
                 }
@@ -2420,8 +2432,6 @@ public:
             }
 
             if(!rejected){
-                (*m_samplePaths)[i].path.resize(termination_iter + 1);
-
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
@@ -2451,7 +2461,7 @@ public:
             if(!(*m_samplePaths)[i].active){
                 continue;
             }
-            
+
             std::vector<Vertex> vertices;
 
             Spectrum throughput(1.0f);
