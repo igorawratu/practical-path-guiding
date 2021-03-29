@@ -2388,8 +2388,8 @@ public:
                     break;
                 }
                 else{
-                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
-                    throughput *= bsdfWeight;
+                    //Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
+                    //throughput *= bsdfWeight;
                 }
 
                 vertices.push_back(     
