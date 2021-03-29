@@ -3401,7 +3401,9 @@ public:
                 }
 
                 if(bsdfWeight.isZero()){
-                    valid_path = false;
+                    if(woPdf < EPSILON){
+                        valid_path = false;
+                    }
                     break;
                 }
 
