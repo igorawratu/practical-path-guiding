@@ -1416,7 +1416,7 @@ public:
         return m_nodes.size() < std::numeric_limits<uint32_t>::max() - 1 && node.dTree.statisticalWeightBuilding() > samplesRequired;
     }
 
-    void refine(size_t sTreeThreshold, int maxMB) {
+    void refine(size_t sTreeThreshold, int maxMB, bool staticSTree) {
         if (maxMB >= 0) {
             size_t approxMemoryFootprint = 0;
             for (const auto& node : m_nodes) {
@@ -1442,7 +1442,9 @@ public:
             // Subdivide if needed and leaf
             if (m_nodes[sNode.index].isLeaf) {
                 if (shallSplit(m_nodes[sNode.index], sNode.depth, sTreeThreshold)) {
-                    subdivide((int)sNode.index, m_nodes);
+                    if(staticSTree){
+                        subdivide((int)sNode.index, m_nodes);
+                    }
                 }
             }
 
@@ -1557,6 +1559,7 @@ public:
 
         m_strategyIterationActive = props.getInteger("stratIterActive", -1);
         m_renderIterations = props.getBoolean("renderIterations", false);
+        m_staticSTree = props.getBoolean("staticSTree", false);
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -1583,7 +1586,7 @@ public:
     void resetSDTree(bool augment) {
         Log(EInfo, "Resetting distributions for sampling.");
 
-        m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory);
+        m_sdTree->refine((size_t)(std::sqrt(std::pow(2, m_iter) * m_sppPerPass / 4) * m_sTreeThreshold), m_sdTreeMaxMemory, m_staticSTree);
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
@@ -2825,7 +2828,11 @@ public:
         int sceneResID, int sensorResID, int samplerResID) {
 
         m_sdTree = std::unique_ptr<STree>(new STree(scene->getAABB()));
-        //m_sdTree->subdivide(16);
+
+        if(m_staticSTree){
+            m_sdTree->subdivide(16);
+        }
+        m_sdTree->subdivide(16);
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
         m_currAugmentedPaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
@@ -3846,6 +3853,7 @@ private:
     bool m_reweightAugment;
     size_t sampleCount;
     bool m_renderIterations;
+    bool m_staticSTree;
 
     int m_strategyIterationActive;
 
