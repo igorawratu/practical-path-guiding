@@ -2212,7 +2212,8 @@ public:
 
                 Float nwo = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 if(nwo < EPSILON){
-                    true;
+                    terminated = true;
+                    break;
                 }
 
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
