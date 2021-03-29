@@ -2195,6 +2195,10 @@ public:
     void reweightAugmentHybrid(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].active){
+                continue;
+            }
+
             std::vector<Vertex> vertices;
 
             Spectrum throughput(1.0f);
@@ -2264,6 +2268,10 @@ public:
     void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].active){
+                continue;
+            }
+
             (*m_samplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
@@ -2312,6 +2320,10 @@ public:
     void correctCurrAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
+            if(!(*m_currAugmentedPaths)[i].active){
+                continue;
+            }
+
             (*m_currAugmentedPaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
@@ -2392,7 +2404,7 @@ public:
                     throughput *= bsdfWeight;
                 }
 
-                vertices.push_back(     
+                vertices.push_back(
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
@@ -2436,6 +2448,10 @@ public:
     void reweightCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].active){
+                continue;
+            }
+            
             std::vector<Vertex> vertices;
 
             Spectrum throughput(1.0f);
@@ -3390,7 +3406,7 @@ public:
                 Float woDotGeoN = dot(its.geoFrame.n, wo);
 
                 // BSDF handling
-                if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals) || bsdfWeight.isZero()){
+                if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
                     pathRecord.path.pop_back();
 
                     if(addedNee){
@@ -3400,12 +3416,12 @@ public:
                     break;
                 }
 
-                /*if(bsdfWeight.isZero()){
+                if(bsdfWeight.isZero()){
                     if(woPdf < EPSILON){
                         valid_path = false;
                     }
                     break;
-                }*/
+                }
 
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
