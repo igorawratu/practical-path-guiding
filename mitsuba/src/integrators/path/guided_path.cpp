@@ -2242,12 +2242,10 @@ public:
             }
 
             if(terminated){
-                if(discard_iter >= 0){
-                    (*m_samplePaths)[i].active = false;
-                    (*m_samplePaths)[i].path.clear();
-                    (*m_samplePaths)[i].nee_records.clear();
-                    (*m_samplePaths)[i].radiance_records.clear();
-                }
+                (*m_samplePaths)[i].active = false;
+                (*m_samplePaths)[i].path.clear();
+                (*m_samplePaths)[i].nee_records.clear();
+                (*m_samplePaths)[i].radiance_records.clear();
             }
             else{
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
