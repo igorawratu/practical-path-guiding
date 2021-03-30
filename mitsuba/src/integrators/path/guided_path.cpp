@@ -1442,7 +1442,7 @@ public:
             // Subdivide if needed and leaf
             if (m_nodes[sNode.index].isLeaf) {
                 if (shallSplit(m_nodes[sNode.index], sNode.depth, sTreeThreshold)) {
-                    if(staticSTree){
+                    if(!staticSTree){
                         subdivide((int)sNode.index, m_nodes);
                     }
                 }
@@ -2832,7 +2832,7 @@ public:
         if(m_staticSTree){
             m_sdTree->subdivide(16);
         }
-        
+
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
         m_currAugmentedPaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
