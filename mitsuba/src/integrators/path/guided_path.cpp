@@ -2471,8 +2471,8 @@ public:
 
             int discard_iter = -1;
 
-            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                /*Vector dTreeVoxelSize;
+            /*for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+                Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
@@ -2485,7 +2485,7 @@ public:
                 Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;*/
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
@@ -2523,7 +2523,7 @@ public:
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
-            }
+            }*/
         }
     }
 
