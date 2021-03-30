@@ -2973,13 +2973,12 @@ public:
                 if(reuseSamples){
                     std::vector<RPath>* paths = (m_reweight || m_rejectReweight || m_reject) ? m_samplePaths.get() : m_currAugmentedPaths.get();
                     std::uint32_t path_pos = i * m_sppPerPass + j + buffer_pos;
-                    if(path_pos >= paths->size()){
-                        std::cout << buffer_pos << " : " << path_pos << " : " << paths->size() << std::endl;
-                    }
-                    (*paths)[path_pos].sample_pos = samplePos;
-                    (*paths)[path_pos].spec = spec;
+                    /*(*paths)[path_pos].sample_pos = samplePos;
+                    (*paths)[path_pos].spec = spec;*/
 
-                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);
+                    RPath path;
+
+                    spec *= Li(sensorRay, rRec, path/*(*paths)[path_pos]*/);
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
