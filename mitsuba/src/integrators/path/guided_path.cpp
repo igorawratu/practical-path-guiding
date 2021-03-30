@@ -2471,7 +2471,7 @@ public:
 
             int discard_iter = -1;
 
-            /*for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
                 float dTreePdf;
@@ -2523,7 +2523,7 @@ public:
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
-            }*/
+            }
         }
     }
 
@@ -2593,8 +2593,6 @@ public:
         sampler->configure();
         sampler->generate(Point2i(0));
 
-        m_currBufferPos = std::unique_ptr<size_t>(new size_t);
-
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
@@ -2609,17 +2607,6 @@ public:
             // at _least_ half the total sample budget.
             if (remainingPasses - passesThisIteration < 2 * passesThisIteration) {
                 passesThisIteration = remainingPasses;
-            }
-
-            std::uint64_t samples_this_pass = passesThisIteration * film->getSize().x * film->getSize().y * m_sppPerPass;
-
-            if(m_augment || m_rejectAugment || m_reweightAugment){
-                *m_currBufferPos = m_samplePaths->size();
-                m_currAugmentedPaths->resize(samples_this_pass);
-            }
-            else if((m_reweight || m_reject || m_rejectReweight) && !m_isFinalIter){
-                *m_currBufferPos = 0;
-                m_samplePaths->resize(m_samplePaths->size() + samples_this_pass);
             }
 
             Log(EInfo, "ITERATION %d, %d passes", m_iter, passesThisIteration);
@@ -2654,6 +2641,7 @@ public:
                     renderFinalImage(film, *m_samplePaths);
                 }
             }
+            
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -2675,6 +2663,8 @@ public:
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
+
+                //correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
@@ -2842,7 +2832,7 @@ public:
         if(m_staticSTree){
             m_sdTree->subdivide(16);
         }
-
+        
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
         m_currAugmentedPaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
@@ -2940,15 +2930,14 @@ public:
         if (!sensor->getFilm()->hasAlpha()) // Don't compute an alpha channel if we don't have to
             queryType &= ~RadianceQueryRecord::EOpacity;
 
-        bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
-            (m_augment || m_rejectAugment || m_reweightAugment));
+        bool reuseSamples = m_iter >= m_strategyIterationActive && (m_reweight || m_rejectReweight || m_reject || 
+            m_augment || m_rejectAugment || m_reweightAugment);
 
-        size_t buffer_pos = 0;
+        std::unique_ptr<std::vector<RPath>> paths;
 
         if(reuseSamples){
-            std::lock_guard<std::mutex> lock(*m_samplePathMutex);
-            buffer_pos = *m_currBufferPos;
-            *m_currBufferPos += points.size() * m_sppPerPass;
+            std::uint32_t num_new_samples = points.size() * m_sppPerPass;
+            paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
         for (size_t i = 0; i < points.size(); ++i) {    
@@ -2971,8 +2960,7 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    std::vector<RPath>* paths = (m_reweight || m_rejectReweight || m_reject) ? m_samplePaths.get() : m_currAugmentedPaths.get();
-                    std::uint32_t path_pos = i * m_sppPerPass + j + buffer_pos;
+                    std::uint32_t path_pos = i * m_sppPerPass + j;
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
@@ -2988,6 +2976,17 @@ public:
                 }
                 
                 sampler->advance();
+            }
+        }
+
+        if(reuseSamples){
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+
+            if(m_augment || m_rejectAugment || m_reweightAugment){
+                m_currAugmentedPaths->insert(m_currAugmentedPaths->end(), paths->begin(), paths->end());
+            }
+            else{
+                m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
             }
         }
 
@@ -3459,7 +3458,7 @@ public:
                         break;
                     }
 
-                    //pathRecord.path.back().isDelta = true;
+                    pathRecord.path.back().isDelta = true;
 
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
@@ -3562,6 +3561,11 @@ public:
             scattered = true;
         }
 
+        /*if(pathRecord.radiance_records.size() == 0 && pathRecord.nee_records.size() == 0){
+            pathRecord.path.clear();
+            pathRecord.Li = Spectrum(0.f);
+        }*/
+
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
@@ -3575,10 +3579,6 @@ public:
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
         pathRecord.active = valid_path;
-
-        if(!valid_path){
-            pathRecord.path.clear();
-        }
 
         return Li;
     }
@@ -3854,7 +3854,6 @@ private:
     size_t sampleCount;
     bool m_renderIterations;
     bool m_staticSTree;
-    std::unique_ptr<size_t> m_currBufferPos;
 
     int m_strategyIterationActive;
 
