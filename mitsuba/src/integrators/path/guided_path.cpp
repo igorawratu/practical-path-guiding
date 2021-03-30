@@ -2472,7 +2472,7 @@ public:
             int discard_iter = -1;
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                Vector dTreeVoxelSize;
+                /*Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
@@ -2485,7 +2485,7 @@ public:
                 Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;*/
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
