@@ -2615,11 +2615,11 @@ public:
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
                 *m_currBufferPos = m_samplePaths->size();
-                m_samplePaths->resize(m_samplePaths->size() + samples_this_pass);
+                m_currAugmentedPaths->resize(samples_this_pass);
             }
             else if((m_reweight || m_reject || m_rejectReweight) && !m_isFinalIter){
                 *m_currBufferPos = 0;
-                m_currAugmentedPaths->resize(samples_this_pass);
+                m_samplePaths->resize(m_samplePaths->size() + samples_this_pass);
             }
 
             Log(EInfo, "ITERATION %d, %d passes", m_iter, passesThisIteration);
