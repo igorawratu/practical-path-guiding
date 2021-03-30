@@ -3274,7 +3274,7 @@ public:
                         recordRadiance(throughput * value);
 
                         if(!value.isZero()){
-                            //pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
+                            pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
                         }
                     }
 
@@ -3287,7 +3287,7 @@ public:
                     Spectrum eL = its.Le(-ray.d);
                     recordRadiance(throughput * eL);
                     if(!eL.isZero()){
-                        //pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
                     }
                 }
 
@@ -3297,7 +3297,7 @@ public:
                     recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
-                        //pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
                     }
                 }
 
