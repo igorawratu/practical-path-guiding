@@ -2973,8 +2973,8 @@ public:
                 if(reuseSamples){
                     std::vector<RPath>* paths = (m_reweight || m_rejectReweight || m_reject) ? m_samplePaths.get() : m_currAugmentedPaths.get();
                     std::uint32_t path_pos = i * m_sppPerPass + j + buffer_pos;
-                    /*(*paths)[path_pos].sample_pos = samplePos;
-                    (*paths)[path_pos].spec = spec;*/
+                    (*paths)[path_pos].sample_pos = samplePos;
+                    (*paths)[path_pos].spec = spec;
 
                     RPath path;
 
