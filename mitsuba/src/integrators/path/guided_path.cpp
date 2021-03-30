@@ -2609,6 +2609,17 @@ public:
                 passesThisIteration = remainingPasses;
             }
 
+            std::uint64_t samples_this_pass = passesThisIteration * film->getSize().x * film->getSize().y * m_sppPerPass;
+
+            if(m_augment || m_rejectAugment || m_reweightAugment){
+                m_currBufferPos = m_samplePaths->size();
+                m_samplePaths->resize(m_samplePaths->size() + samples_this_pass);
+            }
+            else if((m_reweight || m_reject || m_rejectReweight) && !m_isFinalIter){
+                m_currBufferPos = 0;
+                m_currAugmentedPaths->resize(samples_this_pass);
+            }
+
             Log(EInfo, "ITERATION %d, %d passes", m_iter, passesThisIteration);
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
@@ -2641,7 +2652,6 @@ public:
                     renderFinalImage(film, *m_samplePaths);
                 }
             }
-            
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -2663,8 +2673,6 @@ public:
                 }
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
-
-                //correctDTreeSampleCounts();
 
                 if(m_renderIterations){
                     renderIterations(scene, film);
@@ -2832,7 +2840,7 @@ public:
         if(m_staticSTree){
             m_sdTree->subdivide(16);
         }
-        
+
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
         m_currAugmentedPaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
@@ -2930,14 +2938,15 @@ public:
         if (!sensor->getFilm()->hasAlpha()) // Don't compute an alpha channel if we don't have to
             queryType &= ~RadianceQueryRecord::EOpacity;
 
-        bool reuseSamples = m_iter >= m_strategyIterationActive && (m_reweight || m_rejectReweight || m_reject || 
-            m_augment || m_rejectAugment || m_reweightAugment);
+        bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
+            (m_augment || m_rejectAugment || m_reweightAugment));
 
-        std::unique_ptr<std::vector<RPath>> paths;
+        std::size buffer_pos;
 
         if(reuseSamples){
-            std::uint32_t num_new_samples = points.size() * m_sppPerPass;
-            paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
+            std::lock_guard<std::mutex> lock(m_samplePathMutex);
+            buffer_pos = m_currBufferPos;
+            m_currBufferPos += points.size();
         }
 
         for (size_t i = 0; i < points.size(); ++i) {    
@@ -2960,7 +2969,8 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    std::uint32_t path_pos = i * m_sppPerPass + j;
+                    std::vector<RPath>* paths = (m_reweight || m_rejectReweight || m_reject) ? m_samplePaths.get() : m_currAugmentedPaths.get();
+                    std::uint32_t path_pos = i * m_sppPerPass + j + buffer_pos;
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
@@ -2976,17 +2986,6 @@ public:
                 }
                 
                 sampler->advance();
-            }
-        }
-
-        if(reuseSamples){
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-
-            if(m_augment || m_rejectAugment || m_reweightAugment){
-                m_currAugmentedPaths->insert(m_currAugmentedPaths->end(), paths->begin(), paths->end());
-            }
-            else{
-                m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
             }
         }
 
@@ -3854,6 +3853,7 @@ private:
     size_t sampleCount;
     bool m_renderIterations;
     bool m_staticSTree;
+    size_t m_currBufferPos;
 
     int m_strategyIterationActive;
 
