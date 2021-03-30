@@ -2930,8 +2930,8 @@ public:
         if (!sensor->getFilm()->hasAlpha()) // Don't compute an alpha channel if we don't have to
             queryType &= ~RadianceQueryRecord::EOpacity;
 
-        bool reuseSamples = m_iter >= m_strategyIterationActive && (m_reweight || m_rejectReweight || m_reject || 
-            m_augment || m_rejectAugment || m_reweightAugment);
+        bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
+            (m_augment || m_rejectAugment || m_reweightAugment));
 
         std::unique_ptr<std::vector<RPath>> paths;
 
