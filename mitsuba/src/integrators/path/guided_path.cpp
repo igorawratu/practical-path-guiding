@@ -2948,7 +2948,7 @@ public:
         if(reuseSamples){
             std::lock_guard<std::mutex> lock(*m_samplePathMutex);
             buffer_pos = *m_currBufferPos;
-            *m_currBufferPos += points.size();
+            *m_currBufferPos += points.size() * m_sppPerPass;
         }
 
         for (size_t i = 0; i < points.size(); ++i) {    
@@ -3344,7 +3344,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
-                pathRecord.path.emplace_back(ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1);
+                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
@@ -3409,7 +3409,7 @@ public:
                                 }
                             }
 
-                            //pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
                             
                             addedNee = true;
 
@@ -3424,10 +3424,10 @@ public:
 
                 // BSDF handling
                 if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
-                    //pathRecord.path.pop_back();
+                    pathRecord.path.pop_back();
 
                     if(addedNee){
-                        //pathRecord.nee_records.pop_back();
+                        pathRecord.nee_records.pop_back();
                     }
 
                     break;
@@ -3450,10 +3450,10 @@ public:
                 /* Handle index-matched medium transitions specially */
                 if (bRec.sampledType == BSDF::ENull) {
                     if (!(rRec.type & RadianceQueryRecord::EIndirectSurfaceRadiance)){
-                        //pathRecord.path.pop_back();
+                        pathRecord.path.pop_back();
 
                         if(addedNee){
-                            //pathRecord.nee_records.pop_back();
+                            pathRecord.nee_records.pop_back();
                         }
 
                         break;
@@ -3503,7 +3503,7 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
-                        //pathRecord.radiance_records.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
@@ -3578,7 +3578,6 @@ public:
 
         if(!valid_path){
             pathRecord.path.clear();
-            pathRecord.Li = Spectrum(0.f);
         }
 
         return Li;
