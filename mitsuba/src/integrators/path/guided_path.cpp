@@ -3571,7 +3571,7 @@ public:
             }
         }
 
-        pathRecord.Li = Li;
+        /*pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
         pathRecord.active = valid_path;
@@ -3579,7 +3579,7 @@ public:
         if(!valid_path){
             pathRecord.path.clear();
             pathRecord.Li = Spectrum(0.f);
-        }
+        }*/
 
         return Li;
     }
