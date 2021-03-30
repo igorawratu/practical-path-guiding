@@ -2943,7 +2943,7 @@ public:
         bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
             (m_augment || m_rejectAugment || m_reweightAugment));
 
-        size_t buffer_pos;
+        size_t buffer_pos = 0;
 
         if(reuseSamples){
             std::lock_guard<std::mutex> lock(*m_samplePathMutex);
