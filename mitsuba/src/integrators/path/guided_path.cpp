@@ -2975,7 +2975,7 @@ public:
                     std::uint32_t path_pos = i * m_sppPerPass + j + buffer_pos;
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
-                    
+
                     spec *= Li(sensorRay, rRec, (*paths)[path_pos]);
                 }
                 else{
@@ -3274,7 +3274,7 @@ public:
                         recordRadiance(throughput * value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
+                            //pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
                         }
                     }
 
@@ -3287,7 +3287,7 @@ public:
                     Spectrum eL = its.Le(-ray.d);
                     recordRadiance(throughput * eL);
                     if(!eL.isZero()){
-                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
+                        //pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
                     }
                 }
 
@@ -3297,7 +3297,7 @@ public:
                     recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
-                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
+                        //pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
                     }
                 }
 
@@ -3344,7 +3344,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
-                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1});
+                //pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
@@ -3409,7 +3409,7 @@ public:
                                 }
                             }
 
-                            pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            //pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
                             
                             addedNee = true;
 
@@ -3424,10 +3424,10 @@ public:
 
                 // BSDF handling
                 if ((woDotGeoN * Frame::cosTheta(bRec.wo) <= 0 && m_strictNormals)){
-                    pathRecord.path.pop_back();
+                    //pathRecord.path.pop_back();
 
                     if(addedNee){
-                        pathRecord.nee_records.pop_back();
+                        //pathRecord.nee_records.pop_back();
                     }
 
                     break;
@@ -3450,16 +3450,16 @@ public:
                 /* Handle index-matched medium transitions specially */
                 if (bRec.sampledType == BSDF::ENull) {
                     if (!(rRec.type & RadianceQueryRecord::EIndirectSurfaceRadiance)){
-                        pathRecord.path.pop_back();
+                        //pathRecord.path.pop_back();
 
                         if(addedNee){
-                            pathRecord.nee_records.pop_back();
+                            //pathRecord.nee_records.pop_back();
                         }
 
                         break;
                     }
 
-                    pathRecord.path.back().isDelta = true;
+                    //pathRecord.path.back().isDelta = true;
 
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
@@ -3503,7 +3503,7 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
-                        pathRecord.radiance_records.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
+                        //pathRecord.radiance_records.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
@@ -3562,11 +3562,6 @@ public:
             scattered = true;
         }
 
-        /*if(pathRecord.radiance_records.size() == 0 && pathRecord.nee_records.size() == 0){
-            pathRecord.path.clear();
-            pathRecord.Li = Spectrum(0.f);
-        }*/
-
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
@@ -3580,6 +3575,11 @@ public:
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
         pathRecord.active = valid_path;
+
+        if(!valid_path){
+            pathRecord.path.clear();
+            pathRecord.Li = Spectrum(0.f);
+        }
 
         return Li;
     }
