@@ -2593,6 +2593,8 @@ public:
         sampler->configure();
         sampler->generate(Point2i(0));
 
+        m_currBufferPos = std::unique_ptr<size_t>(new size_t);
+
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
@@ -2612,11 +2614,11 @@ public:
             std::uint64_t samples_this_pass = passesThisIteration * film->getSize().x * film->getSize().y * m_sppPerPass;
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
-                m_currBufferPos = m_samplePaths->size();
+                *m_currBufferPos = m_samplePaths->size();
                 m_samplePaths->resize(m_samplePaths->size() + samples_this_pass);
             }
             else if((m_reweight || m_reject || m_rejectReweight) && !m_isFinalIter){
-                m_currBufferPos = 0;
+                *m_currBufferPos = 0;
                 m_currAugmentedPaths->resize(samples_this_pass);
             }
 
@@ -2945,8 +2947,8 @@ public:
 
         if(reuseSamples){
             std::lock_guard<std::mutex> lock(*m_samplePathMutex);
-            buffer_pos = m_currBufferPos;
-            m_currBufferPos += points.size();
+            buffer_pos = *m_currBufferPos;
+            *m_currBufferPos += points.size();
         }
 
         for (size_t i = 0; i < points.size(); ++i) {    
@@ -3853,7 +3855,7 @@ private:
     size_t sampleCount;
     bool m_renderIterations;
     bool m_staticSTree;
-    size_t m_currBufferPos;
+    std::unique_ptr<size_t> m_currBufferPos;
 
     int m_strategyIterationActive;
 
