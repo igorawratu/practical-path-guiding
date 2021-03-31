@@ -905,7 +905,7 @@ public:
         built = false;
     }
 
-    bool isBuilt(){return built;}
+    bool isBuilt(){return false;}//built;}
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
         if (!rec.isDelta) {
