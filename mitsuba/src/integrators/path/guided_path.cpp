@@ -1738,6 +1738,8 @@ public:
 
         static const size_t processBatchSize = 128;
 
+        std::cout << "RENDER PROCESSES: " << m_renderProcesses.size() << std::endl;
+
         for (size_t i = 0; i < m_renderProcesses.size(); i += processBatchSize) {
             const size_t start = i;
             const size_t end = std::min(i + processBatchSize, m_renderProcesses.size());
@@ -2981,7 +2983,7 @@ public:
             }
         }
 
-        /*if(reuseSamples){
+        if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
@@ -2990,7 +2992,7 @@ public:
             else{
                 m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
             }
-        }*/
+        }
 
         m_squaredImage->put(squaredBlock);
         m_image->put(block);
