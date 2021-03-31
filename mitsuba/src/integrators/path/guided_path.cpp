@@ -2989,7 +2989,7 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    std::uint32_t path_pos = i * m_sppPerPass + j;
+                    std::uint32_t path_pos = i * m_sppPerPass + j + buffer_start;
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
