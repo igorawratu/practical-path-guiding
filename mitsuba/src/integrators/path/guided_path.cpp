@@ -2647,7 +2647,7 @@ public:
             }
             
             bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
-            (m_augment || m_rejectAugment || m_reweightAugment));
+                (m_augment || m_rejectAugment || m_reweightAugment));
 
             if(reuseSamples){
                 size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
@@ -2989,7 +2989,11 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    std::uint32_t path_pos = i * m_sppPerPass + j + buffer_start;
+                    size_t path_pos = i * m_sppPerPass + j + buffer_start;
+                    if(path_pos > paths->size()){
+                        std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+                        std::cout << paths->size() << " " << path_pos << std::endl;
+                    }
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
