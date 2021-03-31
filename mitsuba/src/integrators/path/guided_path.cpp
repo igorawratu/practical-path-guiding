@@ -2961,7 +2961,7 @@ public:
             paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
-        std::vector<RPath>* temp_paths = nullptr;
+        RPath* temp_paths = nullptr;
 
         size_t buffer_pos = 0;
         if(reuseSamples){
@@ -2969,7 +2969,7 @@ public:
             buffer_pos = curr_buffer_pos;
             curr_buffer_pos += points.size() * m_sppPerPass;
 
-            temp_paths = m_reweight || m_rejectReweight || m_reject ? m_samplePaths.get() : m_currAugmentedPaths.get();
+            temp_paths = m_reweight || m_rejectReweight || m_reject ? (*m_samplePaths)[buffer_pos] : (*m_currAugmentedPaths)[buffer_pos];
         }
 
 
@@ -2993,11 +2993,11 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    std::uint32_t path_pos = i * m_sppPerPass + j + buffer_pos;
-                    (*temp_paths)[path_pos].sample_pos = samplePos;
-                    (*temp_paths)[path_pos].spec = spec;
+                    std::uint32_t path_pos = i * m_sppPerPass + j;
+                    temp_paths[path_pos].sample_pos = samplePos;
+                    temp_paths[path_pos].spec = spec;
 
-                    spec *= Li(sensorRay, rRec, (*temp_paths)[path_pos]);
+                    spec *= Li(sensorRay, rRec, temp_paths[path_pos]);
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
