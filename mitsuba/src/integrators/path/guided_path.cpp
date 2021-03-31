@@ -1724,6 +1724,7 @@ public:
         m_squaredImage->clear();
 
         size_t totalBlocks = 0;
+        blockid = 0;
 
         Log(EInfo, "Rendering %d render passes.", numPasses);
 
@@ -2647,7 +2648,7 @@ public:
             }
             
             bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
-                (m_augment || m_rejectAugment || m_reweightAugment));
+            (m_augment || m_rejectAugment || m_reweightAugment));
 
             if(reuseSamples){
                 size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
@@ -2954,19 +2955,11 @@ public:
         bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
             (m_augment || m_rejectAugment || m_reweightAugment));
 
-        size_t buffer_start = 0;
+        std::unique_ptr<std::vector<RPath>> paths;
 
         if(reuseSamples){
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-
-            buffer_start = curr_buffer_pos;
-            curr_buffer_pos += points.size() * m_sppPerPass;
-        }
-
-        std::vector<RPath>* paths = nullptr;
-
-        if(reuseSamples){
-            paths = m_augment || m_rejectAugment || m_reweightAugment ? m_currAugmentedPaths.get() : m_samplePaths.get();
+            std::uint32_t num_new_samples = points.size() * m_sppPerPass;
+            paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
         for (size_t i = 0; i < points.size(); ++i) {    
@@ -2989,7 +2982,7 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    size_t path_pos = i * m_sppPerPass + j + buffer_start;
+                    std::uint32_t path_pos = i * m_sppPerPass + j;
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
@@ -3007,6 +3000,17 @@ public:
                 sampler->advance();
             }
         }
+
+        /*if(reuseSamples){
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+
+            if(m_augment || m_rejectAugment || m_reweightAugment){
+                m_currAugmentedPaths->insert(m_currAugmentedPaths->end(), paths->begin(), paths->end());
+            }
+            else{
+                m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
+            }
+        }*/
 
         m_squaredImage->put(squaredBlock);
         m_image->put(block);
