@@ -2997,7 +2997,7 @@ public:
 
                     spec *= Li(sensorRay, rRec, (*paths)[path_pos]);*/
 
-                    RVertex rvert;
+                    RPath rvert;
                     spec *= Li(sensorRay, rRec, rvert);
                     main_buffer[path_pos] = rvert;
                 }
