@@ -2468,7 +2468,7 @@ public:
                 continue;
             }
 
-            std::vector<Vertex> vertices;
+            std::vector<Vertex> vertices((*m_samplePaths)[i].path.size());
 
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
@@ -2480,7 +2480,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                /*Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 if(newWoPdf < EPSILON){
                     discard_iter = j;
                     break;
@@ -2489,24 +2489,23 @@ public:
                 Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;*/
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                vertices.push_back(     
-                    Vertex{ 
-                        dTree,
-                        dTreeVoxelSize,
-                        (*m_samplePaths)[i].path[j].ray,
-                        throughput,
-                        (*m_samplePaths)[i].path[j].bsdfVal,
-                        Spectrum{0.0f},
-                        (*m_samplePaths)[i].path[j].woPdf,
-                        (*m_samplePaths)[i].path[j].bsdfPdf,
-                        dTreePdf,
-                        (*m_samplePaths)[i].path[j].isDelta
-                    });
+                vertices[j] = Vertex{ 
+                                dTree,
+                                dTreeVoxelSize,
+                                (*m_samplePaths)[i].path[j].ray,
+                                throughput,
+                                (*m_samplePaths)[i].path[j].bsdfVal,
+                                Spectrum{0.0f},
+                                (*m_samplePaths)[i].path[j].woPdf,
+                                (*m_samplePaths)[i].path[j].bsdfPdf,
+                                dTreePdf,
+                                (*m_samplePaths)[i].path[j].isDelta
+                              };
             }
 
             if(discard_iter >= 0){
