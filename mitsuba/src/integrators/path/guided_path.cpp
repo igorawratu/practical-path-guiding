@@ -2471,7 +2471,7 @@ public:
 
             int discard_iter = -1;
 
-            /*for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
                 float dTreePdf;
@@ -2523,7 +2523,7 @@ public:
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
-            }*/
+            }
         }
     }
 
@@ -2624,7 +2624,7 @@ public:
 
             if(m_reweight || m_reject || m_rejectReweight){
                 if(m_reweight){
-                    reweightCurrentPaths(sampler); 
+                    //reweightCurrentPaths(sampler); 
                 }
                 else if(m_reject){
                     rejectCurrentPaths(sampler);
@@ -2638,7 +2638,7 @@ public:
                 }
 
                 if(m_isFinalIter){
-                    renderFinalImage(film, *m_samplePaths);
+                    //renderFinalImage(film, *m_samplePaths);
                 }
             }
             
