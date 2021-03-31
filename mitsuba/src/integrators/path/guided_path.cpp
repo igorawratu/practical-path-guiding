@@ -905,7 +905,7 @@ public:
         built = false;
     }
 
-    bool isBuilt(){return false;}//built;}
+    bool isBuilt(){return built;}
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
         if (!rec.isDelta) {
@@ -2499,6 +2499,10 @@ public:
                 float dTreePdf;
 
                 Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+
+                if(dTree == nullptr){
+                    std::cout << "DTREE IS NULL! " << (*m_samplePaths)[i].path[j].dTree << std::endl;
+                }
                 if(newWoPdf < EPSILON){
                     discard_iter = j;
                     break;
