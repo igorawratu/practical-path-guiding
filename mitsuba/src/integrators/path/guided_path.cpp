@@ -36,6 +36,7 @@
 MTS_NAMESPACE_BEGIN
 
 const float EPSILON = 1e-5f;
+int blockid;
 
 ref<Film> createFilm(std::uint32_t width, std::uint32_t height, bool hdr){
     Properties props = hdr ? Properties("hdrfilm") : Properties("ldrfilm");
@@ -3865,7 +3866,6 @@ private:
     bool m_renderIterations;
     bool m_staticSTree;
 
-    int blockid;
     int m_strategyIterationActive;
 
 public:
