@@ -2912,6 +2912,11 @@ public:
         Sampler *sampler, ImageBlock *block, const bool &stop,
         const std::vector< TPoint2<uint8_t> > &points) const {
 
+        {
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+            std::cout << "Rendering block with " << points.size() << " points" << std::endl;
+        }
+
         Float diffScaleFactor = 1.0f /
             std::sqrt((Float)m_sppPerPass);
 
