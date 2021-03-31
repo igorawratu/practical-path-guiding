@@ -2961,6 +2961,16 @@ public:
             paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
+        std::vector<RPath>* temp_paths = nullptr;
+
+        size_t buffer_pos = 0;
+        if(reuseSamples){
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+            buffer_pos = curr_buffer_pos;
+            curr_buffer_pos += points.size() * m_sppPerPass;
+        }
+
+
         for (size_t i = 0; i < points.size(); ++i) {    
             Point2i offset = Point2i(points[i]) + Vector2i(block->getOffset());
             if (stop)
