@@ -2468,7 +2468,7 @@ public:
                 continue;
             }
 
-            std::vector<Vertex> vertices;
+            std::vector<Vertex> vertices((*m_samplePaths)[i].path.size());
 
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
@@ -2494,7 +2494,18 @@ public:
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                vertices.push_back(     
+                vertices[j].dTree = dTree;
+                vertices[j].dTreeVoxelSize = dTreeVoxelSize;
+                vertices[j].ray = (*m_samplePaths)[i].path[j].ray;
+                vertices[j].throughput = throughput;
+                vertices[j].bsdfVal = (*m_samplePaths)[i].path[j].bsdfVal;
+                vertices[j].radiance = Spectrum{0.0f};
+                vertices[j].woPdf = (*m_samplePaths)[i].path[j].woPdf;
+                vertices[j].bsdfPdf = (*m_samplePaths)[i].path[j].bsdfPdf;
+                vertices[j].dTreePdf = dTreePdf;
+                vertices[j].isDelta = (*m_samplePaths)[i].path[j].isDelta;
+
+                /*vertices.push_back(     
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
@@ -2506,7 +2517,7 @@ public:
                         (*m_samplePaths)[i].path[j].bsdfPdf,
                         dTreePdf,
                         (*m_samplePaths)[i].path[j].isDelta
-                    });
+                    });*/
             }
 
             if(discard_iter >= 0){
