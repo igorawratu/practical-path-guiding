@@ -2468,6 +2468,8 @@ public:
                 continue;
             }
 
+            std::vector<Vertex> vertices;
+
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
