@@ -3002,26 +3002,27 @@ public:
 
         //RPath* main_buffer = nullptr;
 
+        size_t buffer_pos = 0;
+
         if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            size_t buffer_pos = curr_buffer_pos;
+            buffer_pos = curr_buffer_pos;
             curr_buffer_pos += points.size() * m_sppPerPass;
-
-            if(m_reweight || m_rejectReweight || m_reject){
-                std::copy(paths->begin(), paths->end(), m_samplePaths->begin() + buffer_pos);
-            }
-            else{
-                std::copy(paths->begin(), paths->end(), m_currAugmentedPaths->begin() + buffer_pos);
-            }
 
             //main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
 
             //memcpy(main_buffer, &(*paths)[0], sizeof(RVertex));
         }
 
-        /*if(reuseSamples){
-            memcpy(main_buffer, &(*paths)[0], sizeof(RVertex) * paths->size());
-        }*/
+        if(reuseSamples){
+            //memcpy(main_buffer, &(*paths)[0], sizeof(RVertex) * paths->size());
+            if(m_reweight || m_rejectReweight || m_reject){
+                std::copy(paths->begin(), paths->end(), m_samplePaths->begin() + buffer_pos);
+            }
+            else{
+                std::copy(paths->begin(), paths->end(), m_currAugmentedPaths->begin() + buffer_pos);
+            }
+        }
 
         /*if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
