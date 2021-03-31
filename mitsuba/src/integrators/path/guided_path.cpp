@@ -1738,7 +1738,7 @@ public:
 
         static const size_t processBatchSize = 128;
 
-        std::cout << "RENDER PROCESSES: " << m_renderProcesses.size() << " with " << totalBlocks << " blocks" std::endl;
+        std::cout << "RENDER PROCESSES: " << m_renderProcesses.size() << " with " << totalBlocks << " blocks" << std::endl;
 
         for (size_t i = 0; i < m_renderProcesses.size(); i += processBatchSize) {
             const size_t start = i;
