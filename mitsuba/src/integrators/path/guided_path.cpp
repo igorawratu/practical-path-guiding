@@ -2046,6 +2046,10 @@ public:
             vertex.dTreeVoxelSize = dTreeVoxelSize;
         }
 
+        if(!dTree->isBuilt()){
+            std::cout << "DTREE IS NOT BUILT!!! " << dTree << " " << vertex.dTree << " " << vertex.dTree->isBuilt << std::endl;
+        }
+
         int curr_level = 0;
         dTreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
 
