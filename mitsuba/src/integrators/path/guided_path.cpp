@@ -1153,6 +1153,9 @@ public:
         return sampling.getTotalEnergy() / weighted_samplecount;
     }
 
+public:
+    bool built;
+
 private:
     DTree building;
     DTree sampling;
@@ -1171,8 +1174,6 @@ private:
     std::vector<Intersection> point_cache;
 
     std::pair<Float, Float> m_rejPdfPair;
-
-    bool built;
 
     AdamOptimizer bsdfSamplingFractionOptimizer{0.01f};
 
@@ -1361,6 +1362,7 @@ public:
         }
         cur.isLeaf = false;
         cur.dTree = {}; // Reset to an empty dtree to save memory.
+        cur.dTree.built = false;
     }
 
     DTreeWrapper* dTreeWrapper(Point p, Vector& size) {
