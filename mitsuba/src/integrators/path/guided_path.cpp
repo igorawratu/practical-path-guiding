@@ -2997,9 +2997,9 @@ public:
 
                     spec *= Li(sensorRay, rRec, (*paths)[path_pos]);*/
 
-                    RPath rvert;
-                    spec *= Li(sensorRay, rRec, rvert);
-                    main_buffer[path_pos] = rvert;
+                    RPath rpath;
+                    spec *= Li(sensorRay, rRec, rpath);
+                    main_buffer[path_pos] = std::move(rpath);
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
