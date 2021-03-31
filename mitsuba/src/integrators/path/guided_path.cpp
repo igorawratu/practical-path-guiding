@@ -1473,8 +1473,6 @@ private:
 
 static StatsCounter avgPathLength("Guided path tracer", "Average path length", EAverage);
 
-size_t curr_buffer_pos = 0;
-
 class GuidedPathTracer : public MonteCarloIntegrator {
 public:
     GuidedPathTracer(const Properties &props) : MonteCarloIntegrator(props) {
@@ -1724,6 +1722,7 @@ public:
         m_squaredImage->clear();
 
         size_t totalBlocks = 0;
+        blockid = 0;
 
         Log(EInfo, "Rendering %d render passes.", numPasses);
 
@@ -2646,21 +2645,6 @@ public:
                 }
             }
             
-            bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
-            (m_augment || m_rejectAugment || m_reweightAugment));
-
-            if(reuseSamples){
-                size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
-
-                if(m_augment || m_rejectAugment || m_reweightAugment){
-                    curr_buffer_pos = m_currAugmentedPaths->size();
-                    m_currAugmentedPaths->resize(num_samples + curr_buffer_pos);
-                }
-                else{
-                    curr_buffer_pos = m_samplePaths->size();
-                    m_samplePaths->resize(num_samples + curr_buffer_pos);
-                }
-            }
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -2928,7 +2912,6 @@ public:
     void renderBlock(const Scene *scene, const Sensor *sensor,
         Sampler *sampler, ImageBlock *block, const bool &stop,
         const std::vector< TPoint2<uint8_t> > &points) const {
-
         Float diffScaleFactor = 1.0f /
             std::sqrt((Float)m_sppPerPass);
 
@@ -2961,16 +2944,6 @@ public:
             paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
-        RPath* main_buffer = nullptr;
-
-        if(reuseSamples){
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            size_t buffer_pos = curr_buffer_pos;
-            curr_buffer_pos += points.size() * m_sppPerPass;
-
-            main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
-        }
-
         for (size_t i = 0; i < points.size(); ++i) {    
             Point2i offset = Point2i(points[i]) + Vector2i(block->getOffset());
             if (stop)
@@ -2992,14 +2965,10 @@ public:
 
                 if(reuseSamples){
                     std::uint32_t path_pos = i * m_sppPerPass + j;
-                    /*(*paths)[path_pos].sample_pos = samplePos;
+                    (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
-                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);*/
-
-                    RPath rvert;
-                    spec *= Li(sensorRay, rRec, rvert);
-                    main_buffer[path_pos] = rvert;
+                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
@@ -3014,9 +2983,7 @@ public:
             }
         }
 
-        
-
-        /*if(reuseSamples){
+        if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
@@ -3025,7 +2992,7 @@ public:
             else{
                 m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
             }
-        }*/
+        }
 
         m_squaredImage->put(squaredBlock);
         m_image->put(block);
