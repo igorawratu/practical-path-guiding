@@ -2969,7 +2969,7 @@ public:
             buffer_pos = curr_buffer_pos;
             curr_buffer_pos += points.size() * m_sppPerPass;
 
-            temp_paths = m_reweight || m_rejectReweight || m_reject ? (*m_samplePaths)[buffer_pos] : (*m_currAugmentedPaths)[buffer_pos];
+            temp_paths = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
         }
 
 
