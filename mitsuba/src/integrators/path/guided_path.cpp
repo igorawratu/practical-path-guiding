@@ -2721,6 +2721,8 @@ public:
             m_passesRenderedThisIter = 0;
         }
 
+        std::cout << "DONE RENDERING!!!!!!!" << std::endl;
+
         return result;
     }
 
@@ -2979,7 +2981,7 @@ public:
             }
         }
 
-        if(reuseSamples){
+        /*if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
@@ -2988,7 +2990,7 @@ public:
             else{
                 m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
             }
-        }
+        }*/
 
         m_squaredImage->put(squaredBlock);
         m_image->put(block);
