@@ -2516,7 +2516,7 @@ public:
                 (*m_samplePaths)[i].radiance_records.clear();
             }
             else{
-                computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                /*computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 //compute NEE if enabled
                 if(m_doNee){
@@ -2526,7 +2526,7 @@ public:
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-                }
+                }*/
             }
         }
     }
