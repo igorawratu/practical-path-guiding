@@ -2033,8 +2033,8 @@ public:
         }
     }
 
-    float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
-        if(vertex.dTree != nullptr && vertex.dTree->built()){
+    float computePdf(RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
+        if(vertex.dTree != nullptr && vertex.dTree->isBuilt()){
             dTree =  vertex.dTree;
             dTreeVoxelSize = vertex.dTreeVoxelSize;
         }
