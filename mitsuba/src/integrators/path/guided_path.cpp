@@ -902,10 +902,7 @@ public:
         B = 0.f;
 
         point_cache.resize(100);
-        built = false;
     }
-
-    bool isBuilt(){return built;}
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
         if (!rec.isDelta) {
@@ -993,8 +990,6 @@ public:
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
-
-        built = true;
     }
 
     bool requiresAugmentedSamples(){
@@ -1152,9 +1147,6 @@ public:
     Float estimatedEnergy(){
         return sampling.getTotalEnergy() / weighted_samplecount;
     }
-
-public:
-    bool built;
 
 private:
     DTree building;
@@ -1362,7 +1354,6 @@ public:
         }
         cur.isLeaf = false;
         cur.dTree = {}; // Reset to an empty dtree to save memory.
-        cur.dTree.built = false;
     }
 
     DTreeWrapper* dTreeWrapper(Point p, Vector& size) {
@@ -1920,8 +1911,6 @@ public:
         Ray ray;
         Spectrum bsdfVal;
         Float bsdfPdf, woPdf;
-        DTreeWrapper* dTree;
-        Vector dTreeVoxelSize;
         bool isDelta;
         int level;
         double normalizing_sc;
@@ -2035,21 +2024,8 @@ public:
         }
     }
 
-    float computePdf(RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
-        if(vertex.dTree != nullptr && vertex.dTree->isBuilt()){
-            dTree =  vertex.dTree;
-            dTreeVoxelSize = vertex.dTreeVoxelSize;
-        }
-        else{
-            dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
-            vertex.dTree = dTree;
-            vertex.dTreeVoxelSize = dTreeVoxelSize;
-        }
-
-        if(!dTree->isBuilt()){
-            std::cout << "DTREE IS NOT BUILT!!! " << dTree << " " << vertex.dTree << " " << vertex.dTree->isBuilt() << std::endl;
-        }
-
+    float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
+        dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
         dTreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
 
@@ -2505,10 +2481,6 @@ public:
                 float dTreePdf;
 
                 Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
-
-                if(dTree == nullptr){
-                    std::cout << "DTREE IS NULL! " << (*m_samplePaths)[i].path[j].dTree << std::endl;
-                }
                 if(newWoPdf < EPSILON){
                     discard_iter = j;
                     break;
@@ -3407,7 +3379,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
-                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, dTree, dTreeVoxelSize, isDelta, dTreeLevel, 1, 1});
+                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
