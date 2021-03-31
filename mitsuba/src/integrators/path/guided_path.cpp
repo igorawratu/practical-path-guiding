@@ -2999,7 +2999,7 @@ public:
 
                     RPath rpath;
                     spec *= Li(sensorRay, rRec, rpath);
-                    main_buffer[path_pos] = std::move(rpath);
+                    main_buffer[path_pos] = rpath;
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
