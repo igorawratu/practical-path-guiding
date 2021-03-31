@@ -2649,7 +2649,7 @@ public:
             bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
             (m_augment || m_rejectAugment || m_reweightAugment));
 
-            if(reuseSamples){
+            /*if(reuseSamples){
                 size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
 
                 if(m_augment || m_rejectAugment || m_reweightAugment){
@@ -2660,7 +2660,7 @@ public:
                     curr_buffer_pos = m_samplePaths->size();
                     m_samplePaths->resize(num_samples + curr_buffer_pos);
                 }
-            }
+            }*/
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -2739,6 +2739,9 @@ public:
             ++m_iter;
             m_passesRenderedThisIter = 0;
         }
+
+        m_samplePaths->clear();
+        m_samplePaths->shrink_to_fit();
 
         std::cout << "DONE RENDERING!!!!!!!" << std::endl;
 
@@ -2992,14 +2995,14 @@ public:
 
                 if(reuseSamples){
                     std::uint32_t path_pos = i * m_sppPerPass + j;
-                    /*(*paths)[path_pos].sample_pos = samplePos;
+                    (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
-                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);*/
+                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);
 
-                    RPath rpath;
+                    /*RPath rpath;
                     spec *= Li(sensorRay, rRec, rpath);
-                    main_buffer[path_pos] = rpath;
+                    main_buffer[path_pos] = rpath;*/
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
@@ -3014,9 +3017,7 @@ public:
             }
         }
 
-        
-
-        /*if(reuseSamples){
+        if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
@@ -3025,7 +3026,7 @@ public:
             else{
                 m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
             }
-        }*/
+        }
 
         m_squaredImage->put(squaredBlock);
         m_image->put(block);
