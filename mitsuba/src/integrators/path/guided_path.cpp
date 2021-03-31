@@ -2480,7 +2480,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                /*Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 if(newWoPdf < EPSILON){
                     discard_iter = j;
                     break;
@@ -2489,7 +2489,7 @@ public:
                 Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
+                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;*/
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
