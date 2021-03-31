@@ -902,7 +902,10 @@ public:
         B = 0.f;
 
         point_cache.resize(100);
+        built = false;
     }
+
+    bool isBuilt(){return built;}
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
         if (!rec.isDelta) {
@@ -990,6 +993,8 @@ public:
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
+
+        built = true;
     }
 
     bool requiresAugmentedSamples(){
@@ -1166,6 +1171,8 @@ private:
     std::vector<Intersection> point_cache;
 
     std::pair<Float, Float> m_rejPdfPair;
+
+    bool built;
 
     AdamOptimizer bsdfSamplingFractionOptimizer{0.01f};
 
@@ -1911,6 +1918,8 @@ public:
         Ray ray;
         Spectrum bsdfVal;
         Float bsdfPdf, woPdf;
+        DTreeWrapper* dTree;
+        Vector dTreeVoxelSize;
         bool isDelta;
         int level;
         double normalizing_sc;
@@ -2025,7 +2034,16 @@ public:
     }
 
     float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
-        dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
+        if(vertex.dTree != nullptr && vertex.dTree->built()){
+            dTree =  vertex.dTree;
+            dTreeVoxelSize = vertex.dTreeVoxelSize;
+        }
+        else{
+            dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
+            vertex.dTree = dTree;
+            vertex.dTreeVoxelSize = dTreeVoxelSize;
+        }
+
         int curr_level = 0;
         dTreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
 
@@ -2515,12 +2533,12 @@ public:
                 (*m_samplePaths)[i].radiance_records.clear();
             }
             else{
-                /*computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 //compute NEE if enabled
                 if(m_doNee){
                     computeNee((*m_samplePaths)[i], vertices, sampler);
-                }*/
+                }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
@@ -3379,7 +3397,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
-                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1});
+                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, dTree, dTreeVoxelSize, isDelta, dTreeLevel, 1, 1});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
