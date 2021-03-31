@@ -3011,7 +3011,7 @@ public:
         }
 
         if(reuseSamples){
-            memcpy((void*)main_buffer, (void*)&(*paths)[0], sizeof(RPath) * paths->size());
+            memcpy((void*)main_buffer, (void*)&(*paths)[0], sizeof(RVertex) * paths->size());
         }
 
         /*if(reuseSamples){
