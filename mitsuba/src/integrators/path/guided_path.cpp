@@ -2961,18 +2961,6 @@ public:
             paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
-        RPath* temp_paths = nullptr;
-
-        size_t buffer_pos = 0;
-        if(reuseSamples){
-            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            buffer_pos = curr_buffer_pos;
-            curr_buffer_pos += points.size() * m_sppPerPass;
-
-            temp_paths = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
-        }
-
-
         for (size_t i = 0; i < points.size(); ++i) {    
             Point2i offset = Point2i(points[i]) + Vector2i(block->getOffset());
             if (stop)
@@ -2994,10 +2982,10 @@ public:
 
                 if(reuseSamples){
                     std::uint32_t path_pos = i * m_sppPerPass + j;
-                    temp_paths[path_pos].sample_pos = samplePos;
-                    temp_paths[path_pos].spec = spec;
+                    (*paths)[path_pos].sample_pos = samplePos;
+                    (*paths)[path_pos].spec = spec;
 
-                    spec *= Li(sensorRay, rRec, temp_paths[path_pos]);
+                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
@@ -3010,6 +2998,20 @@ public:
                 
                 sampler->advance();
             }
+        }
+
+        RPath* main_buffer = nullptr;
+
+        if(reuseSamples){
+            std::lock_guard<std::mutex> lg(*m_samplePathMutex);
+            buffer_pos = curr_buffer_pos;
+            curr_buffer_pos += points.size() * m_sppPerPass;
+
+            main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_samplePaths)[buffer_pos];
+        }
+
+        if(reuseSamples){
+            memcpy((void*)main_buffer, (void*)&(*paths)[0], sizeof(RPath) * paths->size());
         }
 
         /*if(reuseSamples){
