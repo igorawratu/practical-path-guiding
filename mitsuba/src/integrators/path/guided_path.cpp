@@ -2628,7 +2628,7 @@ public:
 
             if(m_reweight || m_reject || m_rejectReweight){
                 if(m_reweight){
-                    //reweightCurrentPaths(sampler); 
+                    reweightCurrentPaths(sampler); 
                 }
                 else if(m_reject){
                     rejectCurrentPaths(sampler);
