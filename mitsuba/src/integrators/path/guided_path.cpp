@@ -2641,7 +2641,7 @@ public:
                 }
 
                 if(m_isFinalIter){
-                    //renderFinalImage(film, *m_samplePaths);
+                    renderFinalImage(film, *m_samplePaths);
                 }
             }
             
