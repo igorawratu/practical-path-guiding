@@ -1946,6 +1946,20 @@ public:
             iter = other.iter;
         }
         RPath(const RPath& other) = default;
+        RPath& operator=(RPath&& other){
+            path = std::move(other.path);
+            radiance_records = std::move(other.radiance_records);
+            nee_records = std::move(other.nee_records);
+            sample_pos = other.sample_pos;
+            spec = other.spec;
+            Li = other.Li;
+            alpha = other.alpha;
+            active = other.active;
+            iter = other.iter;
+
+            return *this;
+        }
+        RPath& operator=(const RPath& other) = default;
 
         std::vector<RVertex> path;
         std::vector<RadRecord> radiance_records;
