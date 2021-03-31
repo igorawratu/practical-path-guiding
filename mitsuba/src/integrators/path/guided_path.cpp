@@ -1722,6 +1722,7 @@ public:
         m_squaredImage->clear();
 
         size_t totalBlocks = 0;
+        blockid = 0;
 
         Log(EInfo, "Rendering %d render passes.", numPasses);
 
@@ -2914,7 +2915,7 @@ public:
 
         {
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-            std::cout << "Rendering block with " << points.size() << " points" << std::endl;
+            std::cout << "Rendering block " << blockid++ << " with " << points.size() << " points" << std::endl;
         }
 
         Float diffScaleFactor = 1.0f /
@@ -3864,6 +3865,7 @@ private:
     bool m_renderIterations;
     bool m_staticSTree;
 
+    int blockid;
     int m_strategyIterationActive;
 
 public:
