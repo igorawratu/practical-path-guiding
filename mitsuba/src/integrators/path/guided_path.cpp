@@ -2654,11 +2654,11 @@ public:
 
                 if(m_augment || m_rejectAugment || m_reweightAugment){
                     curr_buffer_pos = m_currAugmentedPaths->size();
-                    m_currAugmentedPaths->resize(num_samples);
+                    m_currAugmentedPaths->resize(num_samples + curr_buffer_pos);
                 }
                 else{
                     curr_buffer_pos = m_samplePaths->size();
-                    m_samplePaths->resize(num_samples);
+                    m_samplePaths->resize(num_samples + curr_buffer_pos);
                 }
             }
 
@@ -2990,10 +2990,6 @@ public:
 
                 if(reuseSamples){
                     size_t path_pos = i * m_sppPerPass + j + buffer_start;
-                    if(path_pos > paths->size()){
-                        std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                        std::cout << paths->size() << " " << path_pos << " " << buffer_start << std::endl;
-                    }
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
