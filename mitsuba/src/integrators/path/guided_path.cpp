@@ -3007,9 +3007,9 @@ public:
             size_t buffer_pos = curr_buffer_pos;
             curr_buffer_pos += points.size() * m_sppPerPass;
 
-            main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_samplePaths)[buffer_pos];
+            main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
 
-            memcpy(main_buffer, &(*paths)[0], sizeof(RVertex) * paths->size());
+            memcpy(main_buffer, &(*paths)[0], sizeof(RVertex));
         }
 
         /*if(reuseSamples){
