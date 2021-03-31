@@ -3000,14 +3000,21 @@ public:
             }
         }
 
-        RPath* main_buffer = nullptr;
+        //RPath* main_buffer = nullptr;
 
         if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             size_t buffer_pos = curr_buffer_pos;
             curr_buffer_pos += points.size() * m_sppPerPass;
 
-            main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
+            if(m_reweight || m_rejectReweight || m_reject){
+                std::copy(paths->begin(), paths->end(), m_samplePaths->begin() + buffer_pos);
+            }
+            else{
+                std::copy(paths->begin(), paths->end(), m_currAugmentedPaths->begin() + buffer_pos);
+            }
+
+            //main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
 
             //memcpy(main_buffer, &(*paths)[0], sizeof(RVertex));
         }
