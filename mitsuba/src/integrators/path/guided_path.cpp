@@ -1945,6 +1945,7 @@ public:
             active = other.active;
             iter = other.iter;
         }
+        RPath(const RPath& other) = default;
 
         std::vector<RVertex> path;
         std::vector<RadRecord> radiance_records;
