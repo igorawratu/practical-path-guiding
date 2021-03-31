@@ -1722,7 +1722,6 @@ public:
         m_squaredImage->clear();
 
         size_t totalBlocks = 0;
-        blockid = 0;
 
         Log(EInfo, "Rendering %d render passes.", numPasses);
 
