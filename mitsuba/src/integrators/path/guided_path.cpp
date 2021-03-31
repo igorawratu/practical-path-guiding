@@ -2992,7 +2992,7 @@ public:
                     size_t path_pos = i * m_sppPerPass + j + buffer_start;
                     if(path_pos > paths->size()){
                         std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                        std::cout << paths->size() << " " << path_pos << std::endl;
+                        std::cout << paths->size() << " " << path_pos << " " << buffer_start << std::endl;
                     }
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
