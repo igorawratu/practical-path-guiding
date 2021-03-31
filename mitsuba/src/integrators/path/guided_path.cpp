@@ -2494,7 +2494,20 @@ public:
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                vertices[j].dTree = dTree;
+                vertices[j] =  Vertex{ 
+                        dTree,
+                        dTreeVoxelSize,
+                        (*m_samplePaths)[i].path[j].ray,
+                        throughput,
+                        (*m_samplePaths)[i].path[j].bsdfVal,
+                        Spectrum{0.0f},
+                        (*m_samplePaths)[i].path[j].woPdf,
+                        (*m_samplePaths)[i].path[j].bsdfPdf,
+                        dTreePdf,
+                        (*m_samplePaths)[i].path[j].isDelta
+                    };
+
+                /*vertices[j].dTree = dTree;
                 vertices[j].dTreeVoxelSize = dTreeVoxelSize;
                 vertices[j].ray = (*m_samplePaths)[i].path[j].ray;
                 vertices[j].throughput = throughput;
@@ -2503,7 +2516,7 @@ public:
                 vertices[j].woPdf = (*m_samplePaths)[i].path[j].woPdf;
                 vertices[j].bsdfPdf = (*m_samplePaths)[i].path[j].bsdfPdf;
                 vertices[j].dTreePdf = dTreePdf;
-                vertices[j].isDelta = (*m_samplePaths)[i].path[j].isDelta;
+                vertices[j].isDelta = (*m_samplePaths)[i].path[j].isDelta;*/
 
                 /*vertices.push_back(     
                     Vertex{ 
