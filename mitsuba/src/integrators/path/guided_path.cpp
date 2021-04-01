@@ -2298,12 +2298,19 @@ public:
 
             std::vector<Vertex> vertices;
             
+            bool terminated = false;
+
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
                 Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                if(newWoPdf < EPSILON){
+                    terminated = true;
+                    break;
+                }
+
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
  
@@ -2325,15 +2332,24 @@ public:
                     });
             }
 
-            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
-            if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, sampler);
+            if(terminated){
+                (*m_samplePaths)[i].active = false;
+                (*m_samplePaths)[i].path.clear();
+                (*m_samplePaths)[i].nee_records.clear();
+                (*m_samplePaths)[i].radiance_records.clear();
             }
+            else{
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                if(m_doNee){
+                    computeNee((*m_samplePaths)[i], vertices, sampler);
+                }
+
+                for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+            }
             }
         }
     }
@@ -2473,7 +2489,7 @@ public:
             Spectrum throughput(1.0f);
             (*m_samplePaths)[i].Li = Spectrum(0.f);
 
-            int discard_iter = -1;
+            bool terminated = false;
 
             for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -2482,7 +2498,7 @@ public:
 
                 Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 if(newWoPdf < EPSILON){
-                    discard_iter = j;
+                    terminated = true;
                     break;
                 }
 
@@ -2509,7 +2525,7 @@ public:
                     });
             }
 
-            if(discard_iter >= 0){
+            if(terminated){
                 (*m_samplePaths)[i].active = false;
                 (*m_samplePaths)[i].path.clear();
                 (*m_samplePaths)[i].nee_records.clear();
