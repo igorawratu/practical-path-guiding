@@ -2288,7 +2288,7 @@ public:
 
     void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
-        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+        for(std::uint32_t i = 0; i < m_augmentedStartPos; ++i){
             if(!(*m_samplePaths)[i].active){
                 continue;
             }
@@ -2340,46 +2340,46 @@ public:
 
     void correctCurrAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
-        for(std::uint32_t i = 0; i < m_currAugmentedPaths->size(); ++i){
-            if(!(*m_currAugmentedPaths)[i].active){
+        for(std::uint32_t i = m_augmentedStartPos; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].active){
                 continue;
             }
 
-            (*m_currAugmentedPaths)[i].Li = Spectrum(0.f);
+            (*m_samplePaths)[i].Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
 
-            for(std::uint32_t j = 0; j < (*m_currAugmentedPaths)[i].path.size(); ++j){
+            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_currAugmentedPaths)[i].path[j].ray.o, dTreeVoxelSize);
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
                 int curr_level = 0;
-                Float dTreePdf = dTree->pdf((*m_currAugmentedPaths)[i].path[j].ray.d, (*m_currAugmentedPaths)[i].path[j].level, curr_level);
-                (*m_currAugmentedPaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
-                (*m_currAugmentedPaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
+                Float dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d, (*m_samplePaths)[i].path[j].level, curr_level);
+                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
 
-                Spectrum bsdfWeight = (*m_currAugmentedPaths)[i].path[j].bsdfVal / (*m_currAugmentedPaths)[i].path[j].woPdf;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
                 vertices.push_back(     
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        (*m_currAugmentedPaths)[i].path[j].ray,
+                        (*m_samplePaths)[i].path[j].ray,
                         throughput,
-                        (*m_currAugmentedPaths)[i].path[j].bsdfVal,
+                        (*m_samplePaths)[i].path[j].bsdfVal,
                         Spectrum(0.f),
-                        (*m_currAugmentedPaths)[i].path[j].woPdf,
-                        (*m_currAugmentedPaths)[i].path[j].bsdfPdf,
+                        (*m_samplePaths)[i].path[j].woPdf,
+                        (*m_samplePaths)[i].path[j].bsdfPdf,
                         dTreePdf,
-                        (*m_currAugmentedPaths)[i].path[j].isDelta
+                        (*m_samplePaths)[i].path[j].isDelta
                     });
             }
 
-            computeRadiance((*m_currAugmentedPaths)[i], vertices, sampler);
+            computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
             if(m_doNee){
-                computeNee((*m_currAugmentedPaths)[i], vertices, sampler);
+                computeNee((*m_samplePaths)[i], vertices, sampler);
             }
 
             for (std::uint32_t j = 0; j < vertices.size(); ++j) {;
@@ -2391,7 +2391,7 @@ public:
 
     void rejectAugmentHybrid(ref<Sampler> sampler){
         #pragma omp parallel for
-        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+        for(std::uint32_t i = 0; i < m_augmentedStartPos; ++i){
             if(!(*m_samplePaths)[i].active){
                 continue;
             }
@@ -2652,15 +2652,11 @@ public:
             /*if(reuseSamples){
                 size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
 
-                if(m_augment || m_rejectAugment || m_reweightAugment){
-                    curr_buffer_pos = m_currAugmentedPaths->size();
-                    m_currAugmentedPaths->resize(num_samples + curr_buffer_pos);
-                }
-                else{
-                    curr_buffer_pos = m_samplePaths->size();
-                    m_samplePaths->resize(num_samples + curr_buffer_pos);
-                }
+                curr_buffer_pos = m_samplePaths->size();
+                m_samplePaths->resize(num_samples + curr_buffer_pos);
             }*/
+
+            m_augmentedStartPos = m_samplePaths->size();
 
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
@@ -2683,20 +2679,12 @@ public:
 
                 correctCurrAugmentedSamples(sampler, m_isFinalIter);
 
-                //correctDTreeSampleCounts();
-
                 if(m_renderIterations){
                     renderIterations(scene, film);
                 }
 
                 if(m_isFinalIter){
                     renderFinalImage(film, *m_samplePaths);
-                    renderFinalImage(film, *m_currAugmentedPaths);
-                }
-                else{
-                    m_samplePaths->insert(m_samplePaths->end(), m_currAugmentedPaths->begin(), m_currAugmentedPaths->end());
-                    m_currAugmentedPaths->clear();
-                    m_currAugmentedPaths->shrink_to_fit();
                 }
             }
             
@@ -2859,7 +2847,6 @@ public:
 
         m_samplePathMutex = std::unique_ptr<std::mutex>(new std::mutex());
         m_samplePaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
-        m_currAugmentedPaths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>());
 
         m_iter = 0;
         m_isFinalIter = false;
@@ -2964,15 +2951,15 @@ public:
             paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
         }
 
-        RPath* main_buffer = nullptr;
+        /*RPath* main_buffer = nullptr;
 
         if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             size_t buffer_pos = curr_buffer_pos;
             curr_buffer_pos += points.size() * m_sppPerPass;
 
-            main_buffer = m_reweight || m_rejectReweight || m_reject ? &(*m_samplePaths)[buffer_pos] : &(*m_currAugmentedPaths)[buffer_pos];
-        }
+            main_buffer = &(*m_samplePaths)[buffer_pos];
+        }*/
 
         for (size_t i = 0; i < points.size(); ++i) {    
             Point2i offset = Point2i(points[i]) + Vector2i(block->getOffset());
@@ -3020,12 +3007,7 @@ public:
         if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
 
-            if(m_augment || m_rejectAugment || m_reweightAugment){
-                m_currAugmentedPaths->insert(m_currAugmentedPaths->end(), paths->begin(), paths->end());
-            }
-            else{
-                m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
-            }
+            m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
         }
 
         m_squaredImage->put(squaredBlock);
@@ -3880,7 +3862,6 @@ private:
     std::chrono::steady_clock::time_point m_startTime;
 
     std::unique_ptr<std::vector<RPath>> m_samplePaths;
-    std::unique_ptr<std::vector<RPath>> m_currAugmentedPaths;
     std::unique_ptr<std::mutex> m_samplePathMutex;
 
     bool m_reweight;
@@ -3892,6 +3873,7 @@ private:
     size_t sampleCount;
     bool m_renderIterations;
     bool m_staticSTree;
+    size_t m_augmentedStartPos;
 
     int m_strategyIterationActive;
 
