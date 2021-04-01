@@ -759,7 +759,6 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        A = std::min(1000.f, A);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -2016,11 +2015,11 @@ public:
                 }
 
                 for(int k = 0; k <= pos; ++k){
-                    vertices[k].radiance += L * sample_path.path[pos].sc;
+                    vertices[k].radiance += L * sample_path.path[k].sc;
                 }
             }
             
-            sample_path.Li += L * sample_path.path[pos].sc * sample_path.path[pos].normalizing_sc;
+            sample_path.Li += L;// * sample_path.path[pos].sc * sample_path.path[pos].normalizing_sc;
         }
     }
 
