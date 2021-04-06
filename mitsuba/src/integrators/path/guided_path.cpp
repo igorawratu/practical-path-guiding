@@ -788,7 +788,7 @@ public:
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
             pairStack.pop();
-
+5
             const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex.first];
             const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex.first];
 
@@ -2019,7 +2019,7 @@ public:
                     vertices[k].radiance += L * sample_path.path[k].sc;
                 }
 
-                L *= sample_path.path[0].sc * sample_path.path[0].normalizing_sc;
+                //L *= sample_path.path[0].sc * sample_path.path[0].normalizing_sc;
             }
             
             sample_path.Li += L;
@@ -2317,7 +2317,7 @@ public:
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight;
+                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].normalizing_sc * (*m_samplePaths)[i].path[j].sc;
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2377,7 +2377,7 @@ public:
                 (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight;
+                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].normalizing_sc * (*m_samplePaths)[i].path[j].sc;
 
                 vertices.push_back(     
                     Vertex{ 
