@@ -788,7 +788,7 @@ public:
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
             pairStack.pop();
-5
+
             const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex.first];
             const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex.first];
 
