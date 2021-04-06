@@ -759,7 +759,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        A = std::min(A, 1000.f);
+        //A = std::min(A, 1000.f);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
