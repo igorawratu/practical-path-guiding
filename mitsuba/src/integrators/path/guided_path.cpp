@@ -2016,7 +2016,7 @@ public:
                 }
 
                 for(int k = 0; k <= pos; ++k){
-                    vertices[k].radiance += L * sample_path.path[k].sc;
+                    vertices[k].radiance += L;// * sample_path.path[k].sc;
                 }
 
                 //L *= sample_path.path[0].sc * sample_path.path[0].normalizing_sc;
