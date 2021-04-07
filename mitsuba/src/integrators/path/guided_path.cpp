@@ -2744,6 +2744,8 @@ public:
 
             ++m_iter;
             m_passesRenderedThisIter = 0;
+
+            m_samplePaths->clear();
         }
 
         m_samplePaths->clear();
