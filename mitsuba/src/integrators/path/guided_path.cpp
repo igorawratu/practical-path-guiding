@@ -2575,7 +2575,7 @@ public:
         }
     }
 
-    void //renderFinalImage(ref<Film> film, const std::vector<RPath>& sample_paths){
+    void renderFinalImage(ref<Film> film, const std::vector<RPath>& sample_paths){
         ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
         previousSamples->clear();
 
