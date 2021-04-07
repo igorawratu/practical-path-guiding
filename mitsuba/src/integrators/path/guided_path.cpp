@@ -1620,8 +1620,8 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        bool augment = m_iter >= m_strategyIterationActive ? m_augment : false;
-        bool raugment = m_iter >= m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment : false;
+        bool augment = m_iter <= m_strategyIterationActive ? m_augment : false;
+        bool raugment = m_iter <= m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment : false;
         m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(augment, raugment, this->m_isBuilt); });
 
         // Gather statistics
@@ -2959,7 +2959,7 @@ public:
         if (!sensor->getFilm()->hasAlpha()) // Don't compute an alpha channel if we don't have to
             queryType &= ~RadianceQueryRecord::EOpacity;
 
-        bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
+        bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
             (m_augment || m_rejectAugment || m_reweightAugment));
 
         std::unique_ptr<std::vector<RPath>> paths;
@@ -3098,7 +3098,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtreeLevel);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter >= m_strategyIterationActive){
+        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter <= m_strategyIterationActive){
             dTree->incSampleCount();
         }
 
@@ -3147,7 +3147,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtreeLevel);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter >= m_strategyIterationActive){
+        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter <= m_strategyIterationActive){
             dTree->incSampleCount();
         }
 
@@ -3427,7 +3427,7 @@ public:
                             Spectrum L = throughput * value * weight;
 
                             if (!m_isFinalIter && m_nee != EAlways && 
-                                ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
+                                ((!m_augment && !m_rejectAugment && !m_reweightAugment))) {
                                 if (dTree) {
                                     Vertex v = Vertex{
                                         dTree,
@@ -3501,7 +3501,7 @@ public:
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
                     if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
+                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment))) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -3544,7 +3544,7 @@ public:
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
+                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment))) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -3607,7 +3607,7 @@ public:
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter < m_strategyIterationActive)) {
+        if (nVertices > 0 && !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment))) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
