@@ -2662,6 +2662,8 @@ public:
                 if(m_isFinalIter){
                     //renderFinalImage(film, *m_samplePaths);
                 }
+
+                m_samplePaths->clear();
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
@@ -2744,8 +2746,6 @@ public:
 
             ++m_iter;
             m_passesRenderedThisIter = 0;
-
-            m_samplePaths->clear();
         }
 
         m_samplePaths->clear();
