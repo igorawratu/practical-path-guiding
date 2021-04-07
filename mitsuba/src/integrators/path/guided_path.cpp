@@ -2664,7 +2664,7 @@ public:
                 }
             }
             
-            bool reuseSamples = m_iter >= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
+            bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
             (m_augment || m_rejectAugment || m_reweightAugment));
 
             /*if(reuseSamples){
