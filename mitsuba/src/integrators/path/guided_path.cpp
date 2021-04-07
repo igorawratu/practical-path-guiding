@@ -2575,7 +2575,7 @@ public:
         }
     }
 
-    void renderFinalImage(ref<Film> film, const std::vector<RPath>& sample_paths){
+    void //renderFinalImage(ref<Film> film, const std::vector<RPath>& sample_paths){
         ref<ImageBlock> previousSamples = new ImageBlock(Bitmap::ESpectrumAlphaWeight, film->getCropSize(), film->getReconstructionFilter());
         previousSamples->clear();
 
@@ -2660,7 +2660,7 @@ public:
                 }
 
                 if(m_isFinalIter){
-                    renderFinalImage(film, *m_samplePaths);
+                    //renderFinalImage(film, *m_samplePaths);
                 }
             }
             
@@ -2702,7 +2702,7 @@ public:
                 }
 
                 if(m_isFinalIter){
-                    renderFinalImage(film, *m_samplePaths);
+                    //renderFinalImage(film, *m_samplePaths);
                 }
             }
             
