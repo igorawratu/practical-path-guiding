@@ -2663,18 +2663,22 @@ public:
                     //renderFinalImage(film, *m_samplePaths);
                 }
 
-                m_samplePaths->clear();
+                if(m_iter > m_strategyIterationActive){
+                    m_samplePaths->clear();
+                    m_samplePaths->shrink_to_fit();
+                }
+                
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
-            (m_augment || m_rejectAugment || m_reweightAugment));
+                (m_augment || m_rejectAugment || m_reweightAugment));
 
-            /*if(reuseSamples){
+            if(reuseSamples){
                 size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
 
                 curr_buffer_pos = m_samplePaths->size();
                 m_samplePaths->resize(num_samples + curr_buffer_pos);
-            }*/
+            }
 
             m_augmentedStartPos = m_samplePaths->size();
 
@@ -2705,6 +2709,11 @@ public:
 
                 if(m_isFinalIter){
                     //renderFinalImage(film, *m_samplePaths);
+                }
+
+                if(m_iter > m_strategyIterationActive){
+                    m_samplePaths->clear();
+                    m_samplePaths->shrink_to_fit();
                 }
             }
             
@@ -2964,14 +2973,14 @@ public:
         bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
             (m_augment || m_rejectAugment || m_reweightAugment));
 
-        std::unique_ptr<std::vector<RPath>> paths;
+        /*std::unique_ptr<std::vector<RPath>> paths;
 
         if(reuseSamples){
             std::uint32_t num_new_samples = points.size() * m_sppPerPass;
             paths = std::unique_ptr<std::vector<RPath>>(new std::vector<RPath>(num_new_samples));
-        }
+        }*/
 
-        /*RPath* main_buffer = nullptr;
+        RPath* main_buffer = nullptr;
 
         if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
@@ -2979,7 +2988,7 @@ public:
             curr_buffer_pos += points.size() * m_sppPerPass;
 
             main_buffer = &(*m_samplePaths)[buffer_pos];
-        }*/
+        }
 
         for (size_t i = 0; i < points.size(); ++i) {    
             Point2i offset = Point2i(points[i]) + Vector2i(block->getOffset());
@@ -3001,15 +3010,16 @@ public:
                 sensorRay.scaleDifferential(diffScaleFactor);
 
                 if(reuseSamples){
-                    std::uint32_t path_pos = i * m_sppPerPass + j;
+                    /*std::uint32_t path_pos = i * m_sppPerPass + j;
                     (*paths)[path_pos].sample_pos = samplePos;
                     (*paths)[path_pos].spec = spec;
 
-                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);
+                    spec *= Li(sensorRay, rRec, (*paths)[path_pos]);*/
 
-                    /*RPath rpath;
-                    spec *= Li(sensorRay, rRec, rpath);
-                    main_buffer[path_pos] = rpath;*/
+                    std::uint32_t path_pos = i * m_sppPerPass + j;
+                    //RPath rpath;
+                    spec *= Li(sensorRay, rRec, main_buffer[path_pos]);
+                    //main_buffer[path_pos] = rpath;
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
@@ -3024,11 +3034,11 @@ public:
             }
         }
 
-        if(reuseSamples){
+        /*if(reuseSamples){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
 
             m_samplePaths->insert(m_samplePaths->end(), paths->begin(), paths->end());
-        }
+        }*/
 
         m_squaredImage->put(squaredBlock);
         m_image->put(block);
