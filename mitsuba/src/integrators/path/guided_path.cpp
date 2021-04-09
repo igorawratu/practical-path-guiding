@@ -3017,9 +3017,9 @@ public:
                     spec *= Li(sensorRay, rRec, (*paths)[path_pos]);*/
 
                     std::uint32_t path_pos = i * m_sppPerPass + j;
-                    //RPath rpath;
-                    spec *= Li(sensorRay, rRec, main_buffer[path_pos]);
-                    //main_buffer[path_pos] = rpath;
+                    RPath rpath;
+                    spec *= Li(sensorRay, rRec, rpath);
+                    main_buffer[path_pos] = rpath;
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
