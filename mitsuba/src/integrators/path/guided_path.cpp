@@ -2667,10 +2667,6 @@ public:
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
                 }*/
-
-                m_samplePaths->clear();
-                m_samplePaths->shrink_to_fit();
-                
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
