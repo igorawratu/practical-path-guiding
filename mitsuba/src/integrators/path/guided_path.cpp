@@ -2644,7 +2644,7 @@ public:
                 updateRequiredSamples(sampler);
             }
 
-            if((m_reweight || m_reject || m_rejectReweight) && !m_isFinalIter){
+            if(m_reweight || m_reject || m_rejectReweight){
                 if(m_reweight){
                     reweightCurrentPaths(sampler); 
                 }
@@ -2667,6 +2667,9 @@ public:
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
                 }*/
+
+                m_samplePaths->clear();
+                m_samplePaths->shrink_to_fit();
                 
             }
             
