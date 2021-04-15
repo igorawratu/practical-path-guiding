@@ -3113,7 +3113,7 @@ public:
             dTree->incSampleCount();
         }
 
-        if (woPdf == 0) {
+        if (woPdf < EPSILON) {
             return Spectrum{0.0f};
         }
 
