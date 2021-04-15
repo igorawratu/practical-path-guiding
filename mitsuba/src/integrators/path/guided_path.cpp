@@ -3491,7 +3491,6 @@ public:
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
                 if(woPdf < EPSILON * 10.f){
-                    std::lock_guard<std::mutex> lock(m_samplePathMutex);
                     std::cout << bsdfWeight.getLuminance() << " " << woPdf << " " << bsdfPdf << " " << dTreePdf << std::endl;
                 }
 
