@@ -3492,7 +3492,7 @@ public:
                 refractive index along the path */
                 if(woPdf < EPSILON * 10.f){
                     std::lock_guard<std::mutex> lock(m_samplePathMutex);
-                    std::cout << bsdfWeight << " " << woPdf << " " << bsdfPdf << " " << dTreePdf << std::endl;
+                    std::cout << bsdfWeight.getLuminance() << " " << woPdf << " " << bsdfPdf << " " << dTreePdf << std::endl;
                 }
 
                 throughput *= bsdfWeight;
