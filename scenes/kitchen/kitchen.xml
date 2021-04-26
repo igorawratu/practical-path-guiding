@@ -14,11 +14,9 @@
 
 		<!-- Parameters for our guided path tracer -->
 		<string name="budgetType" value="spp"/>
-		<float name="budget" value="100000"/>
+		<float name="budget" value="32767"/>
 
-		<string name="nee" value="kickstart"/>
-
-		<string name="nee" value="kickstart"/>
+		<string name="nee" value="always"/>
 		<integer name="sTreeThreshold" value="12000"/>
 		<boolean name="staticSTree" value="true"/>
 		
@@ -42,8 +40,8 @@
 			<integer name="sampleCount" value="127" />
 		</sampler>
 		<film type="hdrfilm" >
-			<integer name="width" value="1920" />
-			<integer name="height" value="1080" />
+			<integer name="width" value="512" />
+			<integer name="height" value="512" />
 			<boolean name="banner" value="false" />
 			<rfilter type="box" />
 		</film>
