@@ -101,7 +101,7 @@
             <rgb name="reflectance" value="0.0399472, 0.14198, 0.0033027"/>
         </bsdf>
     </bsdf>
-    <bsdf type="thindielectric" id="RadioGlass" >
+    <bsdf type="diffuse" id="RadioGlass" >
         <float name="intIOR" value="1.5" />
         <float name="extIOR" value="1" />
     </bsdf>
@@ -138,7 +138,7 @@
             <rgb name="reflectance" value="0.578596, 0.578596, 0.578596"/>
         </bsdf>
     </bsdf>
-    <bsdf type="dielectric" id="WineGlasses" >
+    <bsdf type="diffuse" id="WineGlasses" >
         <float name="intIOR" value="1.5" />
         <float name="extIOR" value="1" />
     </bsdf>
@@ -281,7 +281,7 @@
             <rgb name="reflectance" value="0.001373, 0.001373, 0.001373"/>
         </bsdf>
     </bsdf>
-    <bsdf type="dielectric" id="CookerGlass" >
+    <bsdf type="diffuse" id="CookerGlass" >
         <float name="intIOR" value="1.5" />
         <float name="extIOR" value="1" />
         <rgb name="specularTransmittance" value="0, 0, 0"/>
@@ -314,7 +314,7 @@
             <string name="material" value="none" />
         </bsdf>
     </bsdf>
-    <bsdf type="dielectric" id="MicrowaveGlass" >
+    <bsdf type="diffuse" id="MicrowaveGlass" >
         <float name="intIOR" value="1.5" />
         <float name="extIOR" value="1" />
         <rgb name="specularTransmittance" value="0, 0, 0"/>
@@ -329,7 +329,7 @@
             <rgb name="reflectance" value="0.578596, 0.578596, 0.578596"/>
         </bsdf>
     </bsdf>
-    <bsdf type="dielectric" id="MicrowaveDigital" >
+    <bsdf type="diffuse" id="MicrowaveDigital" >
         <float name="intIOR" value="1.5" />
         <float name="extIOR" value="1" />
         <rgb name="specularTransmittance" value="0, 0, 0"/>
