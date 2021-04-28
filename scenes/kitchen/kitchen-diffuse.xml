@@ -56,7 +56,7 @@
             <translate x="-1.2"/>
             <translate y="0.6"/>
         </transform>
-        <bsdf type="conductor" >
+        <bsdf type="diffuse" >
             <string name="material" value="none" />
         </bsdf>
     </shape>
@@ -310,7 +310,7 @@
         </bsdf>
     </bsdf>
     <bsdf type="twosided" id="RadioDialLine" >
-        <bsdf type="conductor" >
+        <bsdf type="diffuse" >
             <string name="material" value="none" />
         </bsdf>
     </bsdf>
@@ -358,7 +358,7 @@
         </bsdf>
     </bsdf>
     <bsdf type="twosided" id="WindowLock" >
-        <bsdf type="conductor" >
+        <bsdf type="diffuse" >
             <string name="material" value="none" />
         </bsdf>
     </bsdf>
@@ -556,7 +556,7 @@
         </bsdf>
     </bsdf>
     <bsdf type="twosided" id="RadioEdges" >
-        <bsdf type="conductor" >
+        <bsdf type="diffuse" >
             <string name="material" value="none" />
         </bsdf>
     </bsdf>
