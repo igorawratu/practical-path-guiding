@@ -1560,6 +1560,7 @@ public:
         m_augment = props.getBoolean("augment", false);
 
         m_strategyIterationActive = props.getInteger("stratIterActive", -1);
+        m_lastStrategyIteration = props.getInteger("lastStrategyiteration", 100)
         m_renderIterations = props.getBoolean("renderIterations", false);
         m_staticSTree = props.getBoolean("staticSTree", false);
     }
@@ -2663,7 +2664,7 @@ public:
                     //renderFinalImage(film, *m_samplePaths);
                 }
 
-                if(m_iter > m_strategyIterationActive){
+                if(m_iter > m_lastStrategyIteration){
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
                 }
@@ -3909,6 +3910,7 @@ private:
     size_t m_augmentedStartPos;
 
     int m_strategyIterationActive;
+    int m_lastStrategyIteration;
 
 public:
     MTS_DECLARE_CLASS()
