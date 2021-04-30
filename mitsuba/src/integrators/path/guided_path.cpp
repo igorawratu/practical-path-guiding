@@ -1560,7 +1560,7 @@ public:
         m_augment = props.getBoolean("augment", false);
 
         m_strategyIterationActive = props.getInteger("stratIterActive", -1);
-        m_lastStrategyIteration = props.getInteger("lastStrategyiteration", 100)
+        m_lastStrategyIteration = props.getInteger("lastStrategyiteration", 100);
         m_renderIterations = props.getBoolean("renderIterations", false);
         m_staticSTree = props.getBoolean("staticSTree", false);
     }
