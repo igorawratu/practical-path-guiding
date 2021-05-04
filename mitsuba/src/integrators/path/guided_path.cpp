@@ -2646,7 +2646,7 @@ public:
                     passesNextIter = remainingPassesNextIter;
                 }
                 
-                nextIterFinal = passesThisIteration >= remainingPasses;
+                nextIterFinal = passesNextIter >= remainingPassesNextIter;
             }
 
             film->clear();
