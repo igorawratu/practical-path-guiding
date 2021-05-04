@@ -2636,6 +2636,19 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
+            bool nextIterFinal = false;
+
+            if(!m_isFinalIter){
+                int remainingPassesNextIter = remainingPasses - passesThisIteration;
+                int passesNextIter = std::min(remainingPassesNextIter, 1 << (m_iter + 1));
+
+                if(remainingPassesNextIter - passesNextIter < 2 * passesNextIter){
+                    passesNextIter = remainingPassesNextIter;
+                }
+                
+                nextIterFinal = passesThisIteration >= remainingPasses;
+            }
+
             film->clear();
             
             resetSDTree(m_augment);
@@ -2645,7 +2658,7 @@ public:
                 updateRequiredSamples(sampler);
             }
 
-            if(m_reweight || m_reject || m_rejectReweight){
+            if((m_reweight || m_reject || m_rejectReweight) && nextIterFinal){
                 if(m_reweight){
                     reweightCurrentPaths(sampler); 
                 }
@@ -2664,10 +2677,10 @@ public:
                     //renderFinalImage(film, *m_samplePaths);
                 }
 
-                if(m_iter > m_lastStrategyIteration){
+                /*if(m_iter > m_lastStrategyIteration){
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
-                }
+                }*/
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
