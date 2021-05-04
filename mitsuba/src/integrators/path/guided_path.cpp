@@ -2677,7 +2677,7 @@ public:
                     //renderFinalImage(film, *m_samplePaths);
                 }
 
-                if(m_iter > m_lastStrategyIteration){
+                if(m_iter >= m_lastStrategyIteration){
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
                 }
