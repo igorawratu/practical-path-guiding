@@ -2658,8 +2658,7 @@ public:
                 updateRequiredSamples(sampler);
             }
 
-            if((m_reweight || m_reject || m_rejectReweight) && nextIterFinal){
-                std::cout << "APPLYING REWEIGHTING" << std::endl;
+            if((m_reweight || m_reject || m_rejectReweight)/* && nextIterFinal*/){
                 if(m_reweight){
                     reweightCurrentPaths(sampler); 
                 }
@@ -2678,13 +2677,10 @@ public:
                     //renderFinalImage(film, *m_samplePaths);
                 }
 
-                /*if(m_iter > m_lastStrategyIteration){
+                if(m_iter > m_lastStrategyIteration){
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
-                }*/
-            }
-            else{
-                std::cout << "NOT APPLYING REWEIGHTING" << std::endl;
+                }
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
