@@ -2659,6 +2659,7 @@ public:
             }
 
             if((m_reweight || m_reject || m_rejectReweight) && nextIterFinal){
+                std::cout << "APPLYING REWEIGHTING" << std::endl;
                 if(m_reweight){
                     reweightCurrentPaths(sampler); 
                 }
@@ -2681,6 +2682,9 @@ public:
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
                 }*/
+            }
+            else{
+                std::cout << "NOT APPLYING REWEIGHTING" << std::endl;
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
@@ -3504,10 +3508,6 @@ public:
 
                 /* Keep track of the throughput, medium, and relative
                 refractive index along the path */
-                if(woPdf < EPSILON * 10.f){
-                    std::cout << bsdfWeight.getLuminance() << " " << woPdf << " " << bsdfPdf << " " << dTreePdf << std::endl;
-                }
-
                 throughput *= bsdfWeight;
                 eta *= bRec.eta;
                 if (its.isMediumTransition())
