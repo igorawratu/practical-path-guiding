@@ -3639,7 +3639,7 @@ public:
         }
 
         {
-            std::lock_guard<std::mutex> lock(m_samplePathMutex);
+            std::lock_guard<std::mutex> lock(*m_samplePathMutex);
             std::cout << pathRecord.path.size() << " " << pathRecord.radiance_records.size() << " " << pathRecord.nee_records.size() << std::endl;
         }
         
