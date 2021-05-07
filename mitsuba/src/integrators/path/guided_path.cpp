@@ -3638,6 +3638,8 @@ public:
             }
         }
 
+        std::cout << pathRecord.path.size() << " " << pathRecord.radiance_records.size() << " " << pathRecord.nee_records.size() << std::endl;
+
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
