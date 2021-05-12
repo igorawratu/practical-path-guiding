@@ -620,7 +620,7 @@ public:
 
             for (int i = 0; i < 4; ++i) {
                 m_nodes[sNode.nodeIndex].setSum(i, otherNode.sum(i));
-                const Float fraction = total > 0 ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
+                const Float fraction = total > std::numeric_limits<float>::min() ? (otherNode.sum(i) / total) : std::pow(0.25f, sNode.depth);
                 if(!(fraction <= (1.0f + Epsilon))){
                     std::cout << fraction << " " << total << " " << sNode.depth << " " << otherNode.sum(i) << std::endl;
                 }
