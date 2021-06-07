@@ -896,15 +896,9 @@ struct DTreeWrapper {
 public:
     DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
         current_samples = 0;
-        actual_samples = 0;
-        weighted_samplecount = 0;
+        weighted_previous_samples = 0;
         req_augmented_samples = 0;
-        
-        current_cache_size = 0;
-        current_cache_idx = 0;
         B = 0.f;
-
-        point_cache.resize(100);
     }
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
@@ -916,24 +910,6 @@ public:
         if (bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && rec.product > 0) {
             optimizeBsdfSamplingFraction(rec, bsdfSamplingFractionLoss == EBsdfSamplingFractionLoss::EKL ? 1.0f : 2.0f);
         }
-    }
-
-    void addPointToCache(const Intersection& its){
-        if(!its.isValid()){
-            return;
-        }
-
-        point_cache[current_cache_idx] = its;
-        current_cache_idx = (current_cache_idx + 1) % point_cache.size();
-        current_cache_size = std::min(point_cache.size(), size_t(current_cache_size + 1));
-    }
-
-    Intersection* getCachedPoint(){
-        if(current_cache_size == 0){
-            return nullptr;
-        }
-
-        return &point_cache[rand() % current_cache_size];
     }
 
     static Vector canonicalToDir(Point2 p) {
@@ -965,13 +941,17 @@ public:
             req_augmented_samples = 0;
         }
         else{
-            float req = B * weighted_samplecount;
+            float req = B * weighted_previous_samples;
             float frac = req - int(req);
             req_augmented_samples = req;
             if(sampler->next1D() < frac){
                 req_augmented_samples++;
             }
         }
+    }
+
+    void addWeightedSampleCount(float wsc){
+        weighted_previous_samples += wsc;
     }
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
@@ -987,16 +967,12 @@ public:
             }
         }
 
-        weighted_samplecount = 0;
+        req_augmented_samples = 0;
         current_samples = 0;
-        actual_samples = 0;
+        weighted_previous_samples = 0;
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
-    }
-
-    bool requiresAugmentedSamples(){
-        return current_samples < req_augmented_samples;
     }
 
     void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
@@ -1006,51 +982,20 @@ public:
     Vector sample(Sampler* sampler, bool augment) const{
         if(augment){
             return current_samples >= req_augmented_samples ? canonicalToDir(sampling.sample(sampler)) : canonicalToDir(augmented.sample(sampler));
-            //return canonicalToDir(sampling.sample(sampler));
         }
         else return canonicalToDir(sampling.sample(sampler));
     }
 
     void incSampleCount(){
         current_samples++;
-        actual_samples++;
-    }
-
-    void incSampleCount(double weight){
-        actual_samples++;
-        weighted_samplecount += weight;
-    }
-
-    void updateWeightedWithCurrent(){
-        weighted_samplecount += getAugmentedMultiplier() * current_samples;
-    }
-
-    void verifyEnoughSamples() const{
-        if(current_samples < req_augmented_samples){
-            std::cout << "Not enough samples: " << current_samples << "-" << req_augmented_samples << std::endl;
-        }
-        else{
-            std::cout << "Enough samples: " << current_samples << "-" << req_augmented_samples << std::endl;
-        }
-    }
-
-    void correctSampleCounts(){
-        if(current_samples < req_augmented_samples){
-            actual_samples = weighted_samplecount + req_augmented_samples;
-            current_samples = req_augmented_samples;
-        }
     }
 
     double getAugmentedMultiplier(){
-        return current_samples < req_augmented_samples ? double(req_augmented_samples) / current_samples : 1;
+        return current_samples < req_augmented_samples ? current_samples / double(req_augmented_samples) : 1;
     }
 
     double getAugmentedNormalizer(){
-        return current_samples < req_augmented_samples ? double(actual_samples) / (weighted_samplecount + req_augmented_samples) : 1;
-        /*return current_samples < req_augmented_samples ? 
-            float(actual_samples) / 
-            (float(current_samples) + weighted_samplecount * getAugmentedMultiplier())
-            : 1.f;*/
+        return 0;
     }
 
     Float pdf(const Vector& dir, int level, int& curr_level) const {
@@ -1159,14 +1104,8 @@ private:
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
-    std::uint64_t actual_samples;
-    double weighted_samplecount;
+    double weighted_previous_samples;
     float B;
-
-    std::uint32_t current_cache_size;
-    std::uint32_t current_cache_idx;
-
-    std::vector<Intersection> point_cache;
 
     std::pair<Float, Float> m_rejPdfPair;
 
@@ -1473,6 +1412,42 @@ private:
     AABB m_aabb;
 };
 
+struct RVertex{
+    Ray ray;
+    Spectrum bsdfVal;
+    Float bsdfPdf, woPdf;
+    bool isDelta;
+    int level;
+    double normalizing_sc;
+    double sc;
+};
+
+struct RadRecord{
+    int pos;
+    Spectrum L;
+    float pdf;
+};
+
+struct NEERecord{
+    int pos;
+    Spectrum L;
+    float pdf;
+    Vector wo;
+    Spectrum bsdfVal;
+    Float bsdfPdf;
+};
+
+struct RPath{
+    std::vector<RVertex> path;
+    std::vector<RadRecord> radiance_records;
+    std::vector<NEERecord> nee_records;
+    Point2 sample_pos;
+    Spectrum spec;
+    Spectrum Li;
+    Float alpha;
+    bool active;
+    int iter;
+};
 
 static StatsCounter avgPathLength("Guided path tracer", "Average path length", EAverage);
 
@@ -1596,25 +1571,20 @@ public:
         m_sdTree->forEachDTreeWrapperParallel([this, &augment](DTreeWrapper* dTree) { dTree->reset(20, m_dTreeThreshold, augment); });
     }
 
-    void verifyAugmentedSDTree(Scene* scene) {
-        m_sdTree->forEachDTreeWrapperParallel([this, scene](DTreeWrapper* dTree) { 
-            dTree->verifyEnoughSamples();
-        });
-    }
-
-    void correctDTreeSampleCounts() {
-        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
-            dTree->correctSampleCounts();
-        });
-    }
-
-    void updateDTreeWeightedSamplecounts(){
-        m_sdTree->forEachDTreeWrapperParallel([this](DTreeWrapper* dTree) { 
-            dTree->updateWeightedWithCurrent();
-        });
-    }
-
     void updateRequiredSamples(ref<Sampler> sampler){
+        //parallelize and make thread safe
+        for(size_t i = 0; i < m_samplePaths->size(); ++i){
+            if(!(*m_samplePaths)[i].active){
+                continue;
+            }
+
+            for(size_t j = 0; j < m_samplePaths[i]->path.size(); ++j){
+                Vector dTreeVoxelSize;
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper(m_samplePaths[i]->path[j].ray.o, dTreeVoxelSize);
+                dTree->addWeightedSampleCount(m_samplePaths[i]->path[j].sc);
+            }
+        }
+
         m_sdTree->forEachDTreeWrapperParallel([this, &sampler](DTreeWrapper* dTree) { 
             dTree->computeRequiredSamples(sampler);
         });
@@ -1909,43 +1879,6 @@ public:
                     break;
             }
         }
-    };
-
-    struct RVertex{
-        Ray ray;
-        Spectrum bsdfVal;
-        Float bsdfPdf, woPdf;
-        bool isDelta;
-        int level;
-        double normalizing_sc;
-        double sc;
-    };
-
-    struct RadRecord{
-        int pos;
-        Spectrum L;
-        float pdf;
-    };
-
-    struct NEERecord{
-        int pos;
-        Spectrum L;
-        float pdf;
-        Vector wo;
-        Spectrum bsdfVal;
-        Float bsdfPdf;
-    };
-
-    struct RPath{
-        std::vector<RVertex> path;
-        std::vector<RadRecord> radiance_records;
-        std::vector<NEERecord> nee_records;
-        Point2 sample_pos;
-        Spectrum spec;
-        Spectrum Li;
-        Float alpha;
-        bool active;
-        int iter;
     };
 
     void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, ref<Sampler> sampler){
@@ -2276,22 +2209,6 @@ public:
         }
     }
 
-    void recordSavedSamples(){
-        #pragma omp parallel for
-        for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-            if(!(*m_samplePaths)[i].active){
-                continue;
-            }
-
-            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
-
-                dTree->incSampleCount((*m_samplePaths)[i].path[j].sc);
-            }
-        }
-    }
-
     void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_augmentedStartPos; ++i){
@@ -2319,6 +2236,7 @@ public:
 
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].normalizing_sc * (*m_samplePaths)[i].path[j].sc;
@@ -2378,7 +2296,6 @@ public:
                 int curr_level = 0;
                 Float dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d, (*m_samplePaths)[i].path[j].level, curr_level);
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
-                (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].normalizing_sc * (*m_samplePaths)[i].path[j].sc;
@@ -2639,29 +2556,15 @@ public:
             
             m_isFinalIter = passesThisIteration >= remainingPasses;
 
-            bool nextIterFinal = false;
-
-            if(!m_isFinalIter){
-                int remainingPassesNextIter = remainingPasses - passesThisIteration;
-                int passesNextIter = std::min(remainingPassesNextIter, 1 << (m_iter + 1));
-
-                if(remainingPassesNextIter - passesNextIter < 2 * passesNextIter){
-                    passesNextIter = remainingPassesNextIter;
-                }
-                
-                nextIterFinal = passesNextIter >= remainingPassesNextIter;
-            }
-
             film->clear();
             
             resetSDTree(m_augment);
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
-                recordSavedSamples();
                 updateRequiredSamples(sampler);
             }
 
-            if((m_reweight || m_reject || m_rejectReweight)/* && nextIterFinal*/){
+            if(m_reweight || m_reject || m_rejectReweight){
                 if(m_reweight){
                     reweightCurrentPaths(sampler); 
                 }
@@ -2686,8 +2589,8 @@ public:
                 }*/
             }
             
-            bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
-                (m_augment || m_rejectAugment || m_reweightAugment));
+            bool reuseSamples = m_iter <= m_strategyIterationActive && (m_reweight || m_rejectReweight || m_reject || 
+                m_augment || m_rejectAugment || m_reweightAugment);
 
             if(reuseSamples){
                 size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
@@ -2696,8 +2599,6 @@ public:
                 m_samplePaths->resize(num_samples + curr_buffer_pos);
             }
 
-            m_augmentedStartPos = m_samplePaths->size();
-
             Float variance;
             if (!performRenderPasses(variance, passesThisIteration, scene, queue, job, sceneResID, sensorResID, samplerResID, integratorResID)) {
                 result = false;
@@ -2705,8 +2606,6 @@ public:
             }
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
-                updateDTreeWeightedSamplecounts();
-
                 if(m_augment){
                     performAugmentedSamples(sampler, m_isFinalIter);
                 } 
@@ -2717,8 +2616,6 @@ public:
                     reweightAugmentHybrid(sampler);
                 }
 
-                correctCurrAugmentedSamples(sampler, m_isFinalIter);
-
                 if(m_renderIterations){
                     renderIterations(scene, film);
                 }
@@ -2727,10 +2624,11 @@ public:
                     //renderFinalImage(film, *m_samplePaths);
                 }
 
-                if(m_iter > m_strategyIterationActive){
+                /*if(m_iter > m_strategyIterationActive){
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
-                }
+                }*/
+                m_augmentedStartPos = m_samplePaths->size();
             }
             
 
@@ -2986,8 +2884,8 @@ public:
         if (!sensor->getFilm()->hasAlpha()) // Don't compute an alpha channel if we don't have to
             queryType &= ~RadianceQueryRecord::EOpacity;
 
-        bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
-            (m_augment || m_rejectAugment || m_reweightAugment));
+        bool reuseSamples = m_iter <= m_strategyIterationActive && (m_reweight || m_rejectReweight || m_reject || 
+            m_augment || m_rejectAugment || m_reweightAugment);
 
         /*std::unique_ptr<std::vector<RPath>> paths;
 
@@ -3454,8 +3352,7 @@ public:
                             value *= bsdfVal;
                             Spectrum L = throughput * value * weight;
 
-                            if (!m_isFinalIter && m_nee != EAlways && 
-                                ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter > m_strategyIterationActive)) {
+                            if (!m_isFinalIter && m_nee != EAlways) {
                                 if (dTree) {
                                     Vertex v = Vertex{
                                         dTree,
@@ -3529,7 +3426,7 @@ public:
                     // There exist materials that are smooth/null hybrids (e.g. the mask BSDF), which means that
                     // for optimal-sampling-fraction optimization we need to record null transitions for such BSDFs.
                     if (m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter > m_strategyIterationActive)) {
+                        !m_isFinalIter) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -3572,7 +3469,7 @@ public:
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
-                        !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter > m_strategyIterationActive)) {
+                        !m_isFinalIter) {
                         if (1 / woPdf > 0) {
                             vertices[nVertices] = Vertex{
                                 dTree,
@@ -3627,26 +3524,15 @@ public:
             scattered = true;
         }
 
-        /*if(pathRecord.radiance_records.size() == 0 && pathRecord.nee_records.size() == 0){
-            pathRecord.path.clear();
-            pathRecord.Li = Spectrum(0.f);
-        }*/
-
         avgPathLength.incrementBase();
         avgPathLength += rRec.depth;
 
-        if (nVertices > 0 && !m_isFinalIter && ((!m_augment && !m_rejectAugment && !m_reweightAugment) || m_iter > m_strategyIterationActive)) {
+        if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
                 vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
         }
-
-        /*{
-            std::lock_guard<std::mutex> lock(*m_samplePathMutex);
-            std::cout << pathRecord.path.size() << " " << pathRecord.radiance_records.size() << " " << pathRecord.nee_records.size() << std::endl;
-        }*/
         
-
         pathRecord.Li = Li;
         pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
