@@ -1574,10 +1574,10 @@ public:
                 continue;
             }
 
-            for(size_t j = 0; j < (*m_samplePaths)[i]->path.size(); ++j){
+            for(size_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i]->path[j].ray.o, dTreeVoxelSize);
-                dTree->addWeightedSampleCount((*m_samplePaths)[i]->path[j].sc);
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                dTree->addWeightedSampleCount((*m_samplePaths)[i].path[j].sc);
             }
         }
 
