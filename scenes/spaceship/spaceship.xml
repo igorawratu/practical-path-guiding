@@ -4,8 +4,6 @@
 <scene version="0.5.0" >
 	<integrator type="guided_path">
 		<boolean name="strictNormals" value="true"/>
-		<integer name="maxDepth" value="10"/>
-		<integer name="rrDepth" value="10"/>
 
 		<!-- Parameters for the guided path tracer by Vorba et al. [2014] -->
 		<!--<integer name="maxDepth" value="40"/>
@@ -17,7 +15,21 @@
 
 		<!-- Parameters for our guided path tracer -->
 		<string name="budgetType" value="spp"/>
-		<float name="budget" value="1023"/>
+		<float name="budget" value="50000"/>
+
+		<string name="nee" value="always"/>
+		<integer name="sTreeThreshold" value="12000"/>
+		<boolean name="staticSTree" value="true"/>
+		
+		<boolean name="augment" value="false"/>
+		<boolean name="reject" value="false"/>
+		<boolean name="rejectAugment" value="false"/>
+		<boolean name="rejectReweight" value="false"/>
+		<boolean name="reweight" value="true"/>
+		<boolean name="reweightAugment" value="false"/>
+		
+		<integer name="stratIterActive" value="-1"/>
+		<boolean name="renderIterations" value="false"/>
 	</integrator>
 
 	<sensor type="perspective" >
@@ -25,13 +37,12 @@
 		<transform name="toWorld" >
 			<matrix value="-0.99069 0.007035 0.135953 -0.519664 9.40074e-010 0.998664 -0.0516768 0.817007 -0.136134 -0.0511957 -0.989367 3.82439 0 0 0 1"/>
 		</transform>
-		<sampler type="independent">
-			<integer name="sampleCount" value="1024"/>
-			<integer name="seed" value="1234"/>
+		<sampler type="independent" >
+			<integer name="sampleCount" value="127" />
 		</sampler>
 		<film type="hdrfilm" >
-			<integer name="width" value="640" />
-			<integer name="height" value="360" />
+			<integer name="width" value="512" />
+			<integer name="height" value="512" />
 			<boolean name="banner" value="false" />
 			<rfilter type="box" />
 		</film>

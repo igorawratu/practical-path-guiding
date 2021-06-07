@@ -2680,10 +2680,10 @@ public:
                     //renderFinalImage(film, *m_samplePaths);
                 }
 
-                if(m_iter >= m_lastStrategyIteration){
+                /*if(m_iter >= m_lastStrategyIteration){
                     m_samplePaths->clear();
                     m_samplePaths->shrink_to_fit();
-                }
+                }*/
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (((m_reweight || m_rejectReweight || m_reject) && !m_isFinalIter) || 
