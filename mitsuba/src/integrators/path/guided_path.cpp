@@ -2262,7 +2262,7 @@ public:
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
-                    computeNee((*m_samplePaths)[i], vertices, sampler);
+                    //computeNee((*m_samplePaths)[i], vertices, sampler);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
