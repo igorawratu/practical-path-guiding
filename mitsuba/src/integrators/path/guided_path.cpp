@@ -2535,6 +2535,8 @@ public:
         sampler->configure();
         sampler->generate(Point2i(0));
 
+        m_augmentedStartPos = 0;
+
         while (result && m_passesRendered < nPasses) {
             const int sppRendered = m_passesRendered * m_sppPerPass;
             m_doNee = doNeeWithSpp(sppRendered);
