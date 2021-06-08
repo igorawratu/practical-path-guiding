@@ -1890,7 +1890,7 @@ public:
             DTreeWrapper* dTree = vertices[pos].dTree;
 
             int curr_level = 0;
-            Float dtreePdf = dTree->pdf(sample_path.nee_records[j].wo, fixLevel ? vertices[pos - 1].level : -1, curr_level);
+            Float dtreePdf = dTree->pdf(sample_path.nee_records[j].wo, -1, curr_level);
             Float bsf = dTree->bsdfSamplingFraction();
             Float woPdf = bsf * sample_path.nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
@@ -2268,7 +2268,7 @@ public:
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
-                    computeNee((*m_samplePaths)[i], vertices, sampler, true);
+                    //computeNee((*m_samplePaths)[i], vertices, sampler);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
