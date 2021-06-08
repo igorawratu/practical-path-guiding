@@ -1877,7 +1877,7 @@ public:
         }
     };
 
-    void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, ref<Sampler> sampler){
+    void computeNee(RPath& sample_path, std::vector<Vertex>& vertices, ref<Sampler> sampler, bool fixLevel = false){
         for(std::uint32_t j = 0; j < sample_path.nee_records.size(); ++j){
             int pos = sample_path.nee_records[j].pos;
             if(pos >= int(vertices.size())){
@@ -1890,7 +1890,7 @@ public:
             DTreeWrapper* dTree = vertices[pos].dTree;
 
             int curr_level = 0;
-            Float dtreePdf = dTree->pdf(sample_path.nee_records[j].wo, -1, curr_level);
+            Float dtreePdf = dTree->pdf(sample_path.nee_records[j].wo, fixLevel ? vertices[pos - 1].level : -1, curr_level);
             Float bsf = dTree->bsdfSamplingFraction();
             Float woPdf = bsf * sample_path.nee_records[j].bsdfPdf + (1 - bsf) * dtreePdf;
 
@@ -1960,7 +1960,7 @@ public:
     float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf, bool fixLevel = false){
         dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
-        dTreePdf = dTree->pdf(vertex.ray.d, fixLevel ? vertex.curr_level : -1, curr_level);
+        dTreePdf = dTree->pdf(vertex.ray.d, fixLevel ? vertex.level : -1, curr_level);
 
         Float bsf = dTree->bsdfSamplingFraction();
 
@@ -2268,7 +2268,7 @@ public:
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
-                    //computeNee((*m_samplePaths)[i], vertices, sampler);
+                    computeNee((*m_samplePaths)[i], vertices, sampler, true);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
