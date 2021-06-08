@@ -2208,6 +2208,9 @@ public:
     void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_augmentedStartPos; ++i){
+            if(i >= m_samplePaths->size()){
+                std::cout << i << " " << m_samplePaths->size() << " " << m_augmentedStartPos << std::endl;
+            }
             if(!(*m_samplePaths)[i].active){
                 continue;
             }
