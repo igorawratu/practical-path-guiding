@@ -1957,10 +1957,10 @@ public:
         }
     }
 
-    float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
+    float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf, bool fixLevel = false){
         dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
-        dTreePdf = dTree->pdf(vertex.ray.d, -1, curr_level);
+        dTreePdf = dTree->pdf(vertex.ray.d, fixLevel ? vertex.curr_level : -1, curr_level);
 
         Float bsf = dTree->bsdfSamplingFraction();
 
@@ -2223,7 +2223,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf, true);
                 if(newWoPdf < EPSILON){
                     terminated = true;
                     break;
