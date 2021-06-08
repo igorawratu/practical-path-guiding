@@ -2229,7 +2229,6 @@ public:
                     break;
                 }
 
-                Float oldWoPdf = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
@@ -2972,7 +2971,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtreeLevel);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter <= m_strategyIterationActive){
+        if(m_augment || m_rejectAugment || m_reweightAugment){
             dTree->incSampleCount();
         }
 
@@ -3021,7 +3020,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtreeLevel);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if((m_augment || m_rejectAugment || m_reweightAugment) && m_iter <= m_strategyIterationActive){
+        if(m_augment || m_rejectAugment || m_reweightAugment){
             dTree->incSampleCount();
         }
 
