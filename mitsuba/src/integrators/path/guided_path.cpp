@@ -762,7 +762,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        A = std::min(A, 1000.f);
+        //A = std::min(A, 1000.f);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -1957,10 +1957,10 @@ public:
         }
     }
 
-    float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf, bool fixLevel = false){
+    float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
         dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
-        dTreePdf = dTree->pdf(vertex.ray.d, fixLevel ? vertex.level : -1, curr_level);
+        dTreePdf = dTree->pdf(vertex.ray.d, -1, curr_level);
 
         Float bsf = dTree->bsdfSamplingFraction();
 
@@ -2223,7 +2223,7 @@ public:
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf, true);
+                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
                 if(newWoPdf < EPSILON){
                     terminated = true;
                     break;
