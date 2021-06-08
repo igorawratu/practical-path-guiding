@@ -2234,7 +2234,7 @@ public:
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
  
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal * (*m_samplePaths)[i].path[j].sc / (*m_samplePaths)[i].path[j].woPdf;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
                 vertices.push_back(     
@@ -2267,7 +2267,7 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    vertices[j].commit(*m_sdTree, (m_nee == EKickstart && m_doNee ? 0.5f : 1.0f) * (*m_samplePaths)[i].path[j].sc, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
