@@ -2232,6 +2232,10 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
+
+                if((*m_samplePaths)[i].path[j].sc > 1){
+                    std::cout << (*m_samplePaths)[i].path[j].sc << " " << dTree->getAugmentedMultiplier() << std::endl;
+                }
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
