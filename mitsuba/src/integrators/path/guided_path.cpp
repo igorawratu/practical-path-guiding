@@ -762,7 +762,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        //A = std::min(A, 1000.f);
+        A = std::min(A, 1000.f);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -2297,14 +2297,14 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
-                (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
+                (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
 
                 if(sampler->next1D() > acceptProb){
                     rejected = true;
                     break;
                 }
                 else{
-                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
+                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal * (*m_samplePaths)[i].path[j].sc / newWoPdf;
                     throughput *= bsdfWeight;
                 }
 
