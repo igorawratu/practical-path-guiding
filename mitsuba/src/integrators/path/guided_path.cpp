@@ -2236,8 +2236,9 @@ public:
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
-                if(throughput.getLuminance() > 5.f){
-                    std::cout << throughput.getLuminance() << " " << (*m_samplePaths)[i].path[j].woPdf << std::endl;
+                if(throughput.getLuminance() > 50.f){
+                    std::cout << throughput.getLuminance() << " " << (*m_samplePaths)[i].path[j].woPdf << 
+                    " " << (*m_samplePaths)[i].path[j].bsdfVal.getLuminance() << std::endl;
                 }
 
                 vertices.push_back(     
