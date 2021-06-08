@@ -2234,7 +2234,7 @@ public:
                 (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].normalizing_sc * (*m_samplePaths)[i].path[j].sc;
+                throughput *= bsdfWeight;
 
                 vertices.push_back(     
                     Vertex{ 
