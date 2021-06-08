@@ -2236,6 +2236,10 @@ public:
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
+                if(throughput.getLuminance() > 5.f){
+                    std::cout << throughput.getLuminance() << " " << (*m_samplePaths)[i].path[j].woPdf << std::endl;
+                }
+
                 vertices.push_back(     
                     Vertex{ 
                         dTree,
@@ -2259,7 +2263,7 @@ public:
                 (*m_samplePaths)[i].radiance_records.clear();
             }
             else{
-                //computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
                     //computeNee((*m_samplePaths)[i], vertices, sampler);
