@@ -2229,7 +2229,7 @@ public:
                     break;
                 }
 
-                //(*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
+                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
