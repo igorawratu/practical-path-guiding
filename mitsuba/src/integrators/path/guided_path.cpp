@@ -2372,7 +2372,7 @@ public:
                     break;
                 }
 
-                Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
+                Float reweight = 1.f;//newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
