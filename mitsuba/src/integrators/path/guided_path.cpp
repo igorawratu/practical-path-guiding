@@ -762,7 +762,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        //A = std::min(A, 1000.f);
+        A = std::min(A, 10.f);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -2236,11 +2236,6 @@ public:
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
-
-                if(throughput.getLuminance() > 50.f){
-                    std::cout << throughput.getLuminance() << " " << (*m_samplePaths)[i].path[j].woPdf << 
-                    " " << oldWoPdf << std::endl;
-                }
 
                 vertices.push_back(     
                     Vertex{ 
