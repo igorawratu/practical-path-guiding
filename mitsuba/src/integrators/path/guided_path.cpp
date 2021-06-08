@@ -2229,6 +2229,7 @@ public:
                     break;
                 }
 
+                Float oldWoPdf = (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
@@ -2238,7 +2239,7 @@ public:
 
                 if(throughput.getLuminance() > 50.f){
                     std::cout << throughput.getLuminance() << " " << (*m_samplePaths)[i].path[j].woPdf << 
-                    " " << (*m_samplePaths)[i].path[j].bsdfVal.getLuminance() << std::endl;
+                    " " << oldWoPdf << std::endl;
                 }
 
                 vertices.push_back(     
