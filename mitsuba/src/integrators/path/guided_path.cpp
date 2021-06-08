@@ -2163,6 +2163,7 @@ public:
                 }
 
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
                 (*m_samplePaths)[i].path[j].woPdf = nwo;
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
                 throughput *= bsdfWeight;
@@ -2206,9 +2207,6 @@ public:
     void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_augmentedStartPos; ++i){
-            if(i >= m_samplePaths->size()){
-                std::cout << i << " " << m_samplePaths->size() << " " << m_augmentedStartPos << std::endl;
-            }
             if(!(*m_samplePaths)[i].active){
                 continue;
             }
@@ -2270,57 +2268,7 @@ public:
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-            }
-            }
-        }
-    }
-
-    void correctCurrAugmentedSamples(ref<Sampler> sampler, bool finalIter){
-        #pragma omp parallel for
-        for(std::uint32_t i = m_augmentedStartPos; i < m_samplePaths->size(); ++i){
-            if(!(*m_samplePaths)[i].active){
-                continue;
-            }
-
-            (*m_samplePaths)[i].Li = Spectrum(0.f);
-            Spectrum throughput(1.0f);
-
-            std::vector<Vertex> vertices;
-
-            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
-                Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
-                int curr_level = 0;
-                Float dTreePdf = dTree->pdf((*m_samplePaths)[i].path[j].ray.d, (*m_samplePaths)[i].path[j].level, curr_level);
-                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
-
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].normalizing_sc * (*m_samplePaths)[i].path[j].sc;
-
-                vertices.push_back(     
-                    Vertex{ 
-                        dTree,
-                        dTreeVoxelSize,
-                        (*m_samplePaths)[i].path[j].ray,
-                        throughput,
-                        (*m_samplePaths)[i].path[j].bsdfVal,
-                        Spectrum(0.f),
-                        (*m_samplePaths)[i].path[j].woPdf,
-                        (*m_samplePaths)[i].path[j].bsdfPdf,
-                        dTreePdf,
-                        (*m_samplePaths)[i].path[j].isDelta
-                    });
-            }
-
-            computeRadiance((*m_samplePaths)[i], vertices, sampler);
-
-            if(m_doNee){
-                computeNee((*m_samplePaths)[i], vertices, sampler);
-            }
-
-            for (std::uint32_t j = 0; j < vertices.size(); ++j) {;
-                vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
-                    m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                }
             }
         }
     }
@@ -2348,6 +2296,7 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].sc = dTree->getAugmentedMultiplier();
 
                 if(sampler->next1D() > acceptProb){
                     rejected = true;
