@@ -2555,7 +2555,7 @@ public:
 
             if(m_augment || m_rejectAugment || m_reweightAugment){
                 if(m_augment){
-                    //performAugmentedSamples(sampler, m_isFinalIter);
+                    performAugmentedSamples(sampler, m_isFinalIter);
                 } 
                 else if(m_rejectAugment){
                     rejectAugmentHybrid(sampler);
