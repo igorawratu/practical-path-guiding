@@ -1960,7 +1960,7 @@ public:
     float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
         dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
-        dTreePdf = dTree->pdf(vertex.ray.d, -1, curr_level);
+        dTreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
 
         Float bsf = dTree->bsdfSamplingFraction();
 
