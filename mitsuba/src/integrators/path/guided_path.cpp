@@ -762,7 +762,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        A = std::min(A, 10.f);
+        A = std::min(A, 1000.f);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -2234,7 +2234,7 @@ public:
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
  
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].sc;
                 throughput *= bsdfWeight;
 
                 vertices.push_back(     
@@ -2263,7 +2263,7 @@ public:
                 computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
-                    //computeNee((*m_samplePaths)[i], vertices, sampler);
+                    computeNee((*m_samplePaths)[i], vertices, sampler);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
