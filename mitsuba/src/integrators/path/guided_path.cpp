@@ -1960,7 +1960,7 @@ public:
     float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
         dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
         int curr_level = 0;
-        dTreePdf = dTree->pdf(vertex.ray.d, vertex.level, curr_level);
+        dTreePdf = dTree->pdf(vertex.ray.d, -1, curr_level);
 
         Float bsf = dTree->bsdfSamplingFraction();
 
@@ -2230,11 +2230,12 @@ public:
                 }
 
                 Float oldWoPdf = (*m_samplePaths)[i].path[j].woPdf;
+                (*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
  
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf * (*m_samplePaths)[i].path[j].sc;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
 
                 vertices.push_back(     
@@ -2372,7 +2373,7 @@ public:
                     break;
                 }
 
-                Float reweight = 1.f;//newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
+                Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
                 (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
