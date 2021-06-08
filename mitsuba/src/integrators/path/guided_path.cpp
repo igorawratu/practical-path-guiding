@@ -1904,7 +1904,7 @@ public:
             }
 
             for(int k = 0; k <= pos; ++k){
-                vertices[k].radiance += L * sample_path.path[k].sc;
+                vertices[k].radiance += L;// * sample_path.path[k].sc;
             }
             sample_path.Li += L;
 
@@ -1949,7 +1949,7 @@ public:
                 }
 
                 for(int k = 0; k <= pos; ++k){
-                    vertices[k].radiance += L * sample_path.path[k].sc;
+                    vertices[k].radiance += L;// * sample_path.path[k].sc;
                 }
             }
             
@@ -2232,10 +2232,6 @@ public:
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
-
-                if((*m_samplePaths)[i].path[j].sc > 1){
-                    std::cout << (*m_samplePaths)[i].path[j].sc << " " << dTree->getAugmentedMultiplier() << std::endl;
-                }
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
                 throughput *= bsdfWeight;
