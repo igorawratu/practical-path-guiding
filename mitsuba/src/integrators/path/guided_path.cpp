@@ -2259,7 +2259,7 @@ public:
                 (*m_samplePaths)[i].radiance_records.clear();
             }
             else{
-                computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                //computeRadiance((*m_samplePaths)[i], vertices, sampler);
 
                 if(m_doNee){
                     //computeNee((*m_samplePaths)[i], vertices, sampler);
