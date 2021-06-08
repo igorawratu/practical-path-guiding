@@ -2935,10 +2935,8 @@ public:
                     spec *= Li(sensorRay, rRec);
                 }
 
-                if(!m_augment && !m_rejectAugment && !m_reweightAugment){
-                    block->put(samplePos, spec, rRec.alpha);
-                    squaredBlock->put(samplePos, spec * spec, rRec.alpha);
-                }
+                block->put(samplePos, spec, rRec.alpha);
+                squaredBlock->put(samplePos, spec * spec, rRec.alpha);
                 
                 sampler->advance();
             }
