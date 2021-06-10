@@ -1949,7 +1949,7 @@ public:
                 }
 
                 for(int k = 0; k <= pos; ++k){
-                    vertices[k].radiance += L;// * sample_path.path[k].sc;
+                    vertices[k].radiance += L;
                 }
             }
             
@@ -2089,9 +2089,9 @@ public:
                 }
                 else{
                     Float rw_scale = std::max(1.f, newWoPdf / oldWo);
-                    (*m_samplePaths)[i].path[j].bsdfVal *= rw_scale;
+                    (*m_samplePaths)[i].path[j].sc *= rw_scale;
                     Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
-                    throughput *= bsdfWeight;
+                    throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;
                 }
 
                 vertices.push_back(     
@@ -2117,7 +2117,17 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    Float statweight = (*m_samplePaths)[i].path[j].sc;
+                    if(m_doNee){
+                        statweight *= 0.5f;
+
+                        //only change statistical weight of sample portion, not nee portion
+                        if(m_nee == EAlways){
+                            statweight += 0.5f;
+                        }
+                    }
+
+                    vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
@@ -2159,7 +2169,7 @@ public:
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
 
                 if(reweight < 1.f){
-                    (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
+                    (*m_samplePaths)[i].path[j].sc *= reweight;
                 }
                 else{
                     (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
@@ -2167,8 +2177,8 @@ public:
                 }
 
                 (*m_samplePaths)[i].path[j].woPdf = nwo;
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal * (*m_samplePaths)[i].path[j].sc / nwo;
-                throughput *= bsdfWeight;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
+                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2199,7 +2209,17 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    vertices[j].commit(*m_sdTree, (m_nee == EKickstart && m_doNee ? 0.5f : 1.0f) * (*m_samplePaths)[i].path[j].sc, 
+                    Float statweight = (*m_samplePaths)[i].path[j].sc;
+                    if(m_doNee){
+                        statweight *= 0.5f;
+
+                        //only change statistical weight of sample portion, not nee portion
+                        if(m_nee == EAlways){
+                            statweight += 0.5f;
+                        }
+                    }
+                    
+                    vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
@@ -2236,8 +2256,8 @@ public:
                 (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
  
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal * (*m_samplePaths)[i].path[j].sc / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight;
+                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
+                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2269,7 +2289,17 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    vertices[j].commit(*m_sdTree, (m_nee == EKickstart && m_doNee ? 0.5f : 1.0f) * (*m_samplePaths)[i].path[j].sc, 
+                    Float statweight = (*m_samplePaths)[i].path[j].sc;
+                    if(m_doNee){
+                        statweight *= 0.5f;
+
+                        //only change statistical weight of sample portion, not nee portion
+                        if(m_nee == EAlways){
+                            statweight += 0.5f;
+                        }
+                    }
+
+                    vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
@@ -2306,8 +2336,8 @@ public:
                     break;
                 }
                 else{
-                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal * (*m_samplePaths)[i].path[j].sc / newWoPdf;
-                    throughput *= bsdfWeight;
+                    Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / newWoPdf;
+                    throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;
                 }
 
                 vertices.push_back(
@@ -2333,8 +2363,18 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
+                    Float statweight = (*m_samplePaths)[i].path[j].sc;
+                    if(m_doNee){
+                        statweight *= 0.5f;
+
+                        //only change statistical weight of sample portion, not nee portion
+                        if(m_nee == EAlways){
+                            statweight += 0.5f;
+                        }
+                    }
+
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                    vertices[j].commit(*m_sdTree, (m_nee == EKickstart && m_doNee ? 0.5f : 1.0f) * (*m_samplePaths)[i].path[j].sc, 
+                    vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
@@ -2376,11 +2416,11 @@ public:
 
                 Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
 
-                (*m_samplePaths)[i].path[j].bsdfVal *= reweight;
+                (*m_samplePaths)[i].path[j].sc *= reweight;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight;
+                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2412,7 +2452,16 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    Float statweight = (*m_samplePaths)[i].path[j].sc;
+                    if(m_doNee){
+                        statweight *= 0.5f;
+
+                        //only change statistical weight of sample portion, not nee portion
+                        if(m_nee == EAlways){
+                            statweight += 0.5f;
+                        }
+                    }
+                    vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
