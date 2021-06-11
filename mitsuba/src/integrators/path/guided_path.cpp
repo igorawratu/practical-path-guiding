@@ -2172,12 +2172,12 @@ public:
                     (*m_samplePaths)[i].path[j].sc *= reweight;
                 }
                 
-                //(*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedMultiplier();
                 //(*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
 
                 (*m_samplePaths)[i].path[j].woPdf = nwo;
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
-                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;
+                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc * (*m_samplePaths)[i].path[j].normalizing_sc;
 
                 vertices.push_back(     
                     Vertex{ 
@@ -2208,7 +2208,7 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    Float statweight = (*m_samplePaths)[i].path[j].sc;
+                    Float statweight = (*m_samplePaths)[i].path[j].sc * (*m_samplePaths)[i].path[j].normalizing_sc;
                     if(m_doNee){
                         statweight *= 0.5f;
 
