@@ -2169,7 +2169,7 @@ public:
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
 
                 if(reweight < 1.f){
-                    (*m_samplePaths)[i].path[j].sc *= reweight;
+                    //(*m_samplePaths)[i].path[j].sc *= reweight;
                 }
                 else{
                     (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
