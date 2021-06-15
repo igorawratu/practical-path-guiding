@@ -14,7 +14,7 @@
 
 		<!-- Parameters for our guided path tracer -->
 		<string name="budgetType" value="spp"/>
-		<float name="budget" value="32767"/>
+		<float name="budget" value="255"/>
 
 		<string name="nee" value="always"/>
 		<integer name="sTreeThreshold" value="12000"/>
@@ -24,10 +24,11 @@
 		<boolean name="reject" value="false"/>
 		<boolean name="rejectAugment" value="false"/>
 		<boolean name="rejectReweight" value="false"/>
-		<boolean name="reweight" value="true"/>
-		<boolean name="reweightAugment" value="false"/>
+		<boolean name="reweight" value="false"/>
+		<boolean name="reweightAugment" value="true"/>
 		
-		<integer name="stratIterActive" value="-1"/>
+		<integer name="stratIterActive" value="3"/>
+		<integer name="lastStrategyiteration" value="-1"/>
 		<boolean name="renderIterations" value="false"/>
 	</integrator>
 
