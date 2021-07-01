@@ -329,14 +329,14 @@ public:
         }
     }
 
-    void setMinimumIrr(float irr){
+    void setMinimumIrr(float irr, std::vector<QuadTreeNode>& nodes){
         for(int i = 0; i < 4; ++i){
             if(isLeaf(i)){
                 float prev = m_sum[i].load();
                 while(irr > m_sum[i] && !m_sum[i].compare_exchange_weak(prev, irr)){}
             }
             else{
-                nodes[child(i)].setMinimumIrr(irr);
+                nodes[child(i)].setMinimumIrr(irr, nodes);
             }
         }
     }
@@ -562,7 +562,7 @@ public:
     }
 
     void setMinimumIrr(float irr){
-        m_nodes[0].setMinimumIrr(irr);
+        m_nodes[0].setMinimumIrr(irr, m_nodes);
     }
 
     Float pdf(Point2 p, int level, int& curr_level) const {
@@ -922,7 +922,7 @@ public:
         if (!rec.isDelta) {
             Float irradiance = rec.radiance / rec.woPdf;
             if(irradiance > 0){
-                min_nzradiance = std::min(min_radiance, irradiance);
+                min_nzradiance = std::min(min_nzradiance, irradiance);
             }
             building.recordIrradiance(dirToCanonical(rec.d), irradiance, rec.statisticalWeight, directionalFilter);
         }
