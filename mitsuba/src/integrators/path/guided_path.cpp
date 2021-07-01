@@ -329,6 +329,18 @@ public:
         }
     }
 
+    void setMinimumIrr(float irr){
+        for(int i = 0; i < 4; ++i){
+            if(isLeaf(i)){
+                float prev = m_sum[i].load();
+                while(irr > m_sum[i] && !m_sum[i].compare_exchange_weak(prev, irr)){}
+            }
+            else{
+                nodes[child(i)].setMinimumIrr(irr);
+            }
+        }
+    }
+
     Float computeOverlappingArea(const Point2& min1, const Point2& max1, const Point2& min2, const Point2& max2) {
         Float lengths[2];
         for (int i = 0; i < 2; ++i) {
@@ -547,6 +559,10 @@ public:
                 }
             }
         }
+    }
+
+    void setMinimumIrr(float irr){
+        m_nodes[0].setMinimumIrr(irr);
     }
 
     Float pdf(Point2 p, int level, int& curr_level) const {
@@ -899,11 +915,15 @@ public:
         weighted_previous_samples = 0;
         req_augmented_samples = 0;
         B = 0.f;
+        min_nzradiance = std::numeric_limits<float>::max();
     }
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
         if (!rec.isDelta) {
             Float irradiance = rec.radiance / rec.woPdf;
+            if(irradiance > 0){
+                min_nzradiance = std::min(min_radiance, irradiance);
+            }
             building.recordIrradiance(dirToCanonical(rec.d), irradiance, rec.statisticalWeight, directionalFilter);
         }
 
@@ -956,6 +976,7 @@ public:
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
         previous = sampling;
+        building.setMinimumIrr(min_nzradiance);
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
@@ -1106,6 +1127,8 @@ private:
     std::pair<Float, Float> m_rejPdfPair;
 
     AdamOptimizer bsdfSamplingFractionOptimizer{0.01f};
+
+    float min_nzradiance;
 
     class SpinLock {
     public:
