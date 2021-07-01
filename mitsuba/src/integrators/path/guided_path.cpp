@@ -976,9 +976,10 @@ public:
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
         previous = sampling;
-        if(min_nzradiance > 100.f){
+        if(min_nzradiance > 100000.f){
             min_nzradiance = EPSILON * 2.f;
         }
+        
         building.setMinimumIrr(min_nzradiance);
         building.build();
         
