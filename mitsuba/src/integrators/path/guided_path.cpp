@@ -778,7 +778,7 @@ public:
 
         auto majorizing_pair = newDist.getMajorizingFactor(oldDist);
         float A = majorizing_pair.first < EPSILON && majorizing_pair.second < EPSILON ? 1.f : majorizing_pair.second / majorizing_pair.first;
-        A = std::min(A, 1000.f);
+        //A = std::min(A, 1000.f);
 
         //bool majorizes = newDist.validateMajorizingFactor(oldDist, A);
 
@@ -976,6 +976,9 @@ public:
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
         previous = sampling;
+        if(min_nzradiance > 100.f){
+            min_nzradiance = EPSILON * 2.f;
+        }
         building.setMinimumIrr(min_nzradiance);
         building.build();
         
@@ -994,6 +997,8 @@ public:
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
+
+        min_nzradiance = std::numeric_limits<float>::max();
     }
 
     void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
@@ -2192,14 +2197,14 @@ public:
                 Float reweight = nwo / (*m_samplePaths)[i].path[j].woPdf;
 
                 if(reweight < 1.f){
-                    (*m_samplePaths)[i].path[j].normalizing_sc *= reweight;
+                    (*m_samplePaths)[i].path[j].sc *= reweight;
                 }
                 
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
 
                 (*m_samplePaths)[i].path[j].woPdf = nwo;
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / nwo;
-                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc * (*m_samplePaths)[i].path[j].normalizing_sc;
+                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;// * (*m_samplePaths)[i].path[j].normalizing_sc;
 
                 vertices.push_back(     
                     Vertex{ 
