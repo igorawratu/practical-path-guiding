@@ -2428,13 +2428,6 @@ public:
                 Spectrum bsdfWeight = curr_vert.bsdfVal / curr_vert.woPdf;
                 throughput *= bsdfWeight * curr_vert.sc;
 
-                //account for roulette
-                if (!curr_vert.isDelta) {
-                    Float successProb = throughput.max();
-                    successProb = std::max(0.1f, std::min(successProb, 0.99f));
-                    throughput /= successProb;
-                }
-
                 vertices.push_back(     
                     Vertex{ 
                         dTree,
@@ -2448,6 +2441,13 @@ public:
                         dTreePdf,
                         curr_vert.isDelta
                     });
+
+                //account for roulette
+                if (!curr_vert.isDelta) {
+                    Float successProb = throughput.max();
+                    successProb = std::max(0.1f, std::min(successProb, 0.99f));
+                    throughput /= successProb;
+                }
             }
 
             if(terminated){
