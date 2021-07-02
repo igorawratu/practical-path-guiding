@@ -1448,13 +1448,13 @@ struct RVertex{
 };
 
 struct RadRecord{
-    short pos;
+    int pos;
     Spectrum L;
     float pdf;
 };
 
 struct NEERecord{
-    short pos;
+    int pos;
     Spectrum L;
     float pdf;
     Vector wo;
@@ -2396,6 +2396,10 @@ public:
     void reweightCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
+            if(curr_vert.path.size() > 25 || curr_vert.nee_records.size() > 25){
+                std::cout << curr_vert.path.size() << " " << curr_vert.nee_records.size() << std::endl;
+            }
+
             RPath& curr_sample = (*m_samplePaths)[i];
             if(!curr_sample.active){
                 continue;
@@ -3168,7 +3172,7 @@ public:
                         recordRadiance(throughput * value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_records.push_back({std::int8_t(pathRecord.path.size()) - 1, value, 0.f});
+                            pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
                         }
                     }
 
@@ -3181,7 +3185,7 @@ public:
                     Spectrum eL = its.Le(-ray.d);
                     recordRadiance(throughput * eL);
                     if(!eL.isZero()){
-                        pathRecord.radiance_records.push_back({std::int8_t(pathRecord.path.size()) - 1, eL, 0.f});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
                     }
                 }
 
@@ -3191,7 +3195,7 @@ public:
                     recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
-                        pathRecord.radiance_records.push_back({std::int8_t(pathRecord.path.size()) - 1, sL, 0.f});
+                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
                     }
                 }
 
@@ -3302,7 +3306,7 @@ public:
                                 }
                             }
 
-                            pathRecord.nee_records.push_back({std::int8_t(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
                             
                             addedNee = true;
 
