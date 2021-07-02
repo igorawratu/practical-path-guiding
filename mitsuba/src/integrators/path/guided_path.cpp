@@ -2443,11 +2443,11 @@ public:
                     });
 
                 //account for roulette
-                /*if (!curr_vert.isDelta) {
+                if (j >= m_rrDepth && !curr_vert.isDelta) {
                     Float successProb = throughput.max();
                     successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     throughput /= successProb;
-                }*/
+                }
             }
 
             if(terminated){
