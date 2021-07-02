@@ -2430,7 +2430,7 @@ public:
 
                 //account for roulette
                 if (!curr_vert.isDelta) {
-                    successProb = throughput.max();
+                    Float successProb = throughput.max();
                     successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     throughput /= successProb;
                 }
