@@ -2402,7 +2402,7 @@ public:
                 continue;
             }
 
-            if(curr_sample.path.size() > 25 || curr_sample.nee_records.size() > 25){
+            if(curr_sample.nee_records.size() > 25){
                 counter++;
             }
 
