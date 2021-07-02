@@ -2396,13 +2396,13 @@ public:
     void reweightCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-            if(curr_vert.path.size() > 25 || curr_vert.nee_records.size() > 25){
-                std::cout << curr_vert.path.size() << " " << curr_vert.nee_records.size() << std::endl;
-            }
-
             RPath& curr_sample = (*m_samplePaths)[i];
             if(!curr_sample.active){
                 continue;
+            }
+
+            if(curr_sample.path.size() > 25 || curr_sample.nee_records.size() > 25){
+                std::cout << curr_vert.path.size() << " " << curr_vert.nee_records.size() << std::endl;
             }
 
             std::vector<Vertex> vertices;
