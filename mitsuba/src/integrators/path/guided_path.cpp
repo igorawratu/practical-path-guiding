@@ -1605,7 +1605,7 @@ public:
 
             for(size_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
                 Vector dTreeVoxelSize;
-                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].ray.o, dTreeVoxelSize);
+                DTreeWrapper* dTree = m_sdTree->dTreeWrapper((*m_samplePaths)[i].path[j].o, dTreeVoxelSize);
                 dTree->addWeightedSampleCount((*m_samplePaths)[i].path[j].sc);
             }
         }
@@ -1985,9 +1985,9 @@ public:
     }
 
     float computePdf(const RVertex& vertex, DTreeWrapper*& dTree, Vector& dTreeVoxelSize, float& dTreePdf){
-        dTree = m_sdTree->dTreeWrapper(vertex.ray.o, dTreeVoxelSize);
+        dTree = m_sdTree->dTreeWrapper(vertex.o, dTreeVoxelSize);
         int curr_level = 0;
-        dTreePdf = dTree->pdf(vertex.ray.d, -1, curr_level);
+        dTreePdf = dTree->pdf(vertex.d, -1, curr_level);
 
         Float bsf = dTree->bsdfSamplingFraction();
 
@@ -2051,7 +2051,7 @@ public:
                         Vertex{ 
                             dTree,
                             dTreeVoxelSize,
-                            (*m_samplePaths)[i].path[j].ray,
+                            Ray((*m_samplePaths)[i].path[j].o, (*m_samplePaths)[i].path[j].d, (*m_samplePaths)[i].path[j].time),
                             throughput,
                             (*m_samplePaths)[i].path[j].bsdfVal,
                             Spectrum(0.f),
@@ -2125,7 +2125,7 @@ public:
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        (*m_samplePaths)[i].path[j].ray,
+                        Ray((*m_samplePaths)[i].path[j].o, (*m_samplePaths)[i].path[j].d, (*m_samplePaths)[i].path[j].time),
                         throughput,
                         (*m_samplePaths)[i].path[j].bsdfVal,
                         Spectrum(0.f),
@@ -2209,7 +2209,7 @@ public:
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        (*m_samplePaths)[i].path[j].ray,
+                        Ray((*m_samplePaths)[i].path[j].o, (*m_samplePaths)[i].path[j].d, (*m_samplePaths)[i].path[j].time),
                         throughput,
                         (*m_samplePaths)[i].path[j].bsdfVal,
                         Spectrum{0.0f},
@@ -2288,7 +2288,7 @@ public:
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        (*m_samplePaths)[i].path[j].ray,
+                        Ray((*m_samplePaths)[i].path[j].o, (*m_samplePaths)[i].path[j].d, (*m_samplePaths)[i].path[j].time),
                         throughput,
                         (*m_samplePaths)[i].path[j].bsdfVal,
                         Spectrum(0.f),
@@ -2368,7 +2368,7 @@ public:
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        (*m_samplePaths)[i].path[j].ray,
+                        Ray((*m_samplePaths)[i].path[j].o, (*m_samplePaths)[i].path[j].d, (*m_samplePaths)[i].path[j].time),
                         throughput,
                         (*m_samplePaths)[i].path[j].bsdfVal,
                         Spectrum(0.f),
@@ -2454,7 +2454,7 @@ public:
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        Ray(curr_vert.p, curr_vert.d, curr_vert.time),
+                        Ray(curr_vert.o, curr_vert.d, curr_vert.time),
                         throughput,
                         curr_vert.bsdfVal,
                         Spectrum{0.0f},
