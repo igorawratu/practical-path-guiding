@@ -2402,7 +2402,7 @@ public:
                 continue;
             }
 
-            if(curr_sample.nee_records.size() > 25){
+            if(curr_sample.path.size() > 25){
                 counter++;
             }
 
@@ -3441,15 +3441,7 @@ public:
                 if (rRec.depth++ >= m_rrDepth) {
                     Float successProb = 1.0f;
                     if (dTree && !(bRec.sampledType & BSDF::EDelta)) {
-                        if (!m_isBuilt) {
-                            successProb = throughput.max() * eta * eta;
-                        } else {
-                            // The adjoint russian roulette implementation of Mueller et al. [2017]
-                            // was broken, effectively turning off russian roulette entirely.
-                            // For reproducibility's sake, we therefore removed adjoint russian roulette
-                            // from this codebase rather than fixing it.
-                        }
-
+                        successProb = throughput.max() * eta * eta;
                         successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     }
 
