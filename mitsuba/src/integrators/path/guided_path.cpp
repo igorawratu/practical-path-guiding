@@ -1438,12 +1438,12 @@ private:
 };
 
 struct RVertex{
-    Ray ray;
+    Point o;
+    Vector3f d;
+    Float time;
     Spectrum bsdfVal;
     Float bsdfPdf, woPdf;
     bool isDelta;
-    int level;
-    double normalizing_sc;
     double sc;
 };
 
@@ -1932,10 +1932,10 @@ public:
                 continue;
             }
 
-            for(int k = 0; k <= pos; ++k){
-                vertices[k].radiance += L;// * sample_path.path[k].sc;
+            //not <= because we don't care about the direct lighting component unless we do a kickstart, in which case this is treated separately
+            for(int k = 0; k < pos; ++k){
+                vertices[k].radiance += L;
             }
-            sample_path.Li += L;
 
             if(m_nee == EKickstart){
                 Vertex v = Vertex{ 
@@ -1944,14 +1944,14 @@ public:
                     Ray(vertices[pos].ray.o, sample_path.nee_records[j].wo, 0),
                     prevThroughput * sample_path.nee_records[j].bsdfVal / pdf,
                     sample_path.nee_records[j].bsdfVal,
-                    L,// * sample_path.path[pos].sc,
+                    L,
                     pdf,
                     sample_path.nee_records[j].bsdfPdf,
                     dtreePdf,
                     false
                 };
 
-                v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, 
+                v.commit(*m_sdTree, sample_path.path[pos].sc * 0.5f, m_spatialFilter, m_directionalFilter, 
                     m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
         }
@@ -1981,8 +1981,6 @@ public:
                     vertices[k].radiance += L;
                 }
             }
-            
-            sample_path.Li += L;
         }
     }
 
@@ -2236,7 +2234,7 @@ public:
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    Float statweight = (*m_samplePaths)[i].path[j].sc * (*m_samplePaths)[i].path[j].normalizing_sc;
+                    Float statweight = (*m_samplePaths)[i].path[j].sc;// * (*m_samplePaths)[i].path[j].normalizing_sc;
                     if(m_doNee){
                         statweight *= 0.5f;
 
@@ -2280,7 +2278,7 @@ public:
 
                 //(*m_samplePaths)[i].path[j].bsdfVal *= dTree->getAugmentedMultiplier();
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
-                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
+                //(*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
  
                 Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
@@ -2355,7 +2353,6 @@ public:
                 Float acceptProb = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
                 (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
 
-                (*m_samplePaths)[i].path[j].normalizing_sc = dTree->getAugmentedNormalizer();
                 (*m_samplePaths)[i].path[j].sc *= dTree->getAugmentedMultiplier();
 
                 if(sampler->next1D() > acceptProb){
@@ -2430,63 +2427,62 @@ public:
 
             bool terminated = false;
 
-            for(std::uint32_t j = 0; j < (*m_samplePaths)[i].path.size(); ++j){
+            RPath& curr_sample = (*m_samplePaths)[i];
+
+            for(std::uint32_t j = 0; j < curr_sample.path.size(); ++j){
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
                 float dTreePdf;
 
-                Float newWoPdf = computePdf((*m_samplePaths)[i].path[j], dTree, dTreeVoxelSize, dTreePdf);
+                RVertex& curr_vert = curr_sample.path[j];
+
+                Float newWoPdf = computePdf(curr_vert, dTree, dTreeVoxelSize, dTreePdf);
                 if(newWoPdf < EPSILON){
                     terminated = true;
                     break;
                 }
 
-                Float reweight = newWoPdf / (*m_samplePaths)[i].path[j].woPdf;
+                Float reweight = newWoPdf / curr_vert.woPdf;
 
-                (*m_samplePaths)[i].path[j].sc *= reweight;
-                (*m_samplePaths)[i].path[j].woPdf = newWoPdf;
+                curr_vert.sc *= reweight;
+                curr_vert.woPdf = newWoPdf;
 
-                Spectrum bsdfWeight = (*m_samplePaths)[i].path[j].bsdfVal / (*m_samplePaths)[i].path[j].woPdf;
-                throughput *= bsdfWeight * (*m_samplePaths)[i].path[j].sc;
+                Spectrum bsdfWeight = curr_vert.bsdfVal / curr_vert.woPdf;
+                throughput *= bsdfWeight * curr_vert.sc;
 
                 vertices.push_back(     
                     Vertex{ 
                         dTree,
                         dTreeVoxelSize,
-                        (*m_samplePaths)[i].path[j].ray,
+                        Ray(curr_vert.p, curr_vert.d, curr_vert.time),
                         throughput,
-                        (*m_samplePaths)[i].path[j].bsdfVal,
+                        curr_vert.bsdfVal,
                         Spectrum{0.0f},
-                        (*m_samplePaths)[i].path[j].woPdf,
-                        (*m_samplePaths)[i].path[j].bsdfPdf,
+                        curr_vert.woPdf,
+                        curr_vert.bsdfPdf,
                         dTreePdf,
-                        (*m_samplePaths)[i].path[j].isDelta
+                        curr_vert.isDelta
                     });
             }
 
             if(terminated){
-                (*m_samplePaths)[i].active = false;
-                (*m_samplePaths)[i].path.clear();
-                (*m_samplePaths)[i].nee_records.clear();
-                (*m_samplePaths)[i].radiance_records.clear();
+                curr_sample.active = false;
+                curr_sample.path.clear();
+                curr_sample.nee_records.clear();
+                curr_sample.radiance_records.clear();
             }
             else{
-                computeRadiance((*m_samplePaths)[i], vertices, sampler);
+                computeRadiance(curr_sample, vertices, sampler);
 
                 //compute NEE if enabled
                 if(m_doNee){
-                    computeNee((*m_samplePaths)[i], vertices, sampler);
+                    computeNee(curr_sample, vertices, sampler);
                 }
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    Float statweight = (*m_samplePaths)[i].path[j].sc;
-                    if(m_doNee){
+                    Float statweight = curr_sample.path[j].sc;
+                    if(m_doNee && m_nee == EKickstart){
                         statweight *= 0.5f;
-
-                        //only change statistical weight of sample portion, not nee portion
-                        if(m_nee == EAlways){
-                            statweight += 0.5f;
-                        }
                     }
                     vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
@@ -3332,7 +3328,7 @@ public:
                 bool isDelta = bRec.sampledType & BSDF::EDelta;
 
                 //add the vertices
-                pathRecord.path.push_back(RVertex{ray, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, dTreeLevel, 1, 1});
+                pathRecord.path.push_back(RVertex{its.p, wo, ray.time, bsdfWeight * woPdf, bsdfPdf, woPdf, isDelta, 1});
 
                 /* ==================================================================== */
                 /*                          Luminaire sampling                          */
