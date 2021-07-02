@@ -2059,7 +2059,7 @@ public:
                             curr_vert.isDelta
                         });
 
-                    if (j >= m_rrDepth && !curr_vert.isDelta) {
+                    if (int(j) >= m_rrDepth && !curr_vert.isDelta) {
                         Float successProb = throughput.max();
                         successProb = std::max(0.1f, std::min(successProb, 0.99f));
                         throughput /= successProb;
@@ -2140,7 +2140,7 @@ public:
                         curr_vertex.isDelta
                     });
 
-                if (j >= m_rrDepth && !curr_vert.isDelta) {
+                if (int(j) >= m_rrDepth && !curr_vertex.isDelta) {
                     Float successProb = throughput.max();
                     successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     throughput /= successProb;
@@ -2226,7 +2226,7 @@ public:
                         curr_vertex.isDelta
                     });
 
-                if (j >= m_rrDepth && !curr_vert.isDelta) {
+                if (int(j) >= m_rrDepth && !curr_vertex.isDelta) {
                     Float successProb = throughput.max();
                     successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     throughput /= successProb;
@@ -2305,7 +2305,7 @@ public:
                         curr_vert.isDelta
                     });
 
-                if (j >= m_rrDepth && !curr_vert.isDelta) {
+                if (int(j) >= m_rrDepth && !curr_vert.isDelta) {
                     Float successProb = throughput.max();
                     successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     throughput /= successProb;
@@ -2387,7 +2387,7 @@ public:
                         curr_vert.isDelta
                     });
 
-                if (j >= m_rrDepth && !curr_vert.isDelta) {
+                if (int(j) >= m_rrDepth && !curr_vert.isDelta) {
                     Float successProb = throughput.max();
                     successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     throughput /= successProb;
@@ -2473,7 +2473,7 @@ public:
                     });
 
                 //account for roulette
-                if (j >= m_rrDepth && !curr_vert.isDelta) {
+                if (int(j) >= m_rrDepth && !curr_vert.isDelta) {
                     Float successProb = throughput.max();
                     successProb = std::max(0.1f, std::min(successProb, 0.99f));
                     throughput /= successProb;
