@@ -2473,7 +2473,7 @@ public:
             }
         }
 
-        std::cout << "Num really long paths: " << counter << " / " << m_samplePaths.size() << std::endl;
+        std::cout << "Num really long paths: " << counter << " / " << m_samplePaths->size() << std::endl;
     }
 
     bool renderSPP(Scene *scene, RenderQueue *queue, const RenderJob *job,
