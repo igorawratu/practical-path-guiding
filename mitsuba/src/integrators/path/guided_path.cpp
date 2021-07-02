@@ -2394,6 +2394,7 @@ public:
     }
 
     void reweightCurrentPaths(ref<Sampler> sampler){
+        int counter = 0;
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             RPath& curr_sample = (*m_samplePaths)[i];
@@ -2402,7 +2403,7 @@ public:
             }
 
             if(curr_sample.path.size() > 25 || curr_sample.nee_records.size() > 25){
-                std::cout << curr_sample.path.size() << " " << curr_sample.nee_records.size() << std::endl;
+                counter++;
             }
 
             std::vector<Vertex> vertices;
@@ -2471,6 +2472,8 @@ public:
                 }
             }
         }
+
+        std::cout << "Num really long paths: " << counter << " / " << m_samplePaths.size() << std::endl;
     }
 
     bool renderSPP(Scene *scene, RenderQueue *queue, const RenderJob *job,
