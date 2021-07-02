@@ -2013,7 +2013,6 @@ public:
             }
 
             std::vector<Vertex> vertices;
-            curr_path.Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
             //first try reject path
@@ -2093,7 +2092,6 @@ public:
                 continue;
             }
 
-            curr_path.Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
@@ -2176,7 +2174,6 @@ public:
             std::vector<Vertex> vertices;
 
             Spectrum throughput(1.0f);
-            curr_path.Li = Spectrum(0.f);
             bool terminated = false;
 
             for(std::uint32_t j = 0; j < curr_path.path.size(); ++j){
@@ -2252,7 +2249,6 @@ public:
                 continue;
             }
 
-            curr_path.Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
@@ -2327,7 +2323,6 @@ public:
                 continue;
             }
 
-            curr_path.Li = Spectrum(0.f);
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
@@ -2401,18 +2396,16 @@ public:
     void reweightCurrentPaths(ref<Sampler> sampler){
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
-            if(!(*m_samplePaths)[i].active){
+            RPath& curr_sample = (*m_samplePaths)[i];
+            if(!curr_sample.active){
                 continue;
             }
 
             std::vector<Vertex> vertices;
 
             Spectrum throughput(1.0f);
-            (*m_samplePaths)[i].Li = Spectrum(0.f);
 
             bool terminated = false;
-
-            RPath& curr_sample = (*m_samplePaths)[i];
 
             for(std::uint32_t j = 0; j < curr_sample.path.size(); ++j){
                 Vector dTreeVoxelSize;
@@ -3175,7 +3168,7 @@ public:
                         recordRadiance(throughput * value);
 
                         if(!value.isZero()){
-                            pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, value, 0.f});
+                            pathRecord.radiance_records.push_back({std::int8_t(pathRecord.path.size()) - 1, value, 0.f});
                         }
                     }
 
@@ -3188,7 +3181,7 @@ public:
                     Spectrum eL = its.Le(-ray.d);
                     recordRadiance(throughput * eL);
                     if(!eL.isZero()){
-                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, eL, 0.f});
+                        pathRecord.radiance_records.push_back({std::int8_t(pathRecord.path.size()) - 1, eL, 0.f});
                     }
                 }
 
@@ -3198,7 +3191,7 @@ public:
                     recordRadiance(throughput * sL);
 
                     if(!sL.isZero()){
-                        pathRecord.radiance_records.push_back({int(pathRecord.path.size()) - 1, sL, 0.f});
+                        pathRecord.radiance_records.push_back({std::int8_t(pathRecord.path.size()) - 1, sL, 0.f});
                     }
                 }
 
@@ -3309,7 +3302,7 @@ public:
                                 }
                             }
 
-                            pathRecord.nee_records.push_back({int(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
+                            pathRecord.nee_records.push_back({std::int8_t(pathRecord.path.size()) - 1, premult_value, dRec.pdf, dRec.d, bsdfVal, bsdfPdf});
                             
                             addedNee = true;
 
@@ -3403,7 +3396,7 @@ public:
                     Spectrum L = throughput * value * weight;
                     if (!L.isZero()) {
                         recordRadiance(L);
-                        pathRecord.radiance_records.push_back({int(pathRecord.path.size() - 1), value, emitterPdf});
+                        pathRecord.radiance_records.push_back({std::int8_t(pathRecord.path.size() - 1), value, emitterPdf});
                     }
 
                     if ((!isDelta || m_bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone) && dTree && nVertices < MAX_NUM_VERTICES && 
@@ -3471,8 +3464,6 @@ public:
             }
         }
         
-        pathRecord.Li = Li;
-        pathRecord.alpha = rRec.alpha;
         pathRecord.iter = m_iter;
         pathRecord.active = valid_path;
 
