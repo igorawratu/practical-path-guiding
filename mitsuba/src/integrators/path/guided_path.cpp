@@ -2402,7 +2402,7 @@ public:
             }
 
             if(curr_sample.path.size() > 25 || curr_sample.nee_records.size() > 25){
-                std::cout << curr_vert.path.size() << " " << curr_vert.nee_records.size() << std::endl;
+                std::cout << curr_sample.path.size() << " " << curr_sample.nee_records.size() << std::endl;
             }
 
             std::vector<Vertex> vertices;
