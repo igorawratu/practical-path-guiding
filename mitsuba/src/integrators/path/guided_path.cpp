@@ -912,7 +912,8 @@ struct DTreeWrapper {
 public:
     DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
         current_samples = 0;
-        while (!weighted_previous_samples.compare_exchange_weak(weighted_previous_samples.load(), 0.f));
+        auto val = weighted_previous_samples.load();
+        while (!weighted_previous_samples.compare_exchange_weak(val, 0.f));
         req_augmented_samples = 0;
         B = 0.f;
         min_nzradiance = std::numeric_limits<float>::max();
@@ -994,7 +995,8 @@ public:
 
         req_augmented_samples = 0;
         current_samples = 0;
-        while (!weighted_previous_samples.compare_exchange_weak(weighted_previous_samples.load(), 0.f));
+        auto val = weighted_previous_samples.load();
+        while (!weighted_previous_samples.compare_exchange_weak(val.load(), 0.f));
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
