@@ -953,6 +953,8 @@ public:
         min_nzradiance = other.min_nzradiance;
 
         m_lock = other.m_lock;
+
+        return *this;
     }   
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
