@@ -78,6 +78,11 @@ static void addToAtomicFloat(std::atomic<Float>& var, Float val) {
     while (!var.compare_exchange_weak(current, current + val));
 }
 
+static void setAtomicFloat(std::atomic<Float>& var, Float val) {
+    auto current = var.load();
+    while (!var.compare_exchange_weak(current, val));
+}
+
 inline Float logistic(Float x) {
     return 1 / (1 + std::exp(-x));
 }
@@ -910,13 +915,45 @@ struct DTreeRecord {
 
 struct DTreeWrapper {
 public:
-    DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
-        current_samples = 0;
-        weighted_previous_samples = 0;
-        req_augmented_samples = 0;
-        B = 0.f;
-        min_nzradiance = std::numeric_limits<float>::max();
+    DTreeWrapper() : current_samples(0),
+                    req_augmented_samples(0),
+                    weighted_previous_samples(0),
+                    B(0.f),
+                    m_rejPdfPair(1.f, 1.f),
+                    min_nzradiance(std::numeric_limits<float>::max()){
     }
+
+    DTreeWrapper(const DTreeWrapper& other) : building(other.building),
+                                            sampling(other.sampling),
+                                            previous(other.previous),
+                                            augmented(other.augmented),
+                                            current_samples(other.current_samples),
+                                            req_augmented_samples(other.req_augmented_samples),
+                                            weighted_previous_samples(other.weighted_previous_samples.load()),
+                                            B(other.B),
+                                            m_rejPdfPair(other.m_rejPdfPair),
+                                            bsdfSamplingFractionOptimizer(other.bsdfSamplingFractionOptimizer),
+                                            min_nzradiance(other.min_nzradiance),
+                                            m_lock(other.m_lock)
+    {
+    }
+
+    DTreeWrapper& operator=(const DTreeWrapper& other){
+        building = other.building;
+        sampling = other.sampling;
+        previous = other.previous;
+        augmented = other.augmented;
+
+        current_samples = other.current_samples;
+        req_augmented_samples = other.req_augmented_samples;
+        setAtomicFloat(weighted_previous_samples, other.weighted_previous_samples.load());
+        B = other.B;
+        m_rejPdfPair = other.m_rejPdfPair;
+        bsdfSamplingFractionOptimizer = other.bsdfSamplingFractionOptimizer;
+        min_nzradiance = other.min_nzradiance;
+
+        m_lock = other.m_lock;
+    }   
 
     void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
         if (!rec.isDelta) {
@@ -961,7 +998,7 @@ public:
             req_augmented_samples = 0;
         }
         else{
-            float req = B * weighted_previous_samples;
+            float req = B * weighted_previous_samples.load();
             float frac = req - int(req);
             req_augmented_samples = req;
             if(sampler->next1D() < frac){
@@ -971,8 +1008,7 @@ public:
     }
 
     void addWeightedSampleCount(float wsc){
-        std::lock_guard<std::mutex> lock(weight_mutex);
-        weighted_previous_samples += wsc;
+        addToAtomicFloat(weighted_previous_samples, wsc);
     }
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
@@ -995,7 +1031,7 @@ public:
 
         req_augmented_samples = 0;
         current_samples = 0;
-        weighted_previous_samples = 0;
+        setAtomicFloat(weighted_previous_samples, 0.f);
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
@@ -1128,8 +1164,7 @@ private:
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
-    float weighted_previous_samples;
-    std::mutex weight_mutex;
+    std::atomic<float> weighted_previous_samples;
     float B;
 
     std::pair<Float, Float> m_rejPdfPair;
