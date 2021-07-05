@@ -912,7 +912,7 @@ struct DTreeWrapper {
 public:
     DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
         current_samples = 0;
-        weighted_previous_samples.compare_exchange_weak(weighted_previous_samples.load, 0.f);
+        while (!weighted_previous_samples.compare_exchange_weak(weighted_previous_samples.load(), 0.f));
         req_augmented_samples = 0;
         B = 0.f;
         min_nzradiance = std::numeric_limits<float>::max();
@@ -971,7 +971,7 @@ public:
     }
 
     void addWeightedSampleCount(float wsc){
-        weighted_previous_samples.fetch_add(wsc, std::memory_order_relaxed);
+        addToAtomicFloat(weighted_previous_samples, wsc);
     }
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
@@ -994,7 +994,7 @@ public:
 
         req_augmented_samples = 0;
         current_samples = 0;
-        weighted_previous_samples = 0;
+        while (!weighted_previous_samples.compare_exchange_weak(weighted_previous_samples.load(), 0.f));
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
@@ -1127,7 +1127,7 @@ private:
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
-    std::atomic<float> weighted_previous_samples;
+    std::atomic<Float> weighted_previous_samples;
     float B;
 
     std::pair<Float, Float> m_rejPdfPair;
