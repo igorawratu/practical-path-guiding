@@ -912,8 +912,7 @@ struct DTreeWrapper {
 public:
     DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
         current_samples = 0;
-        auto val = weighted_previous_samples.load();
-        while (!weighted_previous_samples.compare_exchange_weak(val, 0.f));
+        weighted_previous_samples = 0;
         req_augmented_samples = 0;
         B = 0.f;
         min_nzradiance = std::numeric_limits<float>::max();
@@ -962,7 +961,7 @@ public:
             req_augmented_samples = 0;
         }
         else{
-            float req = B * weighted_previous_samples.load();
+            float req = B * weighted_previous_samples;
             float frac = req - int(req);
             req_augmented_samples = req;
             if(sampler->next1D() < frac){
@@ -972,7 +971,8 @@ public:
     }
 
     void addWeightedSampleCount(float wsc){
-        addToAtomicFloat(weighted_previous_samples, wsc);
+        std::lock_guard<std::mutex> lock(weight_mutex);
+        weighted_previous_samples += wsc;
     }
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
@@ -995,8 +995,7 @@ public:
 
         req_augmented_samples = 0;
         current_samples = 0;
-        auto val = weighted_previous_samples.load();
-        while (!weighted_previous_samples.compare_exchange_weak(val.load(), 0.f));
+        weighted_previous_samples = 0;
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
@@ -1129,7 +1128,8 @@ private:
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
-    std::atomic<Float> weighted_previous_samples;
+    float weighted_previous_samples;
+    std::mutex weight_mutex;
     float B;
 
     std::pair<Float, Float> m_rejPdfPair;
