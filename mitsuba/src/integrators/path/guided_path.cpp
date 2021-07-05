@@ -912,7 +912,7 @@ struct DTreeWrapper {
 public:
     DTreeWrapper() : m_rejPdfPair(1.f, 1.f){
         current_samples = 0;
-        weighted_previous_samples = 0;
+        weighted_previous_samples.compare_exchange_weak(weighted_previous_samples.load, 0);
         req_augmented_samples = 0;
         B = 0.f;
         min_nzradiance = std::numeric_limits<float>::max();
@@ -961,7 +961,7 @@ public:
             req_augmented_samples = 0;
         }
         else{
-            float req = B * weighted_previous_samples;
+            float req = B * weighted_previous_samples.load();
             float frac = req - int(req);
             req_augmented_samples = req;
             if(sampler->next1D() < frac){
@@ -971,7 +971,7 @@ public:
     }
 
     void addWeightedSampleCount(float wsc){
-        weighted_previous_samples += wsc;
+        weighted_previous_samples.fetch_add(wsc, std::memory_order_relaxed);
     }
 
     void build(bool augment, bool augmentReweight, bool isBuilt) {
@@ -1127,7 +1127,7 @@ private:
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
-    double weighted_previous_samples;
+    std::atomic<double> weighted_previous_samples;
     float B;
 
     std::pair<Float, Float> m_rejPdfPair;
@@ -1595,6 +1595,7 @@ public:
 
     void updateRequiredSamples(ref<Sampler> sampler){
         //parallelize and make thread safe
+        #pragma omp parallel for
         for(size_t i = 0; i < m_samplePaths->size(); ++i){
             if(!(*m_samplePaths)[i].active){
                 continue;
