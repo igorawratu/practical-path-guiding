@@ -1061,7 +1061,8 @@ public:
         previous = sampling;
         if(sampleless_aug){
             if(augment && isBuilt){
-                float factor = std::min(double(current_samples) / req_augmented_samples, 1.0);
+                float factor = req_augmented_samples == 0 ? 
+                    0.f : std::min(double(current_samples) / req_augmented_samples, 1.0);
                 std::cout << factor << " " << current_samples << " " << req_augmented_samples << std::endl;
 
                 total_samples *= factor;
