@@ -1062,6 +1062,8 @@ public:
         if(sampleless_aug){
             if(augment && isBuilt){
                 float factor = std::min(double(current_samples) / req_augmented_samples, 1.0);
+                std::cout << factor << " " << current_samples << " " << req_augmented_samples << std::endl;
+
                 total_samples *= factor;
 
                 building.blend(sampling, factor);
