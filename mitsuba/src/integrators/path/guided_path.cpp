@@ -1019,7 +1019,7 @@ public:
             min_nzradiance = EPSILON * 2.f;
         }
         
-        building.setMinimumIrr(std::max(EPSILON * 2.f, min_nzradiance));
+        building.setMinimumIrr(EPSILON * 2.f);
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
@@ -1058,10 +1058,6 @@ public:
 
     double getAugmentedMultiplier(){
         return current_samples < req_augmented_samples ? current_samples / double(req_augmented_samples) : 1;
-    }
-
-    double getAugmentedNormalizer(){
-        return 0;
     }
 
     Float pdf(const Vector& dir, int level, int& curr_level) const {
