@@ -1060,7 +1060,7 @@ public:
             min_nzradiance = EPSILON * 2.f;
         }
         
-        building.setMinimumIrr(std::max(EPSILON * 2.f, min_nzradiance));
+        building.setMinimumIrr(std::max(EPSILON * 2.f, min_nzradiance / 5.f));
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
@@ -3069,7 +3069,7 @@ public:
         pdfMat(woPdf, bsdfPdf, dTreePdf, bsdfSamplingFraction, bsdf, bRec, dTree, dtreeLevel);
 
         //have to increment sample count regardless of if dtree or bsdf was sampled as they both form part of the larger total probability
-        if(m_augment || m_rejectAugment || m_reweightAugment){
+        if((m_augment || m_rejectAugment || m_reweightAugment) && !bsdfWeight.izZero()){
             dTree->incSampleCount();
         }
 
