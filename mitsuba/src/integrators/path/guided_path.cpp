@@ -958,6 +958,7 @@ struct DTreeWrapper {
 public:
     DTreeWrapper() : current_samples(0),
                     req_augmented_samples(0),
+                    total_samples(0),
                     weighted_previous_samples(0),
                     B(0.f),
                     m_rejPdfPair(1.f, 1.f),
@@ -970,6 +971,7 @@ public:
                                             augmented(other.augmented),
                                             current_samples(other.current_samples),
                                             req_augmented_samples(other.req_augmented_samples),
+                                            total_samples(other.total_samples),
                                             weighted_previous_samples(other.weighted_previous_samples.load()),
                                             B(other.B),
                                             m_rejPdfPair(other.m_rejPdfPair),
@@ -987,6 +989,7 @@ public:
 
         current_samples = other.current_samples;
         req_augmented_samples = other.req_augmented_samples;
+        total_samples = other.total_samples;
         setAtomicFloat(weighted_previous_samples, other.weighted_previous_samples.load());
         B = other.B;
         m_rejPdfPair = other.m_rejPdfPair;
@@ -1054,25 +1057,54 @@ public:
         addToAtomicFloat(weighted_previous_samples, wsc);
     }
 
-    void build(bool augment, bool augmentReweight, bool isBuilt) {
+    void build(bool augment, bool augmentReweight, bool isBuilt, bool sampleless_aug = false) {
         previous = sampling;
+        if(sampleless_aug){
+            if(augment && isBuilt){
+                factor = std::min(double(current_samples) / req_augmented_samples, 1.0);
+                total_samples *= factor;
+
+                building.blend(sampling, factor);
+            }
+
+            total_samples += current_samples;
+        }
+        
+
         if(min_nzradiance > 100000.f){
             min_nzradiance = EPSILON * 2.f;
         }
-        
+
         building.setMinimumIrr(std::max(EPSILON * 2.f, min_nzradiance / 5.f));
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
             if(augment){
                 B = augmented.buildAugmented(sampling, building);
+
+                if(sampleless_aug){
+                    if(B < EPSILON){
+                        req_augmented_samples = 0;
+                    }
+                    else{
+                        float req = B * total_samples;
+                        float frac = req - int(req);
+                        req_augmented_samples = req;
+                        if(sampler->next1D() < frac){
+                            req_augmented_samples++;
+                        }
+                    }
+                }
             }
             else if(augmentReweight){
                 B = augmented.buildUnmajorizedAugmented(sampling, building);
             }
         }
 
-        req_augmented_samples = 0;
+        if(!sampleless_aug){
+            req_augmented_samples = 0;
+        }
+
         current_samples = 0;
         setAtomicFloat(weighted_previous_samples, 0.f);
 
@@ -1101,8 +1133,15 @@ public:
         return current_samples < req_augmented_samples ? current_samples / double(req_augmented_samples) : 1;
     }
 
-    Float pdf(const Vector& dir, int level, int& curr_level) const {
-        return sampling.pdf(dirToCanonical(dir), level, curr_level);
+    Float pdf(const Vector& dir, int level, int& curr_level, bool sampleless_aug = false) const {
+        if(sampleless_aug){
+            return current_samples >= req_augmented_samples ? 
+                sampling.pdf(dirToCanonical(dir), level, curr_level) : 
+                augmented.pdf(dirToCanonical(dir), level, curr_level);
+        } 
+        else{
+            return sampling.pdf(dirToCanonical(dir), level, curr_level);
+        }
     }
 
     Float diff(const DTreeWrapper& other) const {
@@ -1203,6 +1242,7 @@ private:
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
+    double total_samples;
     std::atomic<float> weighted_previous_samples;
     float B;
 
@@ -1639,6 +1679,8 @@ public:
         m_lastStrategyIteration = props.getInteger("lastStrategyiteration", 100);
         m_renderIterations = props.getBoolean("renderIterations", false);
         m_staticSTree = props.getBoolean("staticSTree", false);
+
+        m_sampleless_aug = true;
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -1695,7 +1737,7 @@ public:
         // Build distributions
         bool augment = m_iter <= m_strategyIterationActive ? m_augment : false;
         bool raugment = m_iter <= m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment : false;
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(augment, raugment, this->m_isBuilt); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(augment || m_sampleless_aug, raugment, this->m_isBuilt, m_sampleless_aug); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -2649,7 +2691,7 @@ public:
             }
             
             bool reuseSamples = m_iter <= m_strategyIterationActive && (m_reweight || m_rejectReweight || m_reject || 
-                m_augment || m_rejectAugment || m_reweightAugment);
+                m_augment || m_rejectAugment || m_reweightAugment) && !m_sampleless_aug;
 
             if(reuseSamples){
                 size_t num_samples = passesThisIteration * m_sppPerPass * film->getSize().x * film->getSize().y;
@@ -2664,7 +2706,7 @@ public:
                 break;
             }
 
-            if(m_augment || m_rejectAugment || m_reweightAugment){
+            if((m_augment || m_rejectAugment || m_reweightAugment) && !m_sampleless_aug){
                 if(m_augment){
                     performAugmentedSamples(sampler, m_isFinalIter);
                 } 
@@ -2943,7 +2985,7 @@ public:
 
         RPath* main_buffer = nullptr;
 
-        if(reuseSamples){
+        if(reuseSamples && !m_sampleless_aug){
             std::lock_guard<std::mutex> lg(*m_samplePathMutex);
             size_t buffer_pos = curr_buffer_pos;
             curr_buffer_pos += points.size() * m_sppPerPass;
@@ -2980,7 +3022,10 @@ public:
                     std::uint32_t path_pos = i * m_sppPerPass + j;
                     RPath rpath;
                     spec *= Li(sensorRay, rRec, rpath);
-                    main_buffer[path_pos] = rpath;
+
+                    if(!m_sampleless_aug){
+                        main_buffer[path_pos] = rpath;
+                    }
                 }
                 else{
                     spec *= Li(sensorRay, rRec);
@@ -3026,7 +3071,7 @@ public:
         }
 
         curr_level = 0;
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), -1, curr_level);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), -1, curr_level, m_sampleless_aug);
 
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
@@ -3850,6 +3895,7 @@ private:
 
     int m_strategyIterationActive;
     int m_lastStrategyIteration;
+    bool m_sampleless_aug;
 
 public:
     MTS_DECLARE_CLASS()
