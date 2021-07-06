@@ -492,7 +492,7 @@ public:
 
                 //only add to leaf nodes, we will call build afterwards to make sure non-leaves are updated accordingly
                 if(node.isLeaf(i)){
-                    float val = nodePair.otherFactor * otherNode.sum(otherChildIdx) + node.sum(i);
+                    float val = treeFactor * nodePair.otherFactor * otherNode.sum(otherChildIdx) + node.sum(i);
                     node.setSum(i, val);
                 }
                 else{
