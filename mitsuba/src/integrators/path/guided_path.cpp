@@ -501,7 +501,7 @@ public:
                     //other node is a leaf, thus we need to divide its factor by 4 to account for its energy
                     //being separated into 4 of the current node's children
                     if(otherNode.isLeaf(otherChildIdx)){
-                        pairStack.push({childNodeIdx, std::make_pair(nodePair.otherIdx, otherChildIdx), nodePair.otherFactor / 4.f});
+                        pairStack.push({childNodeIdx, std::make_pair(nodePair.otherIdx.first, otherChildIdx), nodePair.otherFactor / 4.f});
                     }
                     else{
                         pairStack.push({childNodeIdx, std::make_pair(otherNode.child(otherChildIdx), -1), nodePair.otherFactor});
