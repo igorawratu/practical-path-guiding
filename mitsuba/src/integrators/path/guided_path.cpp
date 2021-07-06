@@ -1057,11 +1057,11 @@ public:
         addToAtomicFloat(weighted_previous_samples, wsc);
     }
 
-    void build(bool augment, bool augmentReweight, bool isBuilt, bool sampleless_aug = false) {
+    void build(bool augment, bool augmentReweight, bool isBuilt, ref<Sampler> sampler, bool sampleless_aug = false) {
         previous = sampling;
         if(sampleless_aug){
             if(augment && isBuilt){
-                factor = std::min(double(current_samples) / req_augmented_samples, 1.0);
+                float factor = std::min(double(current_samples) / req_augmented_samples, 1.0);
                 total_samples *= factor;
 
                 building.blend(sampling, factor);
@@ -1737,7 +1737,7 @@ public:
         // Build distributions
         bool augment = m_iter <= m_strategyIterationActive ? m_augment : false;
         bool raugment = m_iter <= m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment : false;
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(augment || m_sampleless_aug, raugment, this->m_isBuilt, m_sampleless_aug); });
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(augment || m_sampleless_aug, raugment, this->m_isBuilt, sampler, m_sampleless_aug); });
 
         // Gather statistics
         int maxDepth = 0;
