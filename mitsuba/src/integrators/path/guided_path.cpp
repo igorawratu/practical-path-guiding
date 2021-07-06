@@ -475,7 +475,7 @@ public:
             size_t idx;
             std::pair<size_t, int> otherIdx;
             float otherFactor;
-        }
+        };
 
         std::stack<NodePair> pairStack;
         pairStack.push({0, std::make_pair(0, -1), 1.f});
@@ -484,7 +484,7 @@ public:
             NodePair nodePair = pairStack.top();
             pairStack.pop();
 
-            const QuadTreeNode& node = m_nodes[nodePair.idx];
+            QuadTreeNode& node = m_nodes[nodePair.idx];
             const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherIdx.first];
 
             for (int i = 0; i < 4; ++i) {  
