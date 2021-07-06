@@ -470,6 +470,47 @@ public:
         return true;
     }
 
+    void blend(const DTree& other, float treeFactor){
+        struct NodePair{
+            size_t idx;
+            std::pair<size_t, int> otherIdx;
+            float otherFactor;
+        }
+
+        std::stack<NodePair> pairStack;
+        pairStack.push({0, std::make_pair(0, -1), 1.f});
+
+        while(!pairStack.empty()){
+            NodePair nodePair = pairStack.top();
+            pairStack.pop();
+
+            const QuadTreeNode& node = m_nodes[nodePair.idx];
+            const QuadTreeNode& otherNode = other.m_nodes[nodePair.otherIdx.first];
+
+            for (int i = 0; i < 4; ++i) {  
+                int otherChildIdx = nodePair.otherIdx.second < 0 ? i : nodePair.otherIdx.second;
+
+                //only add to leaf nodes, we will call build afterwards to make sure non-leaves are updated accordingly
+                if(node.isLeaf(i)){
+                    float val = nodePair.otherFactor * otherNode.sum(otherChildIdx) + node.sum(i);
+                    node.setSum(i, val);
+                }
+                else{
+                    size_t childNodeIdx = node.child(i);
+
+                    //other node is a leaf, thus we need to divide its factor by 4 to account for its energy
+                    //being separated into 4 of the current node's children
+                    if(otherNode.isLeaf(otherChildIdx)){
+                        pairStack.push({childNodeIdx, std::make_pair(nodePair.otherIdx, otherChildIdx), nodePair.otherFactor / 4.f});
+                    }
+                    else{
+                        pairStack.push({childNodeIdx, std::make_pair(otherNode.child(otherChildIdx), -1), nodePair.otherFactor});
+                    }
+                }
+            }
+        }
+    }
+
     std::pair<Float, Float> getMajorizingFactor(const DTree& other) const{
         struct NodePair {
             std::pair<size_t, int> nodeIndex;
@@ -1019,7 +1060,7 @@ public:
             min_nzradiance = EPSILON * 2.f;
         }
         
-        building.setMinimumIrr(EPSILON * 2.f);
+        building.setMinimumIrr(std::max(EPSILON * 2.f, min_nzradiance / 5.f));
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
