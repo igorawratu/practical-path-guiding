@@ -1057,7 +1057,7 @@ public:
         addToAtomicFloat(weighted_previous_samples, wsc);
     }
 
-    void build(bool augment, bool augmentReweight, bool isBuilt, ref<Sampler> sampler, bool sampleless_aug = false) {
+    void build(bool augment, bool augmentReweight, bool isBuilt, ref<Sampler> sampler, bool samplesSaved, bool sampleless_aug = false) {
         previous = sampling;
         if(sampleless_aug){
             if(augment && isBuilt){
@@ -1082,8 +1082,12 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
+            if(reuseSamples){
+                savedAug = sampling;
+            }
+
             if(augment){
-                B = augmented.buildAugmented(sampling, building);
+                B = augmented.buildAugmented(savedAug, building);
 
                 if(sampleless_aug){
                     if(B < EPSILON){
@@ -1100,7 +1104,7 @@ public:
                 }
             }
             else if(augmentReweight){
-                B = augmented.buildUnmajorizedAugmented(sampling, building);
+                B = augmented.buildUnmajorizedAugmented(savedAug, building);
             }
         }
 
@@ -1242,6 +1246,7 @@ private:
     DTree sampling;
     DTree previous;
     DTree augmented;
+    DTree savedAug;
 
     std::uint64_t current_samples;
     std::uint64_t req_augmented_samples;
@@ -1683,7 +1688,7 @@ public:
         m_renderIterations = props.getBoolean("renderIterations", false);
         m_staticSTree = props.getBoolean("staticSTree", false);
 
-        m_sampleless_aug = true;
+        m_sampleless_aug = false;
     }
 
     ref<BlockedRenderProcess> renderPass(Scene *scene,
@@ -1734,13 +1739,12 @@ public:
         });
     }
 
-    void buildSDTree(ref<Sampler> sampler) {
+    void buildSDTree(ref<Sampler> sampler, bool reuseSamples) {
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        bool augment = m_iter <= m_strategyIterationActive ? m_augment : false;
-        bool raugment = m_iter <= m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment : false;
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, augment, raugment](DTreeWrapper* dTree) { dTree->build(augment || m_sampleless_aug, raugment, this->m_isBuilt, sampler, m_sampleless_aug); });
+        bool raugment = m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment;
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, m_augment, raugment](DTreeWrapper* dTree) { dTree->build(m_augment || m_sampleless_aug, raugment, this->m_isBuilt, sampler, reuseSamples, m_sampleless_aug); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -2382,6 +2386,7 @@ public:
     }
 
     void performAugmentedSamples(ref<Sampler> sampler, bool finalIter){
+        bool noNewPaths = m_augmentedStartPos == m_samplePaths->size();
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_augmentedStartPos; ++i){
             RPath& curr_path = (*m_samplePaths)[i];
@@ -2392,6 +2397,7 @@ public:
             Spectrum throughput(1.0f);
 
             std::vector<Vertex> vertices;
+            std::vector<float> prevVertSCs(curr_path.path.size());
             
             bool terminated = false;
 
@@ -2399,15 +2405,17 @@ public:
                 RVertex& curr_vert = curr_path.path[j];
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
-                float dTreePdf;
+                
+                dTree = m_sdTree->dTreeWrapper(vertex.o, dTreeVoxelSize);
+                float bsf = dTree->bsdfSamplingFraction();
+                float dTreePdf = (curr_vert.woPdf - bsf * curr_vert.bsdfPdf) / (1.f - bsf);
 
-                Float newWoPdf = computePdf(curr_vert, dTree, dTreeVoxelSize, dTreePdf);
-                if(newWoPdf < EPSILON){
-                    terminated = true;
-                    break;
-                }
+                //need to revert scaling factors if no new paths were added, as the scaling is to fix the distribution of the unsaved samples taken in 
+                //the current iteration
+                if(noNewPaths){
+                    prevVertSCs[j] = curr_vert.sc;
+                }   
 
-                curr_vert.woPdf = newWoPdf;
                 curr_vert.sc *= dTree->getAugmentedMultiplier();
  
                 Spectrum bsdfWeight = curr_vert.bsdfVal / curr_vert.woPdf;
@@ -2456,6 +2464,10 @@ public:
 
                     vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                
+                    if(noNewPaths){
+                        curr_path.path[j].sc = prevVertSCs[j];
+                    }   
                 }
             }
         }
@@ -2752,7 +2764,7 @@ public:
             }
 
             if(!m_isFinalIter){
-                buildSDTree(sampler);
+                buildSDTree(sampler, reuseSamples);
             }
 
             if (m_dumpSDTree) {
@@ -2857,7 +2869,7 @@ public:
                     elapsedSeconds = computeElapsedSeconds(m_startTime);
                 } while (elapsedSeconds < nSeconds);
             }
-            buildSDTree(sampler);
+            buildSDTree(sampler, false);
 
             if (m_dumpSDTree) {
                 dumpSDTree(scene, sensor);
