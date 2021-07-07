@@ -796,7 +796,7 @@ public:
                 Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
                 Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
 
-                if(newNode.isLeaf(i) && oldNode.isLeaf(i)){
+                if(newNode.isLeaf(newChildIdx) && oldNode.isLeaf(oldChildIdx)){
                     Float pdf = computeAugmentedPdf(oldPdf, newPdf);
                     m_nodes[nodePair.nodeIdx].setSum(i, pdf);
                 }
