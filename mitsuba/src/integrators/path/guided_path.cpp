@@ -2584,7 +2584,7 @@ public:
             }
 
             std::vector<Vertex> vertices;
-            std::vector<float> prevVertSCs(curr_path.path.size());
+            std::vector<float> prevVertSCs(curr_sample.path.size());
 
             Spectrum throughput(1.0f);
 
