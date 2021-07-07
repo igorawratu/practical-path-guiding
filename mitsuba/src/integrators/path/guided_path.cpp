@@ -1082,7 +1082,7 @@ public:
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
-            if(reuseSamples){
+            if(samplesSaved){
                 savedAug = sampling;
             }
 
@@ -1743,8 +1743,9 @@ public:
         Log(EInfo, "Building distributions for sampling.");
 
         // Build distributions
-        bool raugment = m_strategyIterationActive ? this->m_rejectAugment || this->m_reweightAugment;
-        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, m_augment, raugment](DTreeWrapper* dTree) { dTree->build(m_augment || m_sampleless_aug, raugment, this->m_isBuilt, sampler, reuseSamples, m_sampleless_aug); });
+        bool raugment = this->m_rejectAugment || this->m_reweightAugment;
+        m_sdTree->forEachDTreeWrapperParallel([&sampler, this, raugment, reuseSamples](DTreeWrapper* dTree) { 
+            dTree->build(this->m_augment || m_sampleless_aug, raugment, this->m_isBuilt, sampler, reuseSamples, m_sampleless_aug); });
 
         // Gather statistics
         int maxDepth = 0;
@@ -2406,7 +2407,7 @@ public:
                 Vector dTreeVoxelSize;
                 DTreeWrapper* dTree;
                 
-                dTree = m_sdTree->dTreeWrapper(vertex.o, dTreeVoxelSize);
+                dTree = m_sdTree->dTreeWrapper(curr_vert.o, dTreeVoxelSize);
                 float bsf = dTree->bsdfSamplingFraction();
                 float dTreePdf = (curr_vert.woPdf - bsf * curr_vert.bsdfPdf) / (1.f - bsf);
 
