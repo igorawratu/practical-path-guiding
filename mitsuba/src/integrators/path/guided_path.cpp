@@ -2668,7 +2668,7 @@ public:
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
 
                     if(noNewPaths){
-                        curr_path.path[j].sc = prevVertSCs[j];
+                        curr_sample.path[j].sc = prevVertSCs[j];
                     }   
                 }
             }
