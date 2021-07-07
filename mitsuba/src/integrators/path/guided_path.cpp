@@ -873,7 +873,10 @@ public:
                 Float pdf = computeAugmentedPdf(oldPdf, newPdf, A);
 
                 //one of the nodes are not a leaf, we add to the stack the relevant pair and add a node to the current distribution
-                if(!(newNode.isLeaf(newChildIdx) || oldNode.isLeaf(oldChildIdx))){
+                if(newNode.isLeaf(newChildIdx) && oldNode.isLeaf(oldChildIdx)){
+                    m_nodes[nodePair.nodeIdx].setSum(i, pdf);
+                }
+                else{
                     m_nodes[nodePair.nodeIdx].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
                     m_nodes.back().setSum(pdf / 4.f);
@@ -884,9 +887,7 @@ public:
                         std::make_pair(size_t(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(oldChildIdx)), -1);
 
                     pairStack.push({newIdx, oldIdx, newPdf, oldPdf, m_nodes.size() - 1});
-                }
-
-                m_nodes[nodePair.nodeIdx].setSum(i, pdf);
+                }            
             }
         }
 
