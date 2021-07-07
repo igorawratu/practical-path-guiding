@@ -766,31 +766,35 @@ public:
         m_nodes.emplace_back();
 
         struct NodePair {
-            size_t newNodeIndex;
-            size_t oldNodeIndex;
+            std::pair<size_t, int> newNodeIndex;
+            std::pair<size_t, int> oldNodeIndex;
             Float newNodeFactor;
             Float oldNodeFactor;
             size_t nodeIdx;
         };
 
-        std::pair<Float, Float> pdfPair(1.f, 1.f);
-
         std::stack<NodePair> pairStack;
-        pairStack.push({0, 0, 1.f, 1.f, 0});
+        pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
 
         while (!pairStack.empty()) {
             NodePair nodePair = pairStack.top();
             pairStack.pop();
 
-            const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex];
-            const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex];
+            const QuadTreeNode& oldNode = oldDist.m_nodes[nodePair.oldNodeIndex.first];
+            const QuadTreeNode& newNode = newDist.m_nodes[nodePair.newNodeIndex.first];
 
-            Float oldDenom = oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3);
-            Float newDenom = newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3);
+            //required because trees might not be same depth
+            Float oldDenom = nodePair.oldNodeIndex.second < 0 ? oldNode.sum(0) + oldNode.sum(1) + oldNode.sum(2) + oldNode.sum(3) :
+                oldNode.sum(nodePair.oldNodeIndex.second) * 4.f;
+            Float newDenom = nodePair.newNodeIndex.second < 0 ? newNode.sum(0) + newNode.sum(1) + newNode.sum(2) + newNode.sum(3) : 
+                newNode.sum(nodePair.newNodeIndex.second) * 4.f; 
 
             for (int i = 0; i < 4; ++i) {
-                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(i) / oldDenom;
-                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(i) / newDenom;
+                int oldChildIdx = nodePair.oldNodeIndex.second < 0 ? i : nodePair.oldNodeIndex.second;
+                int newChildIdx = nodePair.newNodeIndex.second < 0 ? i : nodePair.newNodeIndex.second;
+                
+                Float oldPdf = oldDenom < EPSILON ? 0.f : nodePair.oldNodeFactor * 4.f * oldNode.sum(oldChildIdx) / oldDenom;
+                Float newPdf = newDenom < EPSILON ? 0.f : nodePair.newNodeFactor * 4.f * newNode.sum(newChildIdx) / newDenom;
 
                 if(newNode.isLeaf(i) && oldNode.isLeaf(i)){
                     Float pdf = computeAugmentedPdf(oldPdf, newPdf);
@@ -800,8 +804,10 @@ public:
                     m_nodes[nodePair.nodeIdx].setChild(i, static_cast<uint16_t>(m_nodes.size()));
                     m_nodes.emplace_back();
 
-                    size_t newIdx = size_t(newDist.m_nodes[nodePair.newNodeIndex].child(i));
-                    size_t oldIdx = size_t(oldDist.m_nodes[nodePair.oldNodeIndex].child(i));
+                    std::pair<size_t, int> newIdx = newNode.isLeaf(newChildIdx) ? std::make_pair(size_t(nodePair.newNodeIndex.first), newChildIdx) : 
+                        std::make_pair(size_t(newDist.m_nodes[nodePair.newNodeIndex.first].child(newChildIdx)), -1);
+                    std::pair<size_t, int> oldIdx = oldNode.isLeaf(oldChildIdx) ? std::make_pair(size_t(nodePair.oldNodeIndex.first), oldChildIdx) : 
+                        std::make_pair(size_t(oldDist.m_nodes[nodePair.oldNodeIndex.first].child(oldChildIdx)), -1);
 
                     pairStack.push({newIdx, oldIdx, newPdf, oldPdf, m_nodes.size() - 1});
                 }
@@ -840,8 +846,6 @@ public:
             Float oldNodeFactor;
             size_t nodeIdx;
         };
-
-        std::pair<Float, Float> pdfPair(1.f, 1.f);
 
         std::stack<NodePair> pairStack;
         pairStack.push({std::make_pair(0, -1), std::make_pair(0, -1), 1.f, 1.f, 0});
