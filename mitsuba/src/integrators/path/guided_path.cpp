@@ -972,6 +972,7 @@ public:
                                             sampling(other.sampling),
                                             previous(other.previous),
                                             augmented(other.augmented),
+                                            savedAug(other.savedAug),
                                             current_samples(other.current_samples),
                                             req_augmented_samples(other.req_augmented_samples),
                                             total_samples(other.total_samples),
@@ -989,6 +990,7 @@ public:
         sampling = other.sampling;
         previous = other.previous;
         augmented = other.augmented;
+        savedAug = other.savedAug;
 
         current_samples = other.current_samples;
         req_augmented_samples = other.req_augmented_samples;
@@ -2306,6 +2308,8 @@ public:
     }
 
     void reweightAugmentHybrid(ref<Sampler> sampler){
+        bool noNewPaths = m_augmentedStartPos == m_samplePaths->size();
+
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             RPath& curr_path = (*m_samplePaths)[i];
@@ -2314,6 +2318,8 @@ public:
             }
 
             std::vector<Vertex> vertices;
+            std::vector<float> prevVertSCs(curr_path.path.size());
+            std::vector<float> prevVertWOs(curr_path.path.size());
 
             Spectrum throughput(1.0f);
             bool terminated = false;
@@ -2325,21 +2331,21 @@ public:
                 float dTreePdf;
 
                 Float nwo = computePdf(curr_vertex, dTree, dTreeVoxelSize, dTreePdf);
-                if(nwo < EPSILON){
-                    terminated = true;
-                    break;
+
+                if(noNewPaths){
+                    prevVertSCs[j] = curr_vertex.sc;
+                    prevVertWOs[j] = curr_vertex.woPdf;
                 }
 
-                Float reweight = nwo / curr_vertex.woPdf;
-
-                if(reweight < 1.f){
+                if(nwo < curr_vertex.woPdf){
+                    Float reweight = nwo / curr_vertex.woPdf;
                     curr_vertex.sc *= reweight;
+                    curr_vertex.woPdf = nwo;
                 }
-                
-                curr_vertex.sc *= dTree->getAugmentedMultiplier();
 
-                curr_vertex.woPdf = nwo;
-                Spectrum bsdfWeight = curr_vertex.bsdfVal / nwo;
+                curr_vertex.sc *= dTree->getAugmentedMultiplier();
+                
+                Spectrum bsdfWeight = curr_vertex.bsdfVal / curr_vertex.woPdf;
                 throughput *= bsdfWeight * curr_vertex.sc;
 
                 vertices.push_back(     
@@ -2384,6 +2390,11 @@ public:
                     
                     vertices[j].commit(*m_sdTree, statweight, 
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
+                
+                    if(noNewPaths){
+                        curr_path.path[j].sc = prevVertSCs[j];
+                        curr_path.path[j].woPdf = prevVertWOs[j];
+                    } 
                 }
             }
         }
@@ -2490,6 +2501,7 @@ public:
 
             std::vector<Vertex> vertices;
             std::vector<float> prevVertSCs(curr_path.path.size());
+            std::vector<float> prevVertWOs(curr_path.path.size());
 
             bool rejected = false;
             for(std::uint32_t j = 0; j < curr_path.path.size(); ++j){
@@ -2499,6 +2511,11 @@ public:
                 float dTreePdf;
 
                 Float newWoPdf = computePdf(curr_vert, dTree, dTreeVoxelSize, dTreePdf);
+
+                if(noNewPaths){
+                    prevVertSCs[j] = curr_vert.sc;
+                    prevVertWOs[j] = curr_vert.woPdf;
+                }  
 
                 if(newWoPdf < curr_vert.woPdf){
                     Float acceptProb = newWoPdf / curr_vert.woPdf;
@@ -2513,11 +2530,6 @@ public:
                     float bsf = dTree->bsdfSamplingFraction();
                     dTreePdf = (curr_vert.woPdf - bsf * curr_vert.bsdfPdf) / (1.f - bsf);
                 }
-
-                
-                if(noNewPaths){
-                    prevVertSCs[j] = curr_vert.sc;
-                }   
 
                 curr_vert.sc *= dTree->getAugmentedMultiplier();
 
@@ -2564,14 +2576,17 @@ public:
 
                     if(noNewPaths){
                         curr_path.path[j].sc = prevVertSCs[j];
+                        curr_path.path[j].woPdf = prevVertWOs[j];
                     } 
                 }
             }
             else{
-                curr_path.active = false;
-                curr_path.path.clear();
-                curr_path.nee_records.clear();
-                curr_path.radiance_records.clear();
+                if(noNewPaths){
+                    curr_path.active = false;
+                    curr_path.path.clear();
+                    curr_path.nee_records.clear();
+                    curr_path.radiance_records.clear();
+                }
             }
         }
 
@@ -2579,7 +2594,6 @@ public:
     }
 
     void reweightCurrentPaths(ref<Sampler> sampler){
-        bool noNewPaths = m_augmentedStartPos == m_samplePaths->size();
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             RPath& curr_sample = (*m_samplePaths)[i];
@@ -2588,7 +2602,6 @@ public:
             }
 
             std::vector<Vertex> vertices;
-            std::vector<float> prevVertSCs(curr_sample.path.size());
 
             Spectrum throughput(1.0f);
 
@@ -2603,26 +2616,15 @@ public:
 
                 Float newWoPdf = computePdf(curr_vert, dTree, dTreeVoxelSize, dTreePdf);
 
-                if(newWoPdf < curr_vert.woPdf){
-                    if(newWoPdf < EPSILON){
-                        terminated = true;
-                        break;
-                    }
-
-                    Float reweight = newWoPdf / curr_vert.woPdf;
-
-                    curr_vert.sc *= reweight;
-                    curr_vert.woPdf = newWoPdf;
-                }
-                else{
-                    float bsf = dTree->bsdfSamplingFraction();
-                    dTreePdf = (curr_vert.woPdf - bsf * curr_vert.bsdfPdf) / (1.f - bsf);
+                if(newWoPdf < EPSILON){
+                    terminated = true;
+                    break;
                 }
 
-                if(noNewPaths){
-                    prevVertSCs[j] = curr_vert.sc;
-                }
-                curr_vert.sc *= dTree->getAugmentedMultiplier();
+                Float reweight = newWoPdf / curr_vert.woPdf;
+
+                curr_vert.sc *= reweight;
+                curr_vert.woPdf = newWoPdf;
                 
                 Spectrum bsdfWeight = curr_vert.bsdfVal / curr_vert.woPdf;
                 throughput *= bsdfWeight * curr_vert.sc;
@@ -2669,11 +2671,7 @@ public:
                         statweight *= 0.5f;
                     }
                     vertices[j].commit(*m_sdTree, statweight, 
-                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
-
-                    if(noNewPaths){
-                        curr_sample.path[j].sc = prevVertSCs[j];
-                    }   
+                        m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler); 
                 }
             }
         }
@@ -2728,7 +2726,7 @@ public:
             
             resetSDTree(m_augment);
 
-            if((m_augment || m_rejectAugment || m_reweightAugment) && !m_sampleless_aug){
+            if((m_augment || m_rejectAugment || m_reweightAugment) && !m_sampleless_aug && !m_isFinalIter){
                 updateRequiredSamples(sampler);
             }
 
@@ -3125,7 +3123,7 @@ public:
         }
 
         curr_level = 0;
-        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), -1, curr_level, m_sampleless_aug);
+        dTreePdf = dTree->pdf(bRec.its.toWorld(bRec.wo), -1, curr_level, m_augment || m_reweightAugment || m_rejectAugment);
 
         woPdf = bsdfSamplingFraction * bsdfPdf + (1 - bsdfSamplingFraction) * dTreePdf;
     }
@@ -3161,7 +3159,7 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, m_augment || m_rejectAugment || m_reweightAugment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(rRec.sampler, (m_augment || m_rejectAugment || m_reweightAugment) && !m_isFinalIter));
             result = bsdf->eval(bRec);
         }
 
@@ -3210,7 +3208,7 @@ public:
             result *= bsdfPdf;
         } else {
             sample.x = (sample.x - bsdfSamplingFraction) / (1 - bsdfSamplingFraction);
-            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, m_augment || m_rejectAugment || m_reweightAugment));
+            bRec.wo = bRec.its.toLocal(dTree->sample(sampler, (m_augment || m_rejectAugment || m_reweightAugment) && !m_isFinalIter));
             result = bsdf->eval(bRec);
         }
 
