@@ -1083,8 +1083,8 @@ public:
             min_nzradiance = EPSILON * 2.f;
         }
 
-        building.setMinimumIrr(EPSILON * 2.f);
-        building.build();
+        //building.setMinimumIrr(EPSILON * 2.f);
+        //building.build();
         
         if((augment || augmentReweight) && isBuilt){
             if(samplesSaved){
