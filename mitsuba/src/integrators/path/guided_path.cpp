@@ -587,9 +587,10 @@ public:
         std::cout << m_atomic.statisticalWeight << " " << m_atomic.sum << std::endl;
     }
 
-    void recordIrradiance(Point2 p, Float irradiance, Float statisticalWeight, EDirectionalFilter directionalFilter) {
+    void recordIrradiance(Point2 p, Float irradiance, Float statisticalWeight, Float actualStatisticalWeight, EDirectionalFilter directionalFilter) {
         if (std::isfinite(statisticalWeight) && statisticalWeight > 0) {
             addToAtomicFloat(m_atomic.statisticalWeight, statisticalWeight);
+            addToAtomicFloat(m_atomic.realStatisticalWeight, actualStatisticalWeight);
 
             if (std::isfinite(irradiance) && irradiance > 0) {
                 if (directionalFilter == EDirectionalFilter::ENearest) {
@@ -648,8 +649,16 @@ public:
         return m_atomic.statisticalWeight;
     }
 
+    Float actualStatisticalWeight() const {
+        return m_atomic.realStatisticalWeight;
+    }
+
     void setStatisticalWeight(Float statisticalWeight) {
         m_atomic.statisticalWeight = statisticalWeight;
+    }
+
+    void setActualStatisticalWeight(Float statisticalWeight) {
+        m_atomic.realStatisticalWeight = statisticalWeight;
     }
 
     void reset(const DTree& previousDTree, int newMaxDepth, Float subdivisionThreshold, bool augment) {
@@ -929,6 +938,7 @@ private:
         Atomic() {
             sum.store(0, std::memory_order_relaxed);
             statisticalWeight.store(0, std::memory_order_relaxed);
+            realStatisticalWeight.store(0, std::memory_order_relaxed);
         }
 
         Atomic(const Atomic& arg) {
@@ -938,11 +948,14 @@ private:
         Atomic& operator=(const Atomic& arg) {
             sum.store(arg.sum.load(std::memory_order_relaxed), std::memory_order_relaxed);
             statisticalWeight.store(arg.statisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
+            realStatisticalWeight.store(arg.realStatisticalWeight.load(std::memory_order_relaxed), std::memory_order_relaxed);
+
             return *this;
         }
 
         std::atomic<Float> sum;
         std::atomic<Float> statisticalWeight;
+        std::atomic<Float> realStatisticalWeight;
 
     } m_atomic;
 
@@ -1006,13 +1019,13 @@ public:
         return *this;
     }   
 
-    void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
+    void record(const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Float actualSW) {
         if (!rec.isDelta) {
             Float irradiance = rec.radiance / rec.woPdf;
             if(irradiance > 0){
                 min_nzradiance = std::min(min_nzradiance, irradiance);
             }
-            building.recordIrradiance(dirToCanonical(rec.d), irradiance, rec.statisticalWeight, directionalFilter);
+            building.recordIrradiance(dirToCanonical(rec.d), irradiance, rec.statisticalWeight, actualSW, directionalFilter);
         }
 
         if (bsdfSamplingFractionLoss != EBsdfSamplingFractionLoss::ENone && rec.product > 0) {
@@ -1082,7 +1095,7 @@ public:
             min_nzradiance = EPSILON * 2.f;
         }*/
 
-        building.setMinimumIrr(std::max(EPSILON * 10.f, min_nzradiance / 10.f));
+        building.setMinimumIrr(EPSILON * 10.f);
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
@@ -1177,8 +1190,16 @@ public:
         return building.statisticalWeight();
     }
 
+    Float actualStatisticalWeightBuilding() const {
+        return building.actualStaisticalWeight();
+    }
+
     void setStatisticalWeightBuilding(Float statisticalWeight) {
         building.setStatisticalWeight(statisticalWeight);
+    }
+
+    void setActualStatisticalWeightBuilding(Float statisticalWeight) {
+        building.setActualStatisticalWeight(statisticalWeight);
     }
 
     size_t approxMemoryFootprint() const {
@@ -1367,11 +1388,13 @@ struct STreeNode {
         return lengths[0] * lengths[1] * lengths[2];
     }
 
-    void record(const Point& min1, const Point& max1, Point min2, Vector size2, const DTreeRecord& rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, std::vector<STreeNode>& nodes) {
+    void record(const Point& min1, const Point& max1, Point min2, Vector size2, const DTreeRecord& rec, EDirectionalFilter directionalFilter, 
+        EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, std::vector<STreeNode>& nodes, Float actualSW) {
         Float w = computeOverlappingVolume(min1, max1, min2, min2 + size2);
         if (w > 0) {
             if (isLeaf) {
-                dTree.record({ rec.d, rec.radiance, rec.product, rec.woPdf, rec.bsdfPdf, rec.dTreePdf, rec.statisticalWeight * w, rec.isDelta }, directionalFilter, bsdfSamplingFractionLoss);
+                dTree.record({ rec.d, rec.radiance, rec.product, rec.woPdf, rec.bsdfPdf, rec.dTreePdf, rec.statisticalWeight * w, rec.isDelta }, 
+                    directionalFilter, bsdfSamplingFractionLoss, actualSW);
             } else {
                 size2[axis] /= 2;
                 for (int i = 0; i < 2; ++i) {
@@ -1379,7 +1402,7 @@ struct STreeNode {
                         min2[axis] += size2[axis];
                     }
 
-                    nodes[children[i]].record(min1, max1, min2, size2, rec, directionalFilter, bsdfSamplingFractionLoss, nodes);
+                    nodes[children[i]].record(min1, max1, min2, size2, rec, directionalFilter, bsdfSamplingFractionLoss, nodes, actualSW);
                 }
             }
         }
@@ -1444,6 +1467,7 @@ public:
             nodes[idx].dTree = cur.dTree;
             nodes[idx].level = cur.level + 1;
             nodes[idx].dTree.setStatisticalWeightBuilding(nodes[idx].dTree.statisticalWeightBuilding() / 2);
+            nodes[idx].dTree.setActualStatisticalWeightBuilding(nodes[idx].dTree.actualStatisticalWeightBuilding() / 2);
         }
         cur.isLeaf = false;
         cur.dTree = {}; // Reset to an empty dtree to save memory.
@@ -1487,14 +1511,16 @@ public:
         }
     }
 
-    void record(const Point& p, const Vector& dTreeVoxelSize, DTreeRecord rec, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss) {
+    void record(const Point& p, const Vector& dTreeVoxelSize, DTreeRecord rec, 
+        EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Float actualSW) {
         Float volume = 1;
         for (int i = 0; i < 3; ++i) {
             volume *= dTreeVoxelSize[i];
         }
 
         rec.statisticalWeight /= volume;
-        m_nodes[0].record(p - dTreeVoxelSize * 0.5f, p + dTreeVoxelSize * 0.5f, m_aabb.min, m_aabb.getExtents(), rec, directionalFilter, bsdfSamplingFractionLoss, m_nodes);
+        m_nodes[0].record(p - dTreeVoxelSize * 0.5f, p + dTreeVoxelSize * 0.5f, m_aabb.min, m_aabb.getExtents(), 
+            rec, directionalFilter, bsdfSamplingFractionLoss, m_nodes, actualSW);
     }
 
     void dump(BlobWriter& blob) const {
@@ -1506,7 +1532,7 @@ public:
     }
 
     bool shallSplit(const STreeNode& node, int depth, size_t samplesRequired) {
-        return m_nodes.size() < std::numeric_limits<uint32_t>::max() - 1 && node.dTree.statisticalWeightBuilding() > samplesRequired;
+        return m_nodes.size() < std::numeric_limits<uint32_t>::max() - 1 && node.dTree.actualStatisticalWeightBuilding() > samplesRequired;
     }
 
     void refine(size_t sTreeThreshold, int maxMB, bool staticSTree) {
@@ -1990,7 +2016,9 @@ public:
             radiance += r;
         }
 
-        void commit(STree& sdTree, Float statisticalWeight, ESpatialFilter spatialFilter, EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
+        void commit(STree& sdTree, Float statisticalWeight, Float actualSW, ESpatialFilter spatialFilter, 
+            EDirectionalFilter directionalFilter, EBsdfSamplingFractionLoss bsdfSamplingFractionLoss, Sampler* sampler) {
+            
             if (!(woPdf > 0) || !radiance.isValid() || !bsdfVal.isValid()) {
                 return;
             }
@@ -2004,7 +2032,7 @@ public:
             DTreeRecord rec{ ray.d, localRadiance.average(), product.average(), woPdf, bsdfPdf, dTreePdf, statisticalWeight, isDelta };
             switch (spatialFilter) {
                 case ESpatialFilter::ENearest:
-                    dTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
+                    dTree->record(rec, directionalFilter, bsdfSamplingFractionLoss, actualSW);
                     break;
                 case ESpatialFilter::EStochasticBox:
                     {
@@ -2021,12 +2049,12 @@ public:
 
                         splatDTree = sdTree.dTreeWrapper(origin);
                         if (splatDTree) {
-                            splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss);
+                            splatDTree->record(rec, directionalFilter, bsdfSamplingFractionLoss, actualSW);
                         }
                         break;
                     }
                 case ESpatialFilter::EBox:
-                    sdTree.record(ray.o, dTreeVoxelSize, rec, directionalFilter, bsdfSamplingFractionLoss);
+                    sdTree.record(ray.o, dTreeVoxelSize, rec, directionalFilter, bsdfSamplingFractionLoss, actualSW);
                     break;
             }
         }
@@ -2077,7 +2105,7 @@ public:
                     false
                 };
 
-                v.commit(*m_sdTree, sample_path.path[pos].sc * 0.5f, m_spatialFilter, m_directionalFilter, 
+                v.commit(*m_sdTree, sample_path.path[pos].sc * 0.5f, 0.5f, m_spatialFilter, m_directionalFilter, 
                     m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
             }
         }
@@ -2203,8 +2231,10 @@ public:
                     computeNee(curr_path, vertices, sampler);
                 }
 
+                float sw = m_nee == EKickstart && m_doNee ? 0.5f : 1.0f;
+
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
-                    vertices[j].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, 
+                    vertices[j].commit(*m_sdTree, sw, sw,
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
@@ -2285,11 +2315,13 @@ public:
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     Float statweight = curr_path.path[j].sc;
+                    Float rsw = 1.f;
                     if(m_doNee && m_nee == EKickstart){
                         statweight *= 0.5f;
+                        rsw = 0.5f;
                     }
 
-                    vertices[j].commit(*m_sdTree, statweight, 
+                    vertices[j].commit(*m_sdTree, statweight, rsw,
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 }
             }
@@ -2381,11 +2413,13 @@ public:
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     Float statweight = curr_path.path[j].sc;
+                    Float rsw = 1.f;
                     if(m_doNee && m_nee == EKickstart){
                         statweight *= 0.5f;
+                        rsw = 0.5f;
                     }
                     
-                    vertices[j].commit(*m_sdTree, statweight, 
+                    vertices[j].commit(*m_sdTree, statweight, rsw,
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 
                     if(noNewPaths){
@@ -2470,11 +2504,13 @@ public:
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     Float statweight = curr_path.path[j].sc;
+                    Float rsw = 1.f;
                     if(m_doNee && m_nee == EKickstart){
                         statweight *= 0.5f;
+                        rsw = 0.5f;
                     }
 
-                    vertices[j].commit(*m_sdTree, statweight, 
+                    vertices[j].commit(*m_sdTree, statweight, rsw,
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
                 
                     if(noNewPaths){
@@ -2563,12 +2599,14 @@ public:
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     Float statweight = curr_path.path[j].sc;
+                    Float rsw = 1.f;
                     if(m_doNee && m_nee == EKickstart){
                         statweight *= 0.5f;
+                        rsw = 0.5f;
                     }
 
                     std::lock_guard<std::mutex> lg(*m_samplePathMutex);
-                    vertices[j].commit(*m_sdTree, statweight, 
+                    vertices[j].commit(*m_sdTree, statweight, rsw,
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler);
 
                     if(noNewPaths){
@@ -2668,16 +2706,16 @@ public:
 
                 for (std::uint32_t j = 0; j < vertices.size(); ++j) {
                     Float statweight = curr_sample.path[j].sc;
+                    Float rsw = 1.f;
                     if(m_doNee && m_nee == EKickstart){
                         statweight *= 0.5f;
+                        rsw = 0.5f;
                     }
-                    vertices[j].commit(*m_sdTree, statweight, 
+                    vertices[j].commit(*m_sdTree, statweight, rsw,
                         m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, sampler); 
                 }
             }
         }
-
-        std::cout << "MAXRW: " << maxrw << std::endl;
 
         checkActivePerc();
     }
@@ -3514,7 +3552,7 @@ public:
                                         false
                                     };
                                     
-                                    v.commit(*m_sdTree, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
+                                    v.commit(*m_sdTree, 0.5f, 0.5f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
                                 }
                             }
 
@@ -3668,7 +3706,8 @@ public:
 
         if (nVertices > 0 && !m_isFinalIter) {
             for (int i = 0; i < nVertices; ++i) {
-                vertices[i].commit(*m_sdTree, m_nee == EKickstart && m_doNee ? 0.5f : 1.0f, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
+                Float sw = m_nee == EKickstart && m_doNee ? 0.5f : 1.0f;
+                vertices[i].commit(*m_sdTree, sw, sw, m_spatialFilter, m_directionalFilter, m_isBuilt ? m_bsdfSamplingFractionLoss : EBsdfSamplingFractionLoss::ENone, rRec.sampler);
             }
         }
         
