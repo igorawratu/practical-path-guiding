@@ -1078,11 +1078,11 @@ public:
         }
         
 
-        if(min_nzradiance > 100000.f){
+        /*if(min_nzradiance > 100000.f){
             min_nzradiance = EPSILON * 2.f;
-        }
+        }*/
 
-        //building.setMinimumIrr(EPSILON * 2.f);
+        building.setMinimumIrr(std::max(EPSILON * 10.f, min_nzradiance / 10.f));
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
@@ -1121,8 +1121,6 @@ public:
 
         sampling = building;
         m_rejPdfPair = previous.getMajorizingFactor(sampling);
-
-        min_nzradiance = std::numeric_limits<float>::max();
     }
 
     void reset(int maxDepth, Float subdivisionThreshold, bool augment) {
