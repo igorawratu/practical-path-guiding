@@ -1068,7 +1068,6 @@ public:
             if(augment && isBuilt){
                 float factor = req_augmented_samples == 0 ? 
                     0.f : std::min(double(current_samples) / req_augmented_samples, 1.0);
-                std::cout << factor << " " << current_samples << " " << req_augmented_samples << std::endl;
 
                 total_samples *= factor;
 
@@ -1084,7 +1083,7 @@ public:
         }
 
         //building.setMinimumIrr(EPSILON * 2.f);
-        //building.build();
+        building.build();
         
         if((augment || augmentReweight) && isBuilt){
             if(samplesSaved){
