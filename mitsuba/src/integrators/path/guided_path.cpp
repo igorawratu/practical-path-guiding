@@ -2675,6 +2675,8 @@ public:
                 }
             }
         }
+
+        checkActivePerc();
     }
 
     bool renderSPP(Scene *scene, RenderQueue *queue, const RenderJob *job,
