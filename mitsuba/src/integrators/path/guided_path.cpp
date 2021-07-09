@@ -2590,7 +2590,10 @@ public:
         checkActivePerc();
     }
 
+    float maxrw;
+
     void reweightCurrentPaths(ref<Sampler> sampler){
+        maxrw = std::numeric_limits<float>::min();
         #pragma omp parallel for
         for(std::uint32_t i = 0; i < m_samplePaths->size(); ++i){
             RPath& curr_sample = (*m_samplePaths)[i];
@@ -2619,6 +2622,7 @@ public:
                 }
 
                 Float reweight = newWoPdf / curr_vert.woPdf;
+                maxrw = std::max(reweight, maxrw);
 
                 curr_vert.sc *= reweight;
                 curr_vert.woPdf = newWoPdf;
@@ -2672,6 +2676,8 @@ public:
                 }
             }
         }
+
+        std::cout << "MAXRW: " << maxrw << std::endl;
 
         checkActivePerc();
     }
