@@ -1082,7 +1082,7 @@ public:
             min_nzradiance = EPSILON * 2.f;
         }*/
 
-        //building.setMinimumIrr(std::max(EPSILON * 10.f, min_nzradiance / 10.f));
+        building.setMinimumIrr(std::max(EPSILON * 10.f, min_nzradiance / 10.f));
         building.build();
         
         if((augment || augmentReweight) && isBuilt){
