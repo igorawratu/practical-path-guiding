@@ -1191,7 +1191,7 @@ public:
     }
 
     Float actualStatisticalWeightBuilding() const {
-        return building.actualStaisticalWeight();
+        return building.actualStatisticalWeight();
     }
 
     void setStatisticalWeightBuilding(Float statisticalWeight) {
